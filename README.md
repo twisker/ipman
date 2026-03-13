@@ -1,4 +1,10 @@
+<p align="center">
+  <img src="images/IpMan.jpg" alt="IpMan Banner" width="600" />
+</p>
+
 # IpMan - Intelligence Package Manager
+
+*I can take on ten.*
 
 > Agent skill virtual environment manager — like conda/uv, but for AI agent skills.
 
