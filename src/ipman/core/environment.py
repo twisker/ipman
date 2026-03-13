@@ -242,20 +242,95 @@ def deactivate_env(
 # Shell integration (activate script generation)
 # ---------------------------------------------------------------------------
 
-def generate_activate_script(
-    env_name: str, shell: str = "bash"
+def build_prompt_tag(
+    project_path: Path | None = None,
 ) -> str:
-    """Generate a shell script snippet for activate/deactivate.
+    """Build the compact prompt tag showing active envs across all scopes.
 
-    This is printed to stdout so the user can eval it.
+    Format: [ip:<machine><user><project_name>]
+      - machine active: *    inactive: omitted
+      - user active:    -    inactive: omitted
+      - project active: env full name    inactive: omitted
+
+    Examples:
+      [ip:*-myenv]  = all three layers active
+      [ip:myenv]    = only project
+      [ip:*myenv]   = machine + project
+      [ip:*-]       = machine + user, no project
     """
+    if project_path is None:
+        project_path = Path.cwd()
+
+    parts: list[str] = []
+
+    # Machine layer
+    machine_envs = list_envs(Scope.MACHINE, project_path)
+    machine_active = any(e.get("active") for e in machine_envs)
+    if machine_active:
+        parts.append("*")
+
+    # User layer
+    user_envs = list_envs(Scope.USER, project_path)
+    user_active = any(e.get("active") for e in user_envs)
+    if user_active:
+        parts.append("-")
+
+    # Project layer
+    config = _read_project_config(project_path)
+    project_env = config.get("active_env") if config else None
+    if project_env:
+        parts.append(project_env)
+
+    if not parts:
+        return ""
+
+    return f"[ip:{''.join(parts)}]"
+
+
+def get_env_status(
+    project_path: Path | None = None,
+) -> list[dict[str, Any]]:
+    """Get detailed status of active environments across all scopes.
+
+    Returns a list of dicts: {scope, name, agent, path}.
+    """
+    if project_path is None:
+        project_path = Path.cwd()
+
+    result: list[dict[str, Any]] = []
+
+    for scope in Scope:
+        try:
+            envs = list_envs(scope, project_path)
+        except (ValueError, OSError):
+            continue
+        for env in envs:
+            if env.get("active"):
+                result.append({
+                    "scope": scope.value,
+                    "name": env.get("name", "unknown"),
+                    "agent": env.get("agent", "unknown"),
+                    "path": env.get("path", ""),
+                })
+
+    return result
+
+
+def generate_activate_script(
+    env_name: str,
+    shell: str = "bash",
+    prompt_tag: str = "",
+) -> str:
+    """Generate a shell script snippet for activation."""
+    if not prompt_tag:
+        prompt_tag = f"[ip:{env_name}]"
     if shell in ("bash", "zsh"):
-        return _bash_activate_script(env_name)
+        return _bash_activate_script(env_name, prompt_tag)
     if shell == "fish":
-        return _fish_activate_script(env_name)
+        return _fish_activate_script(env_name, prompt_tag)
     if shell in ("powershell", "pwsh"):
-        return _powershell_activate_script(env_name)
-    return _bash_activate_script(env_name)
+        return _powershell_activate_script(env_name, prompt_tag)
+    return _bash_activate_script(env_name, prompt_tag)
 
 
 def generate_deactivate_script(shell: str = "bash") -> str:
@@ -338,31 +413,31 @@ def _inherit_existing(
             shutil.copy2(item, dest)
 
 
-def _bash_activate_script(env_name: str) -> str:
+def _bash_activate_script(env_name: str, prompt_tag: str) -> str:
     return f"""\
 export IPMAN_ENV="{env_name}"
 export _IPMAN_OLD_PS1="$PS1"
-PS1="[ipman:{env_name}] $PS1"
+PS1="{prompt_tag} $PS1"
 export PS1
 """
 
 
-def _fish_activate_script(env_name: str) -> str:
+def _fish_activate_script(env_name: str, prompt_tag: str) -> str:
     return f"""\
 set -gx IPMAN_ENV "{env_name}"
 set -gx _IPMAN_OLD_PROMPT (functions fish_prompt)
 function fish_prompt
-    echo -n "[ipman:{env_name}] "
+    echo -n "{prompt_tag} "
     eval $_IPMAN_OLD_PROMPT
 end
 """
 
 
-def _powershell_activate_script(env_name: str) -> str:
+def _powershell_activate_script(env_name: str, prompt_tag: str) -> str:
     return f"""\
 $env:IPMAN_ENV = "{env_name}"
 $_ipman_old_prompt = $function:prompt
-function prompt {{ "[ipman:{env_name}] " + (& $_ipman_old_prompt) }}
+function prompt {{ "{prompt_tag} " + (& $_ipman_old_prompt) }}
 """
 
 

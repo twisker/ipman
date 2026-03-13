@@ -66,5 +66,30 @@ class TestEnvCLI:
             runner.invoke(cli, ["env", "activate", "env1"])
             result = runner.invoke(cli, ["env", "list"])
             assert result.exit_code == 0
-            # env1 should have the active marker
             assert "env1" in result.output
+
+    def test_status_no_active(self, tmp_path):
+        runner = CliRunner()
+        with runner.isolated_filesystem(temp_dir=tmp_path):
+            result = runner.invoke(cli, ["env", "status"])
+            assert result.exit_code == 0
+            assert "No active environments" in result.output
+
+    def test_status_with_active(self, tmp_path):
+        runner = CliRunner()
+        with runner.isolated_filesystem(temp_dir=tmp_path):
+            runner.invoke(cli, ["env", "create", "myenv"])
+            runner.invoke(cli, ["env", "activate", "myenv"])
+            result = runner.invoke(cli, ["env", "status"])
+            assert result.exit_code == 0
+            assert "[ip:myenv]" in result.output
+            assert "Project" in result.output
+            assert "myenv" in result.output
+
+    def test_activate_shows_prompt_tag(self, tmp_path):
+        runner = CliRunner()
+        with runner.isolated_filesystem(temp_dir=tmp_path):
+            runner.invoke(cli, ["env", "create", "myenv"])
+            result = runner.invoke(cli, ["env", "activate", "myenv"])
+            assert result.exit_code == 0
+            assert "[ip:myenv]" in result.output

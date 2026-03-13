@@ -11,11 +11,13 @@ from ipman.agents.registry import detect_agent, get_adapter, list_known_agents
 from ipman.core.environment import (
     Scope,
     activate_env,
+    build_prompt_tag,
     create_env,
     deactivate_env,
     delete_env,
     generate_activate_script,
     generate_deactivate_script,
+    get_env_status,
     list_envs,
 )
 
@@ -124,20 +126,19 @@ def activate(
     scope = _resolve_scope(scope_project, scope_user, scope_machine)
 
     try:
-        env_path = activate_env(
+        activate_env(
             name=name,
             scope=scope,
             project_path=project_path,
         )
+        prompt_tag = build_prompt_tag(project_path)
         shell = _detect_shell()
-        script = generate_activate_script(name, shell)
+        script = generate_activate_script(name, shell, prompt_tag)
         # If stdout is a terminal, print human-friendly message
         # If piped (eval), print only the script
         if os.isatty(1):
-            click.secho(
-                f"Activated environment '{name}' ({env_path})",
-                fg="green",
-            )
+            click.secho(f"Activated '{name}'.", fg="green")
+            click.echo(f"  Prompt tag: {prompt_tag}")
             click.echo(
                 "\nTo update your shell prompt, run:\n"
                 f'  eval "$(ipman env activate {name})"'
@@ -231,8 +232,40 @@ def list_cmd(
         name = e.get("name", "unknown")
         agent = e.get("agent", "unknown")
         created = e.get("created", "")
-        click.echo(f"  {name}{marker}  (agent: {agent}, created: {created})")
+        click.echo(
+            f"  {name}{marker}  (agent: {agent}, created: {created})"
+        )
 
     active_count = sum(1 for e in envs if e.get("active"))
     if active_count:
         click.echo("\n  * = currently active")
+
+
+@env.command("status")
+def status_cmd() -> None:
+    """Show detailed active environment status across all scopes."""
+    project_path = Path.cwd()
+    prompt_tag = build_prompt_tag(project_path)
+    status = get_env_status(project_path)
+
+    if not status:
+        click.echo("No active environments.")
+        return
+
+    click.echo(f"Prompt: {prompt_tag}\n")
+
+    scope_labels = {
+        "machine": ("*", "Machine"),
+        "user": ("-", "User"),
+        "project": ("", "Project"),
+    }
+
+    for entry in status:
+        scope = entry["scope"]
+        symbol, label = scope_labels.get(scope, ("", scope))
+        prefix = f"  {symbol} " if symbol else "  "
+        click.secho(f"{prefix}{label}", fg="cyan", nl=False)
+        click.echo(
+            f": {entry['name']}  "
+            f"(agent: {entry['agent']}, path: {entry['path']})"
+        )

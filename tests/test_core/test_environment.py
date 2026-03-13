@@ -11,11 +11,13 @@ from ipman.agents.claude_code import ClaudeCodeAdapter
 from ipman.core.environment import (
     Scope,
     activate_env,
+    build_prompt_tag,
     create_env,
     deactivate_env,
     delete_env,
     generate_activate_script,
     generate_deactivate_script,
+    get_env_status,
     list_envs,
 )
 
@@ -230,20 +232,64 @@ class TestListEnvs:
 
 
 class TestShellScripts:
-    def test_bash_activate(self):
-        script = generate_activate_script("myenv", "bash")
+    def test_bash_activate_with_prompt_tag(self):
+        script = generate_activate_script("myenv", "bash", "[ip:myenv]")
         assert 'IPMAN_ENV="myenv"' in script
-        assert "[ipman:myenv]" in script
+        assert "[ip:myenv]" in script
+
+    def test_bash_activate_default_tag(self):
+        script = generate_activate_script("myenv", "bash")
+        assert "[ip:myenv]" in script
 
     def test_bash_deactivate(self):
         script = generate_deactivate_script("bash")
         assert "unset IPMAN_ENV" in script
 
     def test_fish_activate(self):
-        script = generate_activate_script("myenv", "fish")
+        script = generate_activate_script("myenv", "fish", "[ip:myenv]")
         assert "IPMAN_ENV" in script
-        assert "[ipman:myenv]" in script
+        assert "[ip:myenv]" in script
 
     def test_powershell_activate(self):
-        script = generate_activate_script("myenv", "powershell")
+        script = generate_activate_script(
+            "myenv", "powershell", "[ip:myenv]"
+        )
         assert "IPMAN_ENV" in script
+        assert "[ip:myenv]" in script
+
+
+class TestPromptTag:
+    def test_no_active_envs(self, project):
+        project.mkdir()
+        assert build_prompt_tag(project) == ""
+
+    def test_project_only(self, project, adapter):
+        project.mkdir()
+        create_env("myenv", adapter, Scope.PROJECT, project)
+        activate_env("myenv", Scope.PROJECT, project)
+        assert build_prompt_tag(project) == "[ip:myenv]"
+
+    def test_deactivated_is_empty(self, project, adapter):
+        project.mkdir()
+        create_env("myenv", adapter, Scope.PROJECT, project)
+        activate_env("myenv", Scope.PROJECT, project)
+        deactivate_env(project)
+        assert build_prompt_tag(project) == ""
+
+
+class TestEnvStatus:
+    def test_no_active(self, project):
+        project.mkdir()
+        result = get_env_status(project)
+        assert result == []
+
+    def test_project_active(self, project, adapter):
+        project.mkdir()
+        create_env("myenv", adapter, Scope.PROJECT, project)
+        activate_env("myenv", Scope.PROJECT, project)
+
+        result = get_env_status(project)
+        assert len(result) == 1
+        assert result[0]["scope"] == "project"
+        assert result[0]["name"] == "myenv"
+        assert result[0]["agent"] == "claude-code"
