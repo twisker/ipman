@@ -54,16 +54,16 @@
 
 | 优先级 | 任务 | 所属模块 | 责任人 | 状态 |
 |-------|------|----------|--------|------|
-| P0 | 扩展 Agent 适配器接口：添加 skill install/uninstall/list 的 CLI 命令封装 | agents/base | AI | 待开始 |
-| P0 | 实现 Claude Code 适配器的 skill CLI 封装（plugin install/uninstall/list） | agents/claude_code | AI | 待开始 |
-| P0 | 实现 OpenClaw 适配器（clawhub install/uninstall、skill list） | agents/openclaw | AI | 待开始 |
-| P1 | 实现 `ipman install <name>` 命令（通过 agent CLI 安装） | CLI + core | AI | 待开始 |
-| P1 | 实现 `ipman uninstall <name>` 命令（通过 agent CLI 卸载） | CLI + core | AI | 待开始 |
-| P1 | 实现 `ipman skill list` 命令（通过 agent CLI 列出） | CLI + core | AI | 待开始 |
-| P1 | 实现 IpHub index.yaml 客户端读取与缓存 | hub/client | AI | 待开始 |
-| P2 | 实现 `--agent` 参数覆盖自动探测 | CLI | AI | 待开始 |
-| P2 | 编写 Agent 适配器 CLI 封装测试（mock subprocess） | tests | AI | 待开始 |
-| P2 | 编写 IpHub 客户端测试 | tests | AI | 待开始 |
+| P0 | 扩展 Agent 适配器接口：添加 skill install/uninstall/list 的 CLI 命令封装 | agents/base | AI | 已完成 |
+| P0 | 实现 Claude Code 适配器的 skill CLI 封装（plugin install/uninstall/list） | agents/claude_code | AI | 已完成 |
+| P0 | 实现 OpenClaw 适配器（clawhub install/uninstall、skill list） | agents/openclaw | AI | 已完成 |
+| P1 | 实现 `ipman install <name>` 命令（通过 agent CLI 安装） | CLI + core | AI | 已完成 |
+| P1 | 实现 `ipman uninstall <name>` 命令（通过 agent CLI 卸载） | CLI + core | AI | 已完成 |
+| P1 | 实现 `ipman skill list` 命令（通过 agent CLI 列出） | CLI + core | AI | 已完成 |
+| P1 | 实现 IpHub index.yaml 客户端读取与缓存 | hub/client | AI | 已完成 |
+| P2 | 实现 `--agent` 参数覆盖自动探测 | CLI | AI | 已完成 |
+| P2 | 编写 Agent 适配器 CLI 封装测试（mock subprocess） | tests | AI | 已完成 |
+| P2 | 编写 IpHub 客户端测试 | tests | AI | 已完成 |
 
 ---
 
