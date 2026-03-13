@@ -1,6 +1,7 @@
 # IpHub 设计方案
 
 **设计日期：** 2026-03-14
+**最后更新：** 2026-03-14（v2 — skill 无版本、IP 分文件、双模式安装）
 
 ---
 
@@ -31,8 +32,11 @@ iphub/
 ├── index.yaml                      # 全量索引（自动生成，勿手动编辑）
 ├── registry/
 │   ├── @twisker/
-│   │   ├── web-scraper.yaml        # Skill 注册
-│   │   └── frontend-toolkit.yaml   # IP 包注册
+│   │   ├── web-scraper.yaml        # Skill 注册（单文件）
+│   │   └── frontend-toolkit/       # IP 包注册（目录，分版本文件）
+│   │       ├── meta.yaml           # 元信息（作者、描述、许可）
+│   │       ├── 1.0.0.yaml          # 版本内容（skills + dependencies）
+│   │       └── 2.0.0.yaml
 │   └── @alice/
 │       └── git-helper.yaml
 ├── stats/
@@ -49,7 +53,9 @@ iphub/
 
 ## 三、注册文件格式
 
-### 3.1 Skill 注册文件
+### 3.1 Skill 注册文件（单文件）
+
+Skill 没有语义化版本。Agent CLI 不支持版本指定，安装时永远安装源头最新版。
 
 ```yaml
 # registry/@twisker/web-scraper.yaml
@@ -63,61 +69,55 @@ keywords: [browser, scraping, automation]
 
 agents:
   claude-code:
-    install_type: plugin
-    source: "web-scraper@twisker-plugins"
-    marketplace: "https://github.com/twisker/twisker-plugins"  # claude marketplace 源
+    plugin: "web-scraper@twisker-plugins"
+    marketplace: "https://github.com/twisker/twisker-plugins"
   openclaw:
-    install_type: skill
-    source: "web-scraper"
-    hub: "https://clawhub.com"          # 缺省值，可指向非官方 hub
+    slug: "web-scraper"
+    hub: "https://clawhub.com"
 
-versions:
-  - version: "1.2.0"
-    released: 2026-03-10
-    depends: [http-client]
-    agents:
-      claude-code:
-        source: "web-scraper@twisker-plugins"
-        min_version: "1.0.0"            # agent 最低版本要求
-      openclaw:
-        source: "web-scraper"
-        hub: "https://clawhub.com"
-  - version: "1.1.0"
-    released: 2026-02-15
-    depends: [http-client]
-    agents:
-      claude-code:
-        source: "web-scraper@twisker-plugins"
-      openclaw:
-        source: "web-scraper"
+history:
+  - commit: "a1b2c3d"
+    date: 2026-03-14
+  - commit: "e4f5g6h"
+    date: 2026-02-01
 ```
 
-### 3.2 IP 包注册文件
+- `agents` — 安装源信息，不随版本变化
+- `history` — 纯记录（commit hash + 登记时间），不参与安装逻辑
+- 无 `version` 字段、无 `versions` 数组
 
+### 3.2 IP 包注册文件（分文件存储）
+
+IP 包有真正的版本控制。每个版本一个独立文件，元信息单独存放。
+
+**meta.yaml** — 跨版本共享的元信息：
 ```yaml
-# registry/@twisker/frontend-toolkit.yaml
+# registry/@twisker/frontend-toolkit/meta.yaml
 type: ip
 name: frontend-toolkit
 description: "Essential skills for frontend development"
 author: "@twisker"
 license: MIT
 homepage: https://github.com/twisker/frontend-toolkit
+```
 
-versions:
-  - version: "1.0.0"
-    released: 2026-03-14
-    skills:
-      - name: css-helper
-        version: ">=2.0"
-      - name: react-patterns
-        version: "^1.3.0"
-      - name: a11y-checker
-        version: "*"
+**版本文件** — 特定版本的完整内容：
+```yaml
+# registry/@twisker/frontend-toolkit/2.0.0.yaml
+version: "2.0.0"
+released: 2026-03-14
+
+skills:
+  - name: css-helper
+  - name: react-patterns
+  - name: a11y-checker
+
+dependencies:
+  - name: base-utils
+    version: ">=1.0.0"
 ```
 
 ### 3.3 Agent 安装源配置
-
-每个 agent 的安装源可以指定自定义地址：
 
 | Agent | 字段 | 缺省值 | 说明 |
 |-------|------|--------|------|
@@ -136,7 +136,6 @@ skills:
   web-scraper:
     owner: "@twisker"
     type: skill
-    latest: "1.2.0"
     description: "Browser automation for web scraping"
     agents: [claude-code, openclaw]
     counter_issue: 42
@@ -145,7 +144,6 @@ skills:
   git-helper:
     owner: "@alice"
     type: skill
-    latest: "2.0.1"
     description: "Git workflow automation"
     agents: [claude-code]
     counter_issue: 43
@@ -156,12 +154,16 @@ packages:
   frontend-toolkit:
     owner: "@twisker"
     type: ip
-    latest: "1.0.0"
+    latest: "2.0.0"
+    versions: ["2.0.0", "1.0.0"]
     description: "Essential skills for frontend development"
     counter_issue: 44
     installs: 456
     unique_users: 123
 ```
+
+> **注意：** skills 条目无 `latest`/`versions` 字段（skill 没有版本概念）；
+> packages 条目有 `latest` + `versions` 列表（IP 包有真正的版本控制）。
 
 ### 短名称规则
 
@@ -175,9 +177,85 @@ packages:
 
 ---
 
-## 五、发布流程
+## 五、本地 IP 文件格式（.ip.yaml）
 
-### 5.1 发布 Skill
+IP 文件是用户本地使用的技能清单文件，可独立于 IpHub 存在。
+
+### 5.1 双模式安装
+
+IP 文件中的 skills 和 dependencies 都支持两种安装模式：
+
+| 有 `source` 字段？ | 模式 | 行为 |
+|-------------------|------|------|
+| 无 | IpHub 模式 | 查 index.yaml → 读注册文件 → 调 agent CLI |
+| 有（skill） | 直接模式 | 从 source 读取 agent 安装源 → 直接调 agent CLI |
+| 有（dependency，路径/URL） | 直接模式 | 加载本地文件或下载远程 .ip.yaml → 递归安装 |
+
+安装程序通过**是否存在 `source` 字段**自动区分。
+
+### 5.2 版本语义
+
+| 项 | version 字段 | 可强制执行？ |
+|----|-------------|------------|
+| IpHub skill | 无此字段（agent CLI 不支持版本指定） | 否 |
+| 直接安装源 skill | 无此字段（版本由源头决定） | 否 |
+| IpHub IP 包依赖 | 版本约束，匹配 IpHub 可用版本 | 是 |
+| 直接路径 IP 包依赖 | 无此字段（文件本身即版本） | 是（隐式） |
+
+### 5.3 版本约束语法（仅用于 IP 包依赖）
+
+| 语法 | 含义 |
+|------|------|
+| `>=1.2.0` | 大于等于 |
+| `^1.3.0` | 兼容更新（>=1.3.0, <2.0.0） |
+| `~1.3.0` | 补丁更新（>=1.3.0, <1.4.0） |
+| `1.2.0` | 精确版本 |
+
+### 5.4 完整示例
+
+```yaml
+# IpMan Intelligence Package — https://github.com/twisker/ipman
+# Install: ipman install frontend-kit.ip.yaml
+
+name: frontend-kit
+version: "2.0.0"
+description: "Frontend development skill collection"
+author:
+  name: "Twisker"
+  github: "@twisker"
+license: MIT
+
+skills:
+  # IpHub 模式（无 version，装最新）
+  - name: css-helper
+  - name: a11y-checker
+
+  # 直接安装源模式（指定 agent 安装参数）
+  - name: our-design-system
+    description: "Internal design system skills"
+    source:
+      claude-code:
+        plugin: "design-system@our-plugins"
+        marketplace: "https://github.com/ourorg/claude-plugins"
+      openclaw:
+        slug: "our-design-system"
+        hub: "https://internal-hub.ourorg.com"
+
+dependencies:
+  # IpHub IP 包（版本约束有效）
+  - name: base-utils
+    version: ">=1.0.0"
+
+  # 直接 IP 文件（文件本身即版本）
+  - name: team-standards
+    source: "https://raw.githubusercontent.com/ourorg/ips/main/standards.ip.yaml"
+```
+
+---
+
+## 六、发布流程
+
+### 6.1 发布 Skill
 
 ```
 ipman hub publish web-scraper
@@ -194,34 +272,34 @@ ipman hub publish web-scraper
      - 创建 counter issue: "[counter] web-scraper"
 ```
 
-### 5.2 发布 IP 包
+### 6.2 发布 IP 包
 
 ```
 ipman hub publish frontend-toolkit.ip.yaml
 
   1. 读取本地 GitHub 身份
-  2. 校验：引用的所有 skill 在 index.yaml 中存在
+  2. 校验：引用的所有 IpHub skill 在 index.yaml 中存在
   3. Fork iphub 仓库
-  4. 创建 registry/@twisker/frontend-toolkit.yaml
-  5. 提 PR → CI 校验 → 自动合并
-  6. Post-merge Action 更新 index + 创建 counter issue
+  4. 创建 registry/@twisker/frontend-toolkit/meta.yaml（首次）
+  5. 创建 registry/@twisker/frontend-toolkit/2.0.0.yaml（版本文件）
+  6. 提 PR → CI 校验 → 自动合并
+  7. Post-merge Action 更新 index + 创建 counter issue
 ```
 
 ---
 
-## 六、安装流程
+## 七、安装流程
 
-### 6.1 安装 Skill
+### 7.1 安装 Skill（IpHub 模式）
 
 ```
 ipman install web-scraper
 
-  1. 拉取 index.yaml → 查找 web-scraper
+  1. 拉取 index.yaml → 查找 web-scraper（type=skill）
   2. 读取 registry/@twisker/web-scraper.yaml
   3. 检测当前 agent（如 claude-code）
   4. 读取 agents.claude-code 配置:
-       install_type: plugin
-       source: "web-scraper@twisker-plugins"
+       plugin: "web-scraper@twisker-plugins"
        marketplace: "https://github.com/twisker/twisker-plugins"
   5. 执行 agent CLI 命令:
        claude plugin marketplace add twisker-plugins \
@@ -230,30 +308,31 @@ ipman install web-scraper
   6. 安装成功 → 向 counter issue 添加 comment + reaction
 ```
 
-### 6.2 安装 IP 包
+### 7.2 安装 IP 文件（本地/远程）
 
 ```
-ipman install frontend-toolkit
+ipman install frontend-kit.ip.yaml
 
-  1. 拉取 index.yaml → 类型=ip
-  2. 读取 registry/@twisker/frontend-toolkit.yaml
-  3. 解析依赖列表: css-helper, react-patterns, a11y-checker
-  4. 版本解析 + 递归依赖解析
-  5. 逐一执行 ipman install <skill-name>（复用 skill 安装流程）
-  6. 向 frontend-toolkit 的 counter issue 添加 comment + reaction
+  1. 检测参数是文件路径 → 加载 .ip.yaml
+  2. 解析 dependencies（递归展开，版本匹配）
+  3. 汇总所有 skills（去重）
+  4. 逐一安装：
+     - 有 source → 直接模式（从 source 读 agent 参数 → 调 agent CLI）
+     - 无 source → IpHub 模式（查 index → 读注册文件 → 调 agent CLI）
 ```
 
-### 6.3 安装时的名称解析
+### 7.3 安装时的名称解析
 
 ```bash
 ipman install web-scraper              # 短名称 → 查 index.yaml
 ipman install @twisker/web-scraper     # 全名 → 直接定位
-ipman install web-scraper --owner alice # 显式指定 owner（若短名称被占，用于装非注册版本）
+ipman install frontend-kit.ip.yaml     # 文件路径 → 本地 IP 安装
+ipman install https://.../.ip.yaml     # URL → 下载后安装
 ```
 
 ---
 
-## 七、身份认证与权限
+## 八、身份认证与权限
 
 ### 认证方式
 
@@ -294,7 +373,7 @@ PR 触发时：
 
 ---
 
-## 八、安装统计
+## 九、安装统计
 
 ### 计数机制
 
@@ -323,7 +402,7 @@ PR 触发时：
 
 ---
 
-## 九、搜索
+## 十、搜索
 
 ```bash
 ipman hub search scraper           # 关键词搜索
@@ -339,16 +418,18 @@ ipman hub info web-scraper         # 查看详细信息
 
 ---
 
-## 十、技术总结
+## 十一、技术总结
 
 | 需求 | 实现方式 |
 |------|---------|
 | 数据存储 | YAML 文件 in GitHub repo |
 | 名称注册 | index.yaml（自动生成，短名称全局唯一） |
+| Skill 版本 | 无语义化版本（history 记录 commit hash + 日期） |
+| IP 包版本 | 分文件存储（meta.yaml + N.N.N.yaml），真正的版本控制 |
 | 身份认证 | GitHub PR author（gh CLI token） |
 | 权限控制 | CI 校验 PR author == namespace |
 | 发布 | ipman hub publish → 自动提 PR |
-| 安装 | ipman install → 解析引用 → 调用 agent CLI |
+| 安装 | 双模式：IpHub 引用 / 直接安装源 |
 | 下载统计 | GitHub Issues (comment + reaction) |
 | 排名 | 定时 Action 汇总 → README Top 10 |
 | 搜索 | 本地 index.yaml 过滤 |

@@ -80,7 +80,8 @@
 | P0 | 定义 IP 包 YAML schema | core/package | AI | 待开始 |
 | P0 | 实现 IP 包解析器 | core/package | AI | 待开始 |
 | P0 | 实现 `ipman pack` 命令 | CLI + core | AI | 待开始 |
-| P1 | 实现 `ipman unpack` / `ipman install <ip-file>` | CLI + core | AI | 待开始 |
+| P1 | 实现 `ipman install <file.ip.yaml>` 本地 IP 文件安装 | CLI + core | AI | 待开始 |
+| P1 | 实现 `ipman install <short-name.ip>` 基于 IpHub 的在线 IP 包安装 | CLI + hub + core | AI | 待开始 |
 | P1 | 实现依赖解析引擎 | core/resolver | AI | 待开始 |
 | P1 | 实现 `ipman export` 命令（导出当前环境为 IP 文件） | CLI + core | AI | 待开始 |
 | P2 | 编写 IP 包管理测试 | tests | AI | 待开始 |
