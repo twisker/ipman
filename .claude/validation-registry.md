@@ -61,12 +61,13 @@
 - `--agent` 参数能正确覆盖自动探测
 - 适配器操作不侵入 Agent 内部目录
 
-### 技能管理（core/skill）
+### 技能管理（通过 Agent CLI）
 
-- `ipman install` 能正确安装技能并创建软链接
-- `ipman uninstall` 能正确移除技能和清理软链接
-- 技能元数据（名称、版本、作者、来源）正确记录
-- 同名技能通过命名空间区分
+- `ipman install` 正确调用当前 agent 的原生 CLI 命令完成安装
+- `ipman uninstall` 正确调用当前 agent 的原生 CLI 命令完成卸载
+- `ipman skill list` 正确调用当前 agent 的原生 CLI 命令列出已安装技能
+- 不直接操作 agent 内部目录结构，所有 CRUD 通过 agent CLI 执行
+- 支持通过 `--agent` 参数手动指定 agent，覆盖自动探测
 
 ### IP 包管理（core/package）
 
@@ -77,10 +78,12 @@
 
 ### IpHub（hub/）
 
-- 搜索返回结果准确
-- 下载安装流程完整
-- 发布需认证
-- 安装计数准确
+- 能正确拉取并缓存 index.yaml
+- 搜索基于本地 index.yaml 过滤，返回结果准确
+- 安装流程：解析引用 → 调用 agent CLI 原生命令 → 计数
+- 发布流程：读取 gh 身份 → fork iphub → 创建注册文件 → 提 PR
+- 身份认证基于 GitHub PR author（gh CLI token）
+- 安装计数通过 GitHub Issue comment + reaction 实现
 
 ### 国际化（utils/i18n）
 

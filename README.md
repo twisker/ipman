@@ -63,7 +63,7 @@ Core Layer (environment, skill, package, resolver)
     |
 Agent Adapter Layer (Claude Code, OpenClaw, ...)
     |
-Market Layer (search, publish, download)
+IpHub Layer (reference registry, search, publish)
 ```
 
 ## Module Overview
@@ -107,9 +107,9 @@ scripts/          # Version bump scripts
 
 | Phase | Focus | Status |
 |-------|-------|--------|
-| Phase 1 | CLI skeleton + virtual environments + basic skill management | Planned |
+| Phase 1 | CLI skeleton + virtual environments + agent CLI skill management | In Progress (Sprint 1 done) |
 | Phase 2 | IP package format + pack/unpack + dependency resolution | Planned |
-| Phase 3 | IpHub (search, publish, download) | Planned |
+| Phase 3 | IpHub (reference registry, search, publish) | Designed |
 | Phase 4 | i18n, docs, Windows installer, PyPI release | Planned |
 
 ## Development
