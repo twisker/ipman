@@ -1,8 +1,10 @@
 # 当前 Sprint
 
-**Sprint 0 - 项目初始化**
+**Sprint 1 - 虚拟环境管理**
 
-**目标：** 建立开发框架，搭建 Python 项目骨架、CI/CD 流水线、测试框架
+**目标：** 设计并实现虚拟环境的创建/激活/停用/删除/列表功能
+
+**状态：** 已完成
 
 ---
 
@@ -10,14 +12,15 @@
 
 | 优先级 | 任务 | 所属模块 | 责任人 | 状态 |
 |-------|------|----------|--------|------|
-| P0 | 初始化 pyproject.toml（uv 项目配置） | 基础设施 | AI | 已完成 |
-| P0 | 创建 src/ipman 包目录结构 | 基础设施 | AI | 已完成 |
-| P0 | 配置 ruff（lint + 格式化） | 基础设施 | AI | 已完成 |
-| P0 | 配置 mypy（类型检查） | 基础设施 | AI | 已完成 |
-| P0 | 配置 pytest（测试框架） | 测试 | AI | 已完成 |
-| P1 | 实现 Click CLI 主入口（`ipman --help`） | CLI | AI | 已完成 |
-| P1 | 搭建 GitHub Actions CI（三平台测试矩阵） | CI/CD | AI | 已完成 |
-| P1 | 创建 GitHub 仓库描述和标签 | 基础设施 | 人工 | 已完成 |
+| P0 | 设计虚拟环境数据结构（目录布局、元数据格式） | core/environment | AI | 已完成 |
+| P0 | 实现跨平台软链接工具函数 | utils/symlink | AI | 已完成 |
+| P0 | 实现 `ipman create` 命令（project/user/machine scope） | CLI + core | AI | 已完成 |
+| P0 | 实现 `ipman activate` / `ipman deactivate` 命令 | CLI + core | AI | 已完成 |
+| P1 | 实现 `ipman delete` 命令 | CLI + core | AI | 已完成 |
+| P1 | 实现 `ipman list` 命令（列出所有环境） | CLI + core | AI | 已完成 |
+| P1 | 实现命令行提示符变更（环境激活标识） | core/environment | AI | 已完成 |
+| P2 | 编写虚拟环境管理单元测试 | tests | AI | 已完成 |
+| P2 | 编写虚拟环境管理集成测试 | tests | AI | 已完成 |
 
 ---
 
@@ -25,16 +28,26 @@
 
 | 模块 | 状态 | 最后更新 | 当前目标 | 备注 |
 |------|------|---------|---------|------|
-| 基础设施 | 稳定 | 2026-03-13 | -- | pyproject.toml + 目录结构 + 版本管理 完成 |
-| CLI | 稳定 | 2026-03-13 | -- | Click 主入口 + info 命令 完成 |
-| 测试 | 稳定 | 2026-03-13 | -- | pytest 配置 + 3 个 CLI 测试通过 |
-| CI/CD | 稳定 | 2026-03-13 | -- | GitHub Actions 三平台矩阵配置完成 |
+| core/environment | 已完成 | 2026-03-14 | -- | 含 prompt tag、env status |
+| utils/symlink | 已完成 | 2026-03-14 | -- | 跨平台，含 Windows junction fallback |
+| cli/env | 已完成 | 2026-03-14 | -- | create/activate/deactivate/delete/list/status |
+| agents/base | 已完成 | 2026-03-14 | -- | AgentAdapter ABC |
+| agents/claude_code | 已完成 | 2026-03-14 | -- | Claude Code 适配器 |
+| agents/registry | 已完成 | 2026-03-14 | -- | 适配器注册与自动探测 |
 
 ---
 
 ## 活跃文件清单
 
-无（所有 AI 任务已完成）
+- `src/ipman/core/environment.py`
+- `src/ipman/utils/symlink.py`
+- `src/ipman/cli/env.py`
+- `src/ipman/agents/base.py`
+- `src/ipman/agents/claude_code.py`
+- `src/ipman/agents/registry.py`
+- `tests/test_core/test_environment.py`
+- `tests/test_core/test_symlink.py`
+- `tests/test_cli/test_env.py`
 
 ---
 
@@ -42,20 +55,10 @@
 
 | 时间 | 改动目的 | 涉及模块/文件 |
 |------|---------|-------------|
-| 2026-03-13 | Sprint 0 启动 | .claude/current-sprint.md |
-| 2026-03-13 | 项目骨架搭建 | pyproject.toml, src/ipman/**, tests/** |
-| 2026-03-13 | CLI 主入口实现 | src/ipman/cli/main.py, tests/test_cli/test_main.py |
-| 2026-03-13 | CI 配置 | .github/workflows/ci.yml |
-| 2026-03-13 | README banner + slogan | README.md, images/IpMan.jpg |
-
----
-
-## Sprint 0 总结
-
-所有 AI 任务已完成。剩余 1 项人工任务（H01: 创建 GitHub 仓库描述和标签）。
-
-验证结果：
-- pytest: 3/3 通过
-- ruff: 无问题
-- mypy: strict 模式无问题
-- `ipman --help`: 正常输出
+| 2026-03-14 | Sprint 1 启动，Sprint 0 存档 | .claude/archive/sprint-0.md |
+| 2026-03-14 | 实现虚拟环境 CRUD + 软链接激活机制 | core/environment, utils/symlink |
+| 2026-03-14 | 实现 CLI env 子命令（create/activate/deactivate/delete/list/status） | cli/env |
+| 2026-03-14 | 实现 Agent 适配器架构（base + claude_code + registry） | agents/* |
+| 2026-03-14 | 实现 prompt tag 设计（[ip:*-myenv] 格式） | core/environment |
+| 2026-03-14 | 编写 53 个测试（全部通过） | tests/ |
+| 2026-03-14 | Prompt tag 设计写入技术规格文档 | .claude/tech-spec-registry.md |

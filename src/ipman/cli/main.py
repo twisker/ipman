@@ -3,6 +3,7 @@
 import click
 
 from ipman import __version__
+from ipman.cli.env import env
 
 
 @click.group()
@@ -14,6 +15,9 @@ def cli() -> None:
     Create, manage, and share isolated skill environments
     for AI agent tools like Claude Code and OpenClaw.
     """
+
+
+cli.add_command(env)
 
 
 @cli.command()

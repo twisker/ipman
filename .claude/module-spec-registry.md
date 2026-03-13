@@ -14,8 +14,8 @@
 
 | 模块 | 说明 | 设计文档 | 源代码目录 | 状态 |
 |------|------|---------|----------|------|
-| cli/main | CLI 主入口，Click group 定义 | -- | `src/ipman/cli/main.py` | 待开始 |
-| cli/env | 虚拟环境命令（create/activate/deactivate/delete/list） | -- | `src/ipman/cli/env.py` | 待开始 |
+| cli/main | CLI 主入口，Click group 定义 | -- | `src/ipman/cli/main.py` | 已完成 |
+| cli/env | 虚拟环境命令（create/activate/deactivate/delete/list/status） | -- | `src/ipman/cli/env.py` | 已完成 |
 | cli/skill | 技能命令（install/uninstall/upgrade/list） | -- | `src/ipman/cli/skill.py` | 待开始 |
 | cli/pack | IP 包命令（pack/unpack/export） | -- | `src/ipman/cli/pack.py` | 待开始 |
 | cli/market | 市场命令（search/publish/top） | -- | `src/ipman/cli/market.py` | 待开始 |
@@ -26,7 +26,7 @@
 
 | 模块 | 说明 | 设计文档 | 源代码目录 | 状态 |
 |------|------|---------|----------|------|
-| core/environment | 虚拟环境生命周期管理（创建/激活/删除/切换） | -- | `src/ipman/core/environment.py` | 待开始 |
+| core/environment | 虚拟环境生命周期管理（创建/激活/删除/切换/状态/prompt tag） | -- | `src/ipman/core/environment.py` | 已完成 |
 | core/skill | 技能的安装/卸载/升级/元数据管理 | -- | `src/ipman/core/skill.py` | 待开始 |
 | core/package | IP 包的解析/打包/导出 | -- | `src/ipman/core/package.py` | 待开始 |
 | core/resolver | 依赖解析引擎 | -- | `src/ipman/core/resolver.py` | 待开始 |
@@ -38,8 +38,9 @@
 
 | 模块 | 说明 | 设计文档 | 源代码目录 | 状态 |
 |------|------|---------|----------|------|
-| agents/base | Agent 适配器基类接口 | -- | `src/ipman/agents/base.py` | 待开始 |
-| agents/claude_code | Claude Code 技能目录适配 | -- | `src/ipman/agents/claude_code.py` | 待开始 |
+| agents/base | Agent 适配器基类接口 | -- | `src/ipman/agents/base.py` | 已完成 |
+| agents/claude_code | Claude Code 技能目录适配 | -- | `src/ipman/agents/claude_code.py` | 已完成 |
+| agents/registry | Agent 适配器注册与自动探测 | -- | `src/ipman/agents/registry.py` | 已完成 |
 | agents/openclaw | OpenClaw 技能目录适配 | -- | `src/ipman/agents/openclaw.py` | 待开始 |
 
 ---
@@ -57,7 +58,7 @@
 
 | 模块 | 说明 | 设计文档 | 源代码目录 | 状态 |
 |------|------|---------|----------|------|
-| utils/symlink | 跨平台软链接创建/管理 | -- | `src/ipman/utils/symlink.py` | 待开始 |
+| utils/symlink | 跨平台软链接创建/管理 | -- | `src/ipman/utils/symlink.py` | 已完成 |
 | utils/i18n | 国际化（中英文自动切换） | -- | `src/ipman/utils/i18n.py` | 待开始 |
 | utils/detect | Agent 工具自动探测 | -- | `src/ipman/utils/detect.py` | 待开始 |
 
@@ -67,12 +68,17 @@
 
 | 模块 | 说明 | 设计文档 | 源代码目录 | 状态 |
 |------|------|---------|----------|------|
-| CI/CD | GitHub Actions 工作流 | -- | `.github/workflows/` | 待开始 |
-| 版本管理脚本 | bump-patch/minor/major | -- | `scripts/` | 待开始 |
-| Git Hooks | pre-commit 自动版本递增 | -- | `.githooks/` | 待开始 |
+| CI/CD | GitHub Actions 工作流 | -- | `.github/workflows/` | 已完成 |
+| 版本管理脚本 | bump-patch/minor/major | -- | `scripts/` | 已完成 |
+| Git Hooks | pre-commit 自动版本递增 | -- | `.githooks/` | 已完成 |
 
 ---
 
 ## 测试脚本索引
 
-> 待开发启动后填充。
+| 测试文件 | 覆盖模块 | 测试数量 | 状态 |
+|---------|---------|---------|------|
+| `tests/test_core/test_environment.py` | core/environment | 30 | 已完成 |
+| `tests/test_core/test_symlink.py` | utils/symlink | 10 | 已完成 |
+| `tests/test_cli/test_env.py` | cli/env | 10 | 已完成 |
+| `tests/test_cli/test_main.py` | cli/main | 3 | 已完成 |
