@@ -57,7 +57,7 @@
 | P1 | 实现 `ipman skill list` 命令（列出已安装技能） | CLI + core | AI | 待开始 |
 | P2 | 实现 `--agent` 参数覆盖自动探测 | CLI | AI | 待开始 |
 | P2 | 实现 `--inherit` 参数继承已有技能 | CLI + core | AI | 待开始 |
-| P2 | 调研 OpenClaw 技能目录结构 | 调研 | 人工 | 待开始 |
+| P2 | 调研 OpenClaw 技能目录结构 | 调研 | AI | 待开始 |
 | P2 | 编写 Agent 适配器和技能管理测试 | tests | AI | 待开始 |
 
 ---
