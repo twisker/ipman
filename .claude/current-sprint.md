@@ -23,11 +23,10 @@
 |-------|------|----------|--------|------|
 | P0 | 定义 IP 包 YAML schema（本地 .ip.yaml 文件格式） | core/package | AI | 已完成 |
 | P0 | 实现 IP 包解析器（加载 + 校验） | core/package | AI | 已完成 |
-| P0 | 实现 `ipman pack` 命令（从环境生成 .ip.yaml） | CLI + core | AI | 待开始 |
+| P0 | 实现 `ipman pack` 命令（从环境生成 .ip.yaml，合并原 export） | CLI + core | AI | 已完成 |
 | P1 | 实现 `ipman install <file.ip.yaml>` 本地 IP 文件安装 | CLI + core | AI | 待开始 |
 | P1 | 实现 `ipman install <short-name.ip>` 基于 IpHub 的在线 IP 包安装 | CLI + hub + core | AI | 待开始 |
 | P1 | 实现依赖解析引擎（版本匹配 + 递归依赖 + 循环检测） | core/resolver | AI | 待开始 |
-| P1 | 实现 `ipman export` 命令（导出当前环境为 IP 文件） | CLI + core | AI | 待开始 |
 | P2 | IP 文件头部自动注入 IpMan 引用和安装说明 | core/package | AI | 已完成 |
 | P2 | 编写 IP 包解析/打包/安装/依赖解析测试 | tests | AI | 进行中 |
 
@@ -39,7 +38,7 @@
 |------|------|---------|---------|------|
 | core/package | 已完成 | 2026-03-14 | IP schema + 解析 + 序列化 | 16 tests 通过 |
 | core/resolver | 待开始 | -- | 版本匹配 + 依赖解析 | 新模块 |
-| cli/pack | 待开始 | -- | pack/export 命令 | 新模块 |
+| cli/pack | 已完成 | 2026-03-14 | pack 命令（合并原 export） | 10 tests 通过 |
 
 ---
 

@@ -4,6 +4,7 @@ import click
 
 from ipman import __version__
 from ipman.cli.env import env
+from ipman.cli.pack import pack
 from ipman.cli.skill import install, skill, uninstall
 
 
@@ -19,6 +20,7 @@ def cli() -> None:
 
 
 cli.add_command(env)
+cli.add_command(pack)
 cli.add_command(skill)
 cli.add_command(install)
 cli.add_command(uninstall)
