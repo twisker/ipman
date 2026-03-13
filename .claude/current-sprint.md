@@ -21,15 +21,15 @@
 
 | 优先级 | 任务 | 所属模块 | 责任人 | 状态 |
 |-------|------|----------|--------|------|
-| P0 | 定义 IP 包 YAML schema（本地 .ip.yaml 文件格式） | core/package | AI | 待开始 |
-| P0 | 实现 IP 包解析器（加载 + 校验） | core/package | AI | 待开始 |
+| P0 | 定义 IP 包 YAML schema（本地 .ip.yaml 文件格式） | core/package | AI | 已完成 |
+| P0 | 实现 IP 包解析器（加载 + 校验） | core/package | AI | 已完成 |
 | P0 | 实现 `ipman pack` 命令（从环境生成 .ip.yaml） | CLI + core | AI | 待开始 |
 | P1 | 实现 `ipman install <file.ip.yaml>` 本地 IP 文件安装 | CLI + core | AI | 待开始 |
 | P1 | 实现 `ipman install <short-name.ip>` 基于 IpHub 的在线 IP 包安装 | CLI + hub + core | AI | 待开始 |
 | P1 | 实现依赖解析引擎（版本匹配 + 递归依赖 + 循环检测） | core/resolver | AI | 待开始 |
 | P1 | 实现 `ipman export` 命令（导出当前环境为 IP 文件） | CLI + core | AI | 待开始 |
-| P2 | IP 文件头部自动注入 IpMan 引用和安装说明 | core/package | AI | 待开始 |
-| P2 | 编写 IP 包解析/打包/安装/依赖解析测试 | tests | AI | 待开始 |
+| P2 | IP 文件头部自动注入 IpMan 引用和安装说明 | core/package | AI | 已完成 |
+| P2 | 编写 IP 包解析/打包/安装/依赖解析测试 | tests | AI | 进行中 |
 
 ---
 
@@ -37,7 +37,7 @@
 
 | 模块 | 状态 | 最后更新 | 当前目标 | 备注 |
 |------|------|---------|---------|------|
-| core/package | 待开始 | -- | IP schema + 解析 + 打包 | 新模块 |
+| core/package | 已完成 | 2026-03-14 | IP schema + 解析 + 序列化 | 16 tests 通过 |
 | core/resolver | 待开始 | -- | 版本匹配 + 依赖解析 | 新模块 |
 | cli/pack | 待开始 | -- | pack/export 命令 | 新模块 |
 
@@ -45,7 +45,10 @@
 
 ## 活跃文件清单
 
-（待开发启动后填充）
+- `src/ipman/core/package.py` — IP 包数据模型 + 解析 + 序列化
+- `tests/test_core/test_package.py` — IP 包测试 (16 tests)
+- `docs/ip-package-spec.md` — IP 文件规格说明（英文）
+- `docs/ip-package-spec.zh-cn.md` — IP 文件规格说明（中文）
 
 ---
 
@@ -53,4 +56,7 @@
 
 | 时间 | 改动目的 | 涉及模块/文件 |
 |------|---------|-------------|
+| 2026-03-14 | 实现 IP 包数据模型 + 解析器 + 序列化 (16 tests) | src/ipman/core/package.py, tests/test_core/test_package.py |
+| 2026-03-14 | 新增 IP 文件规格说明文档 (EN + ZH) | docs/ip-package-spec.md, docs/ip-package-spec.zh-cn.md |
+| 2026-03-14 | IpHub 设计方案更新至 v2 | .claude/research/iphub-design.md |
 | 2026-03-14 | Sprint 2 存档，Sprint 3 初始化 | .claude/archive/sprint-2.md |
