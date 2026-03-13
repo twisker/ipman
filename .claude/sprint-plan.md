@@ -16,14 +16,14 @@
 
 | 优先级 | 任务 | 所属模块 | 责任人 | 状态 |
 |-------|------|----------|--------|------|
-| P0 | 初始化 pyproject.toml（uv 项目配置） | 基础设施 | AI | 待开始 |
-| P0 | 创建 src/ipman 包目录结构 | 基础设施 | AI | 待开始 |
-| P0 | 配置 ruff（lint + 格式化） | 基础设施 | AI | 待开始 |
-| P0 | 配置 mypy（类型检查） | 基础设施 | AI | 待开始 |
-| P0 | 配置 pytest（测试框架） | 测试 | AI | 待开始 |
-| P1 | 实现 Click CLI 主入口（`ipman --help`） | CLI | AI | 待开始 |
-| P1 | 搭建 GitHub Actions CI（三平台测试矩阵） | CI/CD | AI | 待开始 |
-| P1 | 创建 GitHub 仓库描述和标签 | 基础设施 | 人工 | 待开始 |
+| P0 | 初始化 pyproject.toml（uv 项目配置） | 基础设施 | AI | 已完成 |
+| P0 | 创建 src/ipman 包目录结构 | 基础设施 | AI | 已完成 |
+| P0 | 配置 ruff（lint + 格式化） | 基础设施 | AI | 已完成 |
+| P0 | 配置 mypy（类型检查） | 基础设施 | AI | 已完成 |
+| P0 | 配置 pytest（测试框架） | 测试 | AI | 已完成 |
+| P1 | 实现 Click CLI 主入口（`ipman --help`） | CLI | AI | 已完成 |
+| P1 | 搭建 GitHub Actions CI（三平台测试矩阵） | CI/CD | AI | 已完成 |
+| P1 | 创建 GitHub 仓库描述和标签 | 基础设施 | 人工 | 已完成 |
 
 ---
 
