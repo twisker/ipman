@@ -17,7 +17,7 @@
 | P0 | 配置 pytest（测试框架） | 测试 | AI | 已完成 |
 | P1 | 实现 Click CLI 主入口（`ipman --help`） | CLI | AI | 已完成 |
 | P1 | 搭建 GitHub Actions CI（三平台测试矩阵） | CI/CD | AI | 已完成 |
-| P1 | 创建 GitHub 仓库描述和标签 | 基础设施 | 人工 | 待开始 |
+| P1 | 创建 GitHub 仓库描述和标签 | 基础设施 | 人工 | 已完成 |
 
 ---
 
