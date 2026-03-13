@@ -35,7 +35,7 @@
 | cli/env | `tests/test_cli/test_env.py` | >= 70% | -- | 待开始 |
 | cli/skill | `tests/test_cli/test_skill.py` | >= 70% | -- | 待开始 |
 | cli/pack | `tests/test_cli/test_pack.py` | >= 70% | -- | 待开始 |
-| cli/market | `tests/test_cli/test_market.py` | >= 70% | -- | 待开始 |
+| cli/hub | `tests/test_cli/test_hub.py` | >= 70% | -- | 待开始 |
 
 ---
 

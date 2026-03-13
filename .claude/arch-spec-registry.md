@@ -13,7 +13,7 @@
 | CLI 层 | 命令解析、参数校验、用户交互 | Click |
 | 核心层 | 虚拟环境管理、技能管理、IP 包管理 | Python stdlib + pathlib |
 | Agent 适配层 | 不同 Agent 工具的技能目录适配 | 插件式架构 |
-| 市场层 | 在线市场交互、搜索、发布 | httpx + GitHub API |
+| IpHub 层 | IpHub 交互、搜索、发布 | httpx + GitHub API |
 | 存储层 | 本地元数据、锁定文件、环境配置 | YAML + SQLite(可选) |
 
 ### 核心设计原则
@@ -113,7 +113,7 @@ ipman/
 │       │   ├── env.py           # 虚拟环境命令（create/activate/deactivate/delete/list）
 │       │   ├── skill.py         # 技能命令（install/uninstall/upgrade/list）
 │       │   ├── pack.py          # IP 包命令（pack/unpack/export）
-│       │   └── market.py        # 市场命令（search/publish/top）
+│       │   └── hub.py           # IpHub 命令（search/publish/top）
 │       ├── core/                # 核心业务逻辑
 │       │   ├── __init__.py
 │       │   ├── environment.py   # 虚拟环境管理
@@ -126,9 +126,9 @@ ipman/
 │       │   ├── base.py          # 适配器基类
 │       │   ├── claude_code.py   # Claude Code 适配
 │       │   └── openclaw.py      # OpenClaw 适配
-│       ├── market/              # 在线市场交互
+│       ├── hub/                 # IpHub 交互
 │       │   ├── __init__.py
-│       │   ├── client.py        # 市场 HTTP 客户端
+│       │   ├── client.py        # IpHub HTTP 客户端
 │       │   └── publisher.py     # 发布逻辑
 │       └── utils/               # 通用工具
 │           ├── __init__.py
@@ -140,7 +140,7 @@ ipman/
 │   ├── test_cli/
 │   ├── test_core/
 │   ├── test_agents/
-│   └── test_market/
+│   └── test_hub/
 ├── docs/
 │   ├── PRD.md
 │   ├── PRD.zh-cn.md

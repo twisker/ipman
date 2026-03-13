@@ -8,7 +8,7 @@
 
 > Agent skill virtual environment manager — like conda/uv, but for AI agent skills.
 
-IpMan solves the growing problem of skill name collisions, version conflicts, and lack of isolated environments across AI agent tools like Claude Code and OpenClaw. It provides virtual environment management, dependency resolution, and an online marketplace for skill distribution.
+IpMan solves the growing problem of skill name collisions, version conflicts, and lack of isolated environments across AI agent tools like Claude Code and OpenClaw. It provides virtual environment management, dependency resolution, and IpHub for skill distribution.
 
 ## Features
 
@@ -16,7 +16,7 @@ IpMan solves the growing problem of skill name collisions, version conflicts, an
 - **Skill Management** — Install, uninstall, upgrade skills with full metadata tracking
 - **IP Packages** — Bundle skills into distributable Intelligence Packages (YAML-based)
 - **Agent Agnostic** — Works with Claude Code, OpenClaw, and more via adapter plugins
-- **Online Market** — Search, download, and publish skills to the community
+- **IpHub** — Search, download, and publish skills to the community
 - **Cross-Platform** — Linux, macOS, Windows
 
 ## Installation
@@ -73,7 +73,7 @@ Market Layer (search, publish, download)
 | `ipman.cli` | Command-line interface (Click-based subcommands) |
 | `ipman.core` | Core business logic — environments, skills, packages, dependency resolution |
 | `ipman.agents` | Agent tool adapters (plugin architecture) |
-| `ipman.market` | Online marketplace client and publisher |
+| `ipman.hub` | IpHub client and publisher |
 | `ipman.utils` | Cross-platform utilities (symlinks, i18n, agent detection) |
 
 ## Technology Stack
@@ -96,7 +96,7 @@ src/ipman/
 ├── cli/          # CLI commands
 ├── core/         # Business logic
 ├── agents/       # Agent adapters
-├── market/       # Online market
+├── hub/          # IpHub
 └── utils/        # Utilities
 tests/
 docs/
@@ -109,7 +109,7 @@ scripts/          # Version bump scripts
 |-------|-------|--------|
 | Phase 1 | CLI skeleton + virtual environments + basic skill management | Planned |
 | Phase 2 | IP package format + pack/unpack + dependency resolution | Planned |
-| Phase 3 | Online marketplace (search, publish, download) | Planned |
+| Phase 3 | IpHub (search, publish, download) | Planned |
 | Phase 4 | i18n, docs, Windows installer, PyPI release | Planned |
 
 ## Development

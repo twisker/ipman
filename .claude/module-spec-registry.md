@@ -18,7 +18,7 @@
 | cli/env | 虚拟环境命令（create/activate/deactivate/delete/list/status） | -- | `src/ipman/cli/env.py` | 已完成 |
 | cli/skill | 技能命令（install/uninstall/upgrade/list） | -- | `src/ipman/cli/skill.py` | 待开始 |
 | cli/pack | IP 包命令（pack/unpack/export） | -- | `src/ipman/cli/pack.py` | 待开始 |
-| cli/market | 市场命令（search/publish/top） | -- | `src/ipman/cli/market.py` | 待开始 |
+| cli/hub | IpHub 命令（search/publish/top） | -- | `src/ipman/cli/hub.py` | 待开始 |
 
 ---
 
@@ -45,12 +45,12 @@
 
 ---
 
-## 市场模块索引
+## IpHub 模块索引
 
 | 模块 | 说明 | 设计文档 | 源代码目录 | 状态 |
 |------|------|---------|----------|------|
-| market/client | 在线市场 HTTP 客户端 | -- | `src/ipman/market/client.py` | 待开始 |
-| market/publisher | 技能/IP 包发布逻辑 | -- | `src/ipman/market/publisher.py` | 待开始 |
+| hub/client | IpHub HTTP 客户端 | -- | `src/ipman/hub/client.py` | 待开始 |
+| hub/publisher | 技能/IP 包发布逻辑 | -- | `src/ipman/hub/publisher.py` | 待开始 |
 
 ---
 

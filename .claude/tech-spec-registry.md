@@ -60,7 +60,7 @@ CLI 输出规范：
 | 接口 | 用途 | 状态 |
 |------|------|------|
 | Agent 技能目录 API | 读取/操作 Agent 工具的技能存放路径 | 待调研（需针对 OpenClaw、Claude Code 分别适配） |
-| GitHub API | 在线市场数据存储（Issues/Pages） | Phase 3 实现 |
+| GitHub API | IpHub 数据存储（Issues/Pages） | Phase 3 实现 |
 | PyPI API | IpMan 自身发布 | Phase 4 实现 |
 
 ---

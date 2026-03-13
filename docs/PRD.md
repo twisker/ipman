@@ -11,24 +11,24 @@ Develop a command-line tool named **IpMan (intelligence package manager)** to ac
 - Support mainstream Agent tools (at least OpenClaw and Claude Code).
 - Cross-platform support (Linux, macOS, Windows).
 - Allow packaging a set of skills into a text-file-based **Intelligence Package (IP)** for easy installation and distribution.
-- Provide an online IP marketplace (analogous to PyPI).
+- Provide an IpHub (analogous to PyPI).
 - Maintain decoupling from Agent tools' internal structures by managing skills through standard commands rather than hacking into tool-specific directories.
 
 ## 2. Overall Description
 
 ### 2.1 Product Scope
-IpMan is a pure command-line tool focused on managing Agent skill environments. It allows users to create, switch, delete virtual environments; install, uninstall, publish skills and IP packages; and interact with the online marketplace. IpMan does not modify the internal implementation of Agent tools; instead, it achieves isolation by calling the Agent's standard skill management interfaces or manipulating skill storage directories (via symbolic links, etc.).
+IpMan is a pure command-line tool focused on managing Agent skill environments. It allows users to create, switch, delete virtual environments; install, uninstall, publish skills and IP packages; and interact with the IpHub. IpMan does not modify the internal implementation of Agent tools; instead, it achieves isolation by calling the Agent's standard skill management interfaces or manipulating skill storage directories (via symbolic links, etc.).
 
 ### 2.2 User Characteristics
-- **Skill Developers**: Need to isolate skill environments for different projects to avoid version conflicts; want to publish their skills or IP packages to the marketplace.
+- **Skill Developers**: Need to isolate skill environments for different projects to avoid version conflicts; want to publish their skills or IP packages to IpHub.
 - **Skill Users**: Want to quickly install and try different skills, switch environments between projects; need clear details about skills (function, author, version, etc.) to avoid confusion.
 - **Project Maintainers**: Need to define a fixed set of skill dependencies for a project to facilitate team collaboration and deployment.
 
 ### 2.3 Assumptions and Dependencies
 - Users have installed one or more supported Agent tools (OpenClaw, Claude Code, etc.).
-- The online marketplace leverages free GitHub infrastructure (e.g., GitHub Issues, GitHub Pages, or GitHub Actions) for simple data storage and counting; if not feasible, low-cost OSS solutions are used.
+- The IpHub leverages free GitHub infrastructure (e.g., GitHub Issues, GitHub Pages, or GitHub Actions) for simple data storage and counting; if not feasible, low-cost OSS solutions are used.
 - User systems have a Python runtime environment (IpMan itself is written in Python).
-- Internet connectivity is available for accessing the online marketplace.
+- Internet connectivity is available for accessing the IpHub.
 
 ## 3. Functional Requirements
 
@@ -47,7 +47,7 @@ IpMan is a pure command-line tool focused on managing Agent skill environments. 
 | FR6  | When installing a skill, detailed metadata must be recorded: brief description, detailed description, source URL, version, author, dependencies, etc., to resolve confusion caused by skills with the same name. | Detail 5, 17 |
 | FR7  | Support installing individually published skills (i.e., not packaged as an IP) within a virtual environment, and such skills must include metadata (brief description, short name, version, dependencies, etc.) upon publication. | Detail 17 |
 | FR8  | Support offline installation of skills or IP packages from a local IP file. | Detail 7 |
-| FR9  | Support online installation of skills or IP packages by simple name from the marketplace (similar to pip's `install <package>`). | Detail 8 |
+| FR9  | Support online installation of skills or IP packages by simple name from IpHub (similar to pip's `install <package>`). | Detail 8 |
 | FR10 | Support automatic resolution and installation of skill dependencies (including recursive dependencies of IP packages). | Detail 21 |
 
 ### 3.3 IP Package Management
@@ -62,10 +62,10 @@ IpMan is a pure command-line tool focused on managing Agent skill environments. 
 ### 3.4 Marketplace Interaction
 | ID   | Description | Source |
 |------|-------------|--------|
-| FR16 | Provide an online IP marketplace that allows users to search, browse, and download skills and IP packages. | Main Goal 5 |
-| FR17 | The marketplace should record installation/download counts for each skill and IP package, and support rankings (Top 10/20/50). | Detail 6, 20 |
-| FR18 | Support publishing local skills or IP packages to the marketplace (user authentication required; method TBD). | Detail 8 |
-| FR19 | Persistent data for the marketplace should prioritize free GitHub resources (e.g., Issues, Pages, Actions); if not feasible, use public free infrastructure; finally consider low-cost OSS. | Detail 9 |
+| FR16 | Provide an IpHub that allows users to search, browse, and download skills and IP packages. | Main Goal 5 |
+| FR17 | IpHub should record installation/download counts for each skill and IP package, and support rankings (Top 10/20/50). | Detail 6, 20 |
+| FR18 | Support publishing local skills or IP packages to IpHub (user authentication required; method TBD). | Detail 8 |
+| FR19 | Persistent data for IpHub should prioritize free GitHub resources (e.g., Issues, Pages, Actions); if not feasible, use public free infrastructure; finally consider low-cost OSS. | Detail 9 |
 | FR20 | The project homepage (README) should dynamically display the Top 10 skills and Top 10 IP packages rankings. | Detail 22 |
 | FR21 | The project homepage should also display a trend chart of the project's GitHub stars. | Detail 23 |
 
@@ -123,7 +123,7 @@ IpMan is a pure command-line tool focused on managing Agent skill environments. 
 ### 4.6 Data Storage and Statistics
 | ID   | Description | Source |
 |------|-------------|--------|
-| NFR15 | Installation/download statistics for the online marketplace should be accurately recorded and used for ranking displays. | Detail 6, 20 |
+| NFR15 | Installation/download statistics for the IpHub should be accurately recorded and used for ranking displays. | Detail 6, 20 |
 | NFR16 | Data storage should prioritize free GitHub resources (e.g., counting via GitHub Issues, static data via GitHub Pages) with consideration for data persistence. | Detail 9 |
 
 ## 5. External Interface Requirements
@@ -135,7 +135,7 @@ IpMan is a pure command-line tool focused on managing Agent skill environments. 
 - **Skill Installation/Uninstallation**: IpMan must call the standard skill management commands provided by the Agent tool, or manipulate skill storage directories via symbolic links. Implementation must adapt to different Agents while keeping internal logic decoupled.
 
 ### 5.3 Interface with Online Marketplace
-- **HTTP/HTTPS Communication**: Used to download skill metadata and package content, upload packages, retrieve statistics, etc. The marketplace may provide a RESTful API.
+- **HTTP/HTTPS Communication**: Used to download skill metadata and package content, upload packages, retrieve statistics, etc. IpHub may provide a RESTful API.
 
 ## 6. Constraints
 
