@@ -13,12 +13,12 @@
 | CLI 层 | 命令解析、参数校验、用户交互 | Click |
 | 核心层 | 虚拟环境管理、技能管理、IP 包管理 | Python stdlib + pathlib |
 | Agent 适配层 | 不同 Agent 工具的技能目录适配 | 插件式架构 |
-| IpHub 层 | IpHub 交互、搜索、发布 | httpx + GitHub API |
+| IpHub 层 | IpHub 引用注册表交互、搜索、发布 | GitHub API (gh CLI) |
 | 存储层 | 本地元数据、锁定文件、环境配置 | YAML + SQLite(可选) |
 
 ### 核心设计原则
 
-- **Agent 解耦**：不侵入 Agent 内部实现，仅通过软链接或标准接口操作
+- **Agent 解耦**：不侵入 Agent 内部实现，所有 skill CRUD 通过 agent CLI 命令执行
 - **插件式适配**：每个 Agent 工具一个适配器，新增 Agent 支持不影响核心逻辑
 - **依赖最小化**：核心功能尽量使用 Python 标准库，减少外部依赖
 - **跨平台一致性**：所有路径操作使用 pathlib，软链接在 Windows 上有降级方案

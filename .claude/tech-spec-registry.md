@@ -59,9 +59,14 @@ CLI 输出规范：
 
 | 接口 | 用途 | 状态 |
 |------|------|------|
-| Agent 技能目录 API | 读取/操作 Agent 工具的技能存放路径 | 待调研（需针对 OpenClaw、Claude Code 分别适配） |
-| GitHub API | IpHub 数据存储（Issues/Pages） | Phase 3 实现 |
+| Agent CLI | 通过 agent 原生命令安装/卸载 skill | 已调研（详见 `.claude/research/agent-skill-cli-comparison.md`） |
+| GitHub API (gh CLI) | IpHub 引用注册表：发布 PR、计数 issue、读取 index | Phase 3 实现 |
 | PyPI API | IpMan 自身发布 | Phase 4 实现 |
+
+> **IpHub 设计文档**：详见 `.claude/research/iphub-design.md`
+>
+> 核心要点：IpHub 只存引用不存内容，安装通过 agent CLI 原生命令完成。
+> 身份认证基于 GitHub PR author，短名称全局唯一。
 
 ---
 
