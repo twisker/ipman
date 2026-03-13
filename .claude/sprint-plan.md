@@ -35,15 +35,15 @@
 
 | 优先级 | 任务 | 所属模块 | 责任人 | 状态 |
 |-------|------|----------|--------|------|
-| P0 | 设计虚拟环境数据结构（目录布局、元数据格式） | core/environment | AI | 待开始 |
-| P0 | 实现跨平台软链接工具函数 | utils/symlink | AI | 待开始 |
-| P0 | 实现 `ipman create` 命令（project/user/machine scope） | CLI + core | AI | 待开始 |
-| P0 | 实现 `ipman activate` / `ipman deactivate` 命令 | CLI + core | AI | 待开始 |
-| P1 | 实现 `ipman delete` 命令 | CLI + core | AI | 待开始 |
-| P1 | 实现 `ipman list` 命令（列出所有环境） | CLI + core | AI | 待开始 |
-| P1 | 实现命令行提示符变更（环境激活标识） | core/environment | AI | 待开始 |
-| P2 | 编写虚拟环境管理单元测试 | tests | AI | 待开始 |
-| P2 | 编写虚拟环境管理集成测试 | tests | AI | 待开始 |
+| P0 | 设计虚拟环境数据结构（目录布局、元数据格式） | core/environment | AI | 已完成 |
+| P0 | 实现跨平台软链接工具函数 | utils/symlink | AI | 已完成 |
+| P0 | 实现 `ipman create` 命令（project/user/machine scope） | CLI + core | AI | 已完成 |
+| P0 | 实现 `ipman activate` / `ipman deactivate` 命令 | CLI + core | AI | 已完成 |
+| P1 | 实现 `ipman delete` 命令 | CLI + core | AI | 已完成 |
+| P1 | 实现 `ipman list` 命令（列出所有环境） | CLI + core | AI | 已完成 |
+| P1 | 实现命令行提示符变更（环境激活标识） | core/environment | AI | 已完成 |
+| P2 | 编写虚拟环境管理单元测试 | tests | AI | 已完成 |
+| P2 | 编写虚拟环境管理集成测试 | tests | AI | 已完成 |
 
 ### Sprint 2（Agent 适配 + 技能管理基础）
 

@@ -65,7 +65,60 @@ CLI 输出规范：
 
 ---
 
-## 6. 性能与安全要求
+## 6. 命令行提示符标签（Prompt Tag）设计
+
+虚拟环境激活后，IpMan 在 shell 提示符前注入一个紧凑的标签，以直观反映三个作用域层级的激活状态。
+
+### 格式
+
+```
+[ip:<machine><user><project_name>]
+```
+
+| 层级 | 激活时显示 | 未激活时 | 说明 |
+|------|-----------|---------|------|
+| Machine | `*` | 省略 | 全局机器级环境 |
+| User | `-` | 省略 | 当前用户级环境 |
+| Project | 环境全名 | 省略 | 项目级环境，显示完整名称 |
+
+### 示例
+
+| 标签 | 含义 |
+|------|------|
+| `[ip:*-myenv]` | 三层全部激活（machine + user + project "myenv"） |
+| `[ip:myenv]` | 仅 project 层激活 |
+| `[ip:*myenv]` | machine + project 激活 |
+| `[ip:*-]` | machine + user 激活，无 project |
+| `[ip:*]` | 仅 machine 层激活 |
+| `[ip:-]` | 仅 user 层激活 |
+
+### 详细状态查看
+
+```bash
+ipman env status
+```
+
+输出各层级激活环境的详细信息（名称、Agent、路径），适合排查问题或查看完整环境配置。
+
+### 实现
+
+- 核心函数：`ipman.core.environment.build_prompt_tag()`
+- Shell 脚本生成：`generate_activate_script()` / `generate_deactivate_script()`
+- 支持 bash/zsh、fish、powershell 三种 shell
+- 激活时修改 `PS1`（bash/zsh）或 `fish_prompt`（fish）或 `prompt`（powershell）
+- 停用时恢复原始提示符
+
+### 文档要求
+
+此 Prompt Tag 设计必须在以下文档中体现：
+- 用户教程（Getting Started / Quick Start）
+- `ipman env --help` 帮助文本
+- MkDocs 文档站的 CLI 参考章节
+- README.md 功能特性列表
+
+---
+
+## 7. 性能与安全要求
 
 | 要求 | 说明 |
 |------|------|
