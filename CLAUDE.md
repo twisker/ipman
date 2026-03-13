@@ -7,21 +7,23 @@
 **IpMan (Intelligence Package Manager)** -- Agent 技能虚拟环境管理器，类比 conda/uv，实现技能的隔离、依赖管理和分发。
 
 - 项目代号：`ipman`
-- 版本：v0.1.0
-- 当前阶段：项目初始化（Sprint 0 待启动）
+- 版本：v0.1.12
+- 当前阶段：Sprint 2 待启动（Sprint 0+1 已完成）
 
 ## 核心文档索引
 
 | 文档 | 说明 |
 |------|------|
 | `.claude/COLLABORATION.md` | 协作框架：角色分工、工作步骤、代码提交原则 |
-| `.claude/tech-spec-registry.md` | 技术规格：技术栈、终端配色、API依赖 |
+| `.claude/tech-spec-registry.md` | 技术规格：技术栈、终端配色、API依赖、Prompt Tag 设计 |
 | `.claude/arch-spec-registry.md` | 架构规格：系统分层、环境规划、CI/CD、目录结构 |
 | `.claude/sprint-plan.md` | 迭代计划：各阶段的任务拆分与进度 |
 | `.claude/module-spec-registry.md` | 模块索引：各模块的设计文档与源码位置 |
 | `.claude/test-registry.md` | 测试登记：各模块测试覆盖与测试场景 |
 | `.claude/validation-registry.md` | 验收标准：通用交付标准与模块专项验收标准 |
 | `.claude/current-sprint.md` | 当前Sprint：实时任务状态、活跃文件、改动记录 |
+| `.claude/research/agent-skill-cli-comparison.md` | 调研：Claude Code vs OpenClaw 技能 CLI 命令对比 |
+| `.claude/research/iphub-design.md` | 设计：IpHub 引用注册表架构设计 |
 | `人工TODO事项.md` | 人工事项跟踪：需要人工介入的待办与已完成事项 |
 
 ---
@@ -88,7 +90,7 @@
 
 - **开发语言**：Python 3.10+，使用 uv 管理依赖
 - **CLI 框架**：Click
-- **Agent 解耦**：不侵入 Agent 内部实现，仅通过软链接或标准接口操作
+- **Agent 解耦**：不侵入 Agent 内部实现，所有 skill CRUD 通过 agent CLI 命令执行
 - **跨平台**：所有路径操作使用 pathlib，软链接在 Windows 上需有降级方案
 - **TDD**：先写测试，再写实现
 - **Git Flow**：feature/* -> dev -> release/* -> main

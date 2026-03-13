@@ -6,10 +6,12 @@ from pathlib import Path
 
 from ipman.agents.base import AgentAdapter
 from ipman.agents.claude_code import ClaudeCodeAdapter
+from ipman.agents.openclaw import OpenClawAdapter
 
 # All known adapters, in detection priority order
 _ADAPTERS: list[AgentAdapter] = [
     ClaudeCodeAdapter(),
+    OpenClawAdapter(),
 ]
 
 

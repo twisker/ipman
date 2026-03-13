@@ -1,4 +1,4 @@
-"""Claude Code agent adapter."""
+"""OpenClaw agent adapter."""
 
 from __future__ import annotations
 
@@ -10,66 +10,65 @@ from pathlib import Path
 from ipman.agents.base import AgentAdapter, SkillInfo
 
 
-class ClaudeCodeAdapter(AgentAdapter):
-    """Adapter for Claude Code.
+class OpenClawAdapter(AgentAdapter):
+    """Adapter for OpenClaw.
 
-    Skill operations delegate to `claude plugin` CLI commands.
+    Skill operations delegate to ``clawhub`` CLI commands.
     """
 
     @property
     def name(self) -> str:
-        return "claude-code"
+        return "openclaw"
 
     @property
     def display_name(self) -> str:
-        return "Claude Code"
+        return "OpenClaw"
 
     @property
     def config_dir_name(self) -> str:
-        return ".claude"
+        return ".openclaw"
 
     def is_installed(self) -> bool:
-        return shutil.which("claude") is not None
+        return shutil.which("openclaw") is not None
 
     def init_env_dir(self, env_path: Path) -> None:
-        """Create Claude Code environment structure."""
+        """Create OpenClaw environment structure."""
         skills_dir = env_path / "skills"
         skills_dir.mkdir(parents=True, exist_ok=True)
 
     def install_skill(
         self, name: str, **kwargs: str | None,
     ) -> subprocess.CompletedProcess[str]:
-        """Install a plugin via ``claude plugin install``."""
-        args = ["claude", "plugin", "install", name]
-        scope = kwargs.get("scope")
-        if scope:
-            args.extend(["-s", scope])
+        """Install a skill via ``clawhub install``."""
+        args = ["clawhub", "install", name]
+        hub = kwargs.get("hub")
+        if hub:
+            args.extend(["--hub", hub])
         return self._run_cli(args)
 
     def uninstall_skill(
         self, name: str,
     ) -> subprocess.CompletedProcess[str]:
-        """Uninstall a plugin via ``claude plugin uninstall``."""
+        """Uninstall a skill via ``clawhub uninstall``."""
         return self._run_cli(
-            ["claude", "plugin", "uninstall", name],
+            ["clawhub", "uninstall", name],
         )
 
     def list_skills(self) -> list[SkillInfo]:
-        """List installed plugins via ``claude plugin list --json``."""
+        """List installed skills via ``clawhub list --json``."""
         result = self._run_cli(
-            ["claude", "plugin", "list", "--json"],
+            ["clawhub", "list", "--json"],
         )
         if result.returncode != 0:
             return []
         try:
-            plugins = json.loads(result.stdout)
+            skills = json.loads(result.stdout)
         except (json.JSONDecodeError, TypeError):
             return []
         return [
             SkillInfo(
-                name=p.get("name", ""),
-                version=p.get("version", ""),
-                enabled=p.get("enabled", True),
+                name=s.get("name", ""),
+                version=s.get("version", ""),
             )
-            for p in plugins
+            for s in skills
         ]

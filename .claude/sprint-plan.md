@@ -45,20 +45,25 @@
 | P2 | 编写虚拟环境管理单元测试 | tests | AI | 已完成 |
 | P2 | 编写虚拟环境管理集成测试 | tests | AI | 已完成 |
 
-### Sprint 2（Agent 适配 + 技能管理基础）
+### Sprint 2（Agent CLI 适配 + IpHub 客户端基础）
+
+> **设计原则变更（Sprint 1 期间确认）：**
+> - 所有 skill CRUD 通过 agent CLI 命令执行，不直接操作 agent 内部目录
+> - IpHub 只存引用不存内容，安装通过 agent CLI 原生命令完成
+> - 详见 `.claude/research/agent-skill-cli-comparison.md` 和 `.claude/research/iphub-design.md`
 
 | 优先级 | 任务 | 所属模块 | 责任人 | 状态 |
 |-------|------|----------|--------|------|
-| P0 | 设计 Agent 适配器基类接口 | agents/base | AI | 待开始 |
-| P0 | 实现 Claude Code 适配器 | agents/claude_code | AI | 待开始 |
-| P0 | 实现 Agent 工具自动探测 | utils/detect | AI | 待开始 |
-| P1 | 实现 `ipman install <skill>` 命令（本地安装） | CLI + core | AI | 待开始 |
-| P1 | 实现 `ipman uninstall <skill>` 命令 | CLI + core | AI | 待开始 |
-| P1 | 实现 `ipman skill list` 命令（列出已安装技能） | CLI + core | AI | 待开始 |
-| P2 | 实现 `--agent` 参数覆盖自动探测 | CLI | AI | 待开始 |
-| P2 | 实现 `--inherit` 参数继承已有技能 | CLI + core | AI | 待开始 |
-| P2 | 调研 OpenClaw 技能目录结构 | 调研 | AI | 待开始 |
-| P2 | 编写 Agent 适配器和技能管理测试 | tests | AI | 待开始 |
+| P0 | 扩展 Agent 适配器接口：添加 skill install/uninstall/list 的 CLI 命令封装 | agents/base | AI | 已完成 |
+| P0 | 实现 Claude Code 适配器的 skill CLI 封装（plugin install/uninstall/list） | agents/claude_code | AI | 已完成 |
+| P0 | 实现 OpenClaw 适配器（clawhub install/uninstall、skill list） | agents/openclaw | AI | 已完成 |
+| P1 | 实现 `ipman install <name>` 命令（通过 agent CLI 安装） | CLI + core | AI | 已完成 |
+| P1 | 实现 `ipman uninstall <name>` 命令（通过 agent CLI 卸载） | CLI + core | AI | 已完成 |
+| P1 | 实现 `ipman skill list` 命令（通过 agent CLI 列出） | CLI + core | AI | 已完成 |
+| P1 | 实现 IpHub index.yaml 客户端读取与缓存 | hub/client | AI | 已完成 |
+| P2 | 实现 `--agent` 参数覆盖自动探测 | CLI | AI | 已完成 |
+| P2 | 编写 Agent 适配器 CLI 封装测试（mock subprocess） | tests | AI | 已完成 |
+| P2 | 编写 IpHub 客户端测试 | tests | AI | 已完成 |
 
 ---
 
@@ -82,9 +87,9 @@
 
 ---
 
-## Phase 3 -- 在线市场
+## Phase 3 -- IpHub
 
-**目标：** 实现在线市场搜索、下载、发布功能
+**目标：** 实现 IpHub 搜索、下载、发布功能
 
 > Sprint 拆分待 Phase 2 完成后细化。
 

@@ -1,10 +1,19 @@
 # 当前 Sprint
 
-**Sprint 1 - 虚拟环境管理**
+**Sprint 2 - Agent CLI 适配 + IpHub 客户端基础**
 
-**目标：** 设计并实现虚拟环境的创建/激活/停用/删除/列表功能
+**目标：** 基于 agent CLI 命令封装技能安装/卸载；实现 IpHub 引用注册表的客户端读取
 
-**状态：** 已完成
+**状态：** 进行中
+
+---
+
+## 前置条件
+
+- [x] Sprint 1 已完成并存档
+- [x] Agent CLI 调研完成（`.claude/research/agent-skill-cli-comparison.md`）
+- [x] IpHub 设计方案确定（`.claude/research/iphub-design.md`）
+- [x] 人工确认开始 Sprint 2
 
 ---
 
@@ -12,15 +21,16 @@
 
 | 优先级 | 任务 | 所属模块 | 责任人 | 状态 |
 |-------|------|----------|--------|------|
-| P0 | 设计虚拟环境数据结构（目录布局、元数据格式） | core/environment | AI | 已完成 |
-| P0 | 实现跨平台软链接工具函数 | utils/symlink | AI | 已完成 |
-| P0 | 实现 `ipman create` 命令（project/user/machine scope） | CLI + core | AI | 已完成 |
-| P0 | 实现 `ipman activate` / `ipman deactivate` 命令 | CLI + core | AI | 已完成 |
-| P1 | 实现 `ipman delete` 命令 | CLI + core | AI | 已完成 |
-| P1 | 实现 `ipman list` 命令（列出所有环境） | CLI + core | AI | 已完成 |
-| P1 | 实现命令行提示符变更（环境激活标识） | core/environment | AI | 已完成 |
-| P2 | 编写虚拟环境管理单元测试 | tests | AI | 已完成 |
-| P2 | 编写虚拟环境管理集成测试 | tests | AI | 已完成 |
+| P0 | 扩展 Agent 适配器接口：添加 skill install/uninstall/list 的 CLI 命令封装 | agents/base | AI | 已完成 |
+| P0 | 实现 Claude Code 适配器的 skill CLI 封装（plugin install/uninstall/list） | agents/claude_code | AI | 已完成 |
+| P0 | 实现 OpenClaw 适配器（clawhub install/uninstall、skill list） | agents/openclaw | AI | 已完成 |
+| P1 | 实现 `ipman install <name>` 命令（通过 agent CLI 安装） | CLI + core | AI | 已完成 |
+| P1 | 实现 `ipman uninstall <name>` 命令（通过 agent CLI 卸载） | CLI + core | AI | 已完成 |
+| P1 | 实现 `ipman skill list` 命令（通过 agent CLI 列出） | CLI + core | AI | 已完成 |
+| P1 | 实现 IpHub index.yaml 客户端读取与缓存 | hub/client | AI | 已完成 |
+| P2 | 实现 `--agent` 参数覆盖自动探测 | CLI | AI | 已完成 |
+| P2 | 编写 Agent 适配器 CLI 封装测试（mock subprocess） | tests | AI | 已完成 |
+| P2 | 编写 IpHub 客户端测试 | tests | AI | 已完成 |
 
 ---
 
@@ -28,26 +38,27 @@
 
 | 模块 | 状态 | 最后更新 | 当前目标 | 备注 |
 |------|------|---------|---------|------|
-| core/environment | 已完成 | 2026-03-14 | -- | 含 prompt tag、env status |
-| utils/symlink | 已完成 | 2026-03-14 | -- | 跨平台，含 Windows junction fallback |
-| cli/env | 已完成 | 2026-03-14 | -- | create/activate/deactivate/delete/list/status |
-| agents/base | 已完成 | 2026-03-14 | -- | AgentAdapter ABC |
-| agents/claude_code | 已完成 | 2026-03-14 | -- | Claude Code 适配器 |
-| agents/registry | 已完成 | 2026-03-14 | -- | 适配器注册与自动探测 |
+| agents/base | 已完成 | 2026-03-14 | -- | 添加 SkillInfo + install/uninstall/list 抽象方法 |
+| agents/claude_code | 已完成 | 2026-03-14 | -- | 封装 claude plugin CLI（subprocess） |
+| agents/openclaw | 已完成 | 2026-03-14 | -- | 封装 clawhub CLI（subprocess） |
+| agents/registry | 已完成 | 2026-03-14 | -- | 注册 OpenClaw 适配器 |
+| hub/client | 已完成 | 2026-03-14 | -- | index.yaml 拉取 + TTL 缓存 + search/lookup |
+| cli/skill | 已完成 | 2026-03-14 | -- | install/uninstall/list + --agent 参数 |
 
 ---
 
 ## 活跃文件清单
 
-- `src/ipman/core/environment.py`
-- `src/ipman/utils/symlink.py`
-- `src/ipman/cli/env.py`
 - `src/ipman/agents/base.py`
 - `src/ipman/agents/claude_code.py`
+- `src/ipman/agents/openclaw.py`
 - `src/ipman/agents/registry.py`
-- `tests/test_core/test_environment.py`
-- `tests/test_core/test_symlink.py`
-- `tests/test_cli/test_env.py`
+- `src/ipman/cli/skill.py`
+- `src/ipman/cli/main.py`
+- `src/ipman/hub/client.py`
+- `tests/test_agents/test_adapters_cli.py`
+- `tests/test_cli/test_skill.py`
+- `tests/test_hub/test_client.py`
 
 ---
 
@@ -55,10 +66,11 @@
 
 | 时间 | 改动目的 | 涉及模块/文件 |
 |------|---------|-------------|
-| 2026-03-14 | Sprint 1 启动，Sprint 0 存档 | .claude/archive/sprint-0.md |
-| 2026-03-14 | 实现虚拟环境 CRUD + 软链接激活机制 | core/environment, utils/symlink |
-| 2026-03-14 | 实现 CLI env 子命令（create/activate/deactivate/delete/list/status） | cli/env |
-| 2026-03-14 | 实现 Agent 适配器架构（base + claude_code + registry） | agents/* |
-| 2026-03-14 | 实现 prompt tag 设计（[ip:*-myenv] 格式） | core/environment |
-| 2026-03-14 | 编写 53 个测试（全部通过） | tests/ |
-| 2026-03-14 | Prompt tag 设计写入技术规格文档 | .claude/tech-spec-registry.md |
+| 2026-03-14 | Sprint 2 启动 | .claude/current-sprint.md |
+| 2026-03-14 | 扩展 AgentAdapter：SkillInfo + install/uninstall/list 抽象方法 | agents/base |
+| 2026-03-14 | Claude Code 适配器：封装 claude plugin CLI（subprocess） | agents/claude_code |
+| 2026-03-14 | 新建 OpenClaw 适配器：封装 clawhub CLI（subprocess） | agents/openclaw |
+| 2026-03-14 | 注册 OpenClaw 到适配器注册表 | agents/registry |
+| 2026-03-14 | 实现 CLI skill 命令：install/uninstall/skill list + --agent | cli/skill, cli/main |
+| 2026-03-14 | 实现 IpHub 客户端：fetch_index + TTL 缓存 + search + lookup | hub/client |
+| 2026-03-14 | 编写 37 个新测试（全部通过，总计 90） | tests/ |

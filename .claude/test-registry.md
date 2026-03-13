@@ -20,7 +20,7 @@
 
 | 模块 | 测试文件 | 覆盖率要求 | 当前覆盖率 | 状态 |
 |------|---------|-----------|-----------|------|
-| core/environment | `tests/test_core/test_environment.py` | >= 80% | -- | 待开始 |
+| core/environment | `tests/test_core/test_environment.py` | >= 80% | 30 tests passed | 已完成 |
 | core/skill | `tests/test_core/test_skill.py` | >= 80% | -- | 待开始 |
 | core/package | `tests/test_core/test_package.py` | >= 80% | -- | 待开始 |
 | core/resolver | `tests/test_core/test_resolver.py` | >= 80% | -- | 待开始 |
@@ -32,10 +32,10 @@
 
 | 模块 | 测试文件 | 覆盖率要求 | 当前覆盖率 | 状态 |
 |------|---------|-----------|-----------|------|
-| cli/env | `tests/test_cli/test_env.py` | >= 70% | -- | 待开始 |
+| cli/env | `tests/test_cli/test_env.py` | >= 70% | 10 tests passed | 已完成 |
 | cli/skill | `tests/test_cli/test_skill.py` | >= 70% | -- | 待开始 |
 | cli/pack | `tests/test_cli/test_pack.py` | >= 70% | -- | 待开始 |
-| cli/market | `tests/test_cli/test_market.py` | >= 70% | -- | 待开始 |
+| cli/hub | `tests/test_cli/test_hub.py` | >= 70% | -- | 待开始 |
 
 ---
 
@@ -53,7 +53,7 @@
 
 | 模块 | 测试文件 | 覆盖率要求 | 当前覆盖率 | 状态 |
 |------|---------|-----------|-----------|------|
-| utils/symlink | `tests/test_core/test_symlink.py` | >= 90% | -- | 待开始 |
+| utils/symlink | `tests/test_core/test_symlink.py` | >= 90% | 10 tests passed | 已完成 |
 | utils/i18n | `tests/test_core/test_i18n.py` | >= 70% | -- | 待开始 |
 
 ---
@@ -73,4 +73,7 @@
 
 | Sprint | 目标模块 | 测试描述 | 测试文件 | 结果 |
 |--------|---------|---------|---------|------|
-| | | | | |
+| Sprint 1 | core/environment | 虚拟环境 CRUD、scope、prompt tag、状态管理 | `tests/test_core/test_environment.py` | 30/30 通过 |
+| Sprint 1 | utils/symlink | 跨平台软链接创建/删除/验证 | `tests/test_core/test_symlink.py` | 10/10 通过 |
+| Sprint 1 | cli/env | CLI env 子命令集成测试（CliRunner） | `tests/test_cli/test_env.py` | 10/10 通过 |
+| Sprint 1 | cli/main | CLI 主入口帮助/版本 | `tests/test_cli/test_main.py` | 3/3 通过 |

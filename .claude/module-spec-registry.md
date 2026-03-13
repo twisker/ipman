@@ -16,9 +16,9 @@
 |------|------|---------|----------|------|
 | cli/main | CLI 主入口，Click group 定义 | -- | `src/ipman/cli/main.py` | 已完成 |
 | cli/env | 虚拟环境命令（create/activate/deactivate/delete/list/status） | -- | `src/ipman/cli/env.py` | 已完成 |
-| cli/skill | 技能命令（install/uninstall/upgrade/list） | -- | `src/ipman/cli/skill.py` | 待开始 |
+| cli/skill | 技能命令（install/uninstall/list，通过 agent CLI 执行） | -- | `src/ipman/cli/skill.py` | 待开始 |
 | cli/pack | IP 包命令（pack/unpack/export） | -- | `src/ipman/cli/pack.py` | 待开始 |
-| cli/market | 市场命令（search/publish/top） | -- | `src/ipman/cli/market.py` | 待开始 |
+| cli/hub | IpHub 命令（search/publish/top） | -- | `src/ipman/cli/hub.py` | 待开始 |
 
 ---
 
@@ -27,7 +27,7 @@
 | 模块 | 说明 | 设计文档 | 源代码目录 | 状态 |
 |------|------|---------|----------|------|
 | core/environment | 虚拟环境生命周期管理（创建/激活/删除/切换/状态/prompt tag） | -- | `src/ipman/core/environment.py` | 已完成 |
-| core/skill | 技能的安装/卸载/升级/元数据管理 | -- | `src/ipman/core/skill.py` | 待开始 |
+| core/skill | 技能安装/卸载调度（解析 IpHub 引用 → 调用 agent CLI） | -- | `src/ipman/core/skill.py` | 待开始 |
 | core/package | IP 包的解析/打包/导出 | -- | `src/ipman/core/package.py` | 待开始 |
 | core/resolver | 依赖解析引擎 | -- | `src/ipman/core/resolver.py` | 待开始 |
 | core/registry | 本地元数据注册表 | -- | `src/ipman/core/registry.py` | 待开始 |
@@ -39,18 +39,18 @@
 | 模块 | 说明 | 设计文档 | 源代码目录 | 状态 |
 |------|------|---------|----------|------|
 | agents/base | Agent 适配器基类接口 | -- | `src/ipman/agents/base.py` | 已完成 |
-| agents/claude_code | Claude Code 技能目录适配 | -- | `src/ipman/agents/claude_code.py` | 已完成 |
+| agents/claude_code | Claude Code 适配（环境探测 + plugin CLI 封装） | `.claude/research/agent-skill-cli-comparison.md` | `src/ipman/agents/claude_code.py` | 已完成（待扩展 skill CLI） |
 | agents/registry | Agent 适配器注册与自动探测 | -- | `src/ipman/agents/registry.py` | 已完成 |
-| agents/openclaw | OpenClaw 技能目录适配 | -- | `src/ipman/agents/openclaw.py` | 待开始 |
+| agents/openclaw | OpenClaw 适配（clawhub CLI 封装） | `.claude/research/agent-skill-cli-comparison.md` | `src/ipman/agents/openclaw.py` | 待开始 |
 
 ---
 
-## 市场模块索引
+## IpHub 模块索引
 
 | 模块 | 说明 | 设计文档 | 源代码目录 | 状态 |
 |------|------|---------|----------|------|
-| market/client | 在线市场 HTTP 客户端 | -- | `src/ipman/market/client.py` | 待开始 |
-| market/publisher | 技能/IP 包发布逻辑 | -- | `src/ipman/market/publisher.py` | 待开始 |
+| hub/client | IpHub 客户端（index.yaml 拉取/缓存/搜索） | `.claude/research/iphub-design.md` | `src/ipman/hub/client.py` | 待开始 |
+| hub/publisher | 发布逻辑（fork + 创建注册文件 + 提 PR） | `.claude/research/iphub-design.md` | `src/ipman/hub/publisher.py` | 待开始 |
 
 ---
 
