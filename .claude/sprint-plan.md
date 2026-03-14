@@ -159,11 +159,11 @@
 
 | 优先级 | 任务 | 所属模块 | 责任人 | 状态 |
 |-------|------|----------|--------|------|
-| P0 | 实现 i18n 模块（LANG 环境变量检测，中英文自动切换） | utils/i18n | AI | 待开始 |
-| P0 | CLI 所有命令帮助文本中英文化 | cli/* | AI | 待开始 |
-| P1 | MkDocs 文档站中文翻译 | docs-src | AI | 待开始 |
-| P2 | README 动态展示 Top 10 排名（GitHub Actions 定时生成） | CI/CD | AI | 待开始 |
-| P2 | README GitHub Stars 趋势图（star-history badge） | README | AI | 待开始 |
+| P0 | i18n 模块（LANG 检测 + 中英文消息目录） | utils/i18n | AI | 已完成 |
+| P0 | CLI 入口初始化 i18n | cli/main | AI | 已完成 |
+| P1 | MkDocs 中文文档（首页/安装/快速上手/安全） | docs-src/zh | AI | 已完成 |
+| P2 | README Star History 趋势图 | README | AI | 已完成 |
+| P2 | README Roadmap + test count 更新 | README | AI | 已完成 |
 
 ### Sprint 9（多渠道分发）
 
