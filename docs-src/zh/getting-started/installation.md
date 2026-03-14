@@ -23,6 +23,16 @@ uv pip install ipman-cli
 curl -sSL https://raw.githubusercontent.com/twisker/ipman/main/install.sh | bash
 ```
 
+## 下载预编译二进制文件（Windows / macOS / Linux）
+
+从 [GitHub Releases](https://github.com/twisker/ipman/releases) 下载最新版本：
+
+- `ipman-windows-x64.exe` — Windows
+- `ipman-macos-arm64` — macOS (Apple Silicon)
+- `ipman-linux-x64` — Linux
+
+将二进制文件放入 PATH 目录即可使用。
+
 ## 验证安装
 
 ```bash

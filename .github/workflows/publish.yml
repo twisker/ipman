@@ -1,17 +1,17 @@
-name: Publish to PyPI
+name: Publish to PyPI + Build Binaries
 
 on:
   push:
     tags: ["v*"]
 
 jobs:
+  # --- Job 1: PyPI publish ---
   publish:
-    name: Build and Publish
+    name: Publish to PyPI
     runs-on: ubuntu-latest
     environment: release
     permissions:
       id-token: write
-
     steps:
       - uses: actions/checkout@v4
 
@@ -32,3 +32,54 @@ jobs:
 
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
+
+  # --- Job 2: Multi-platform binaries ---
+  binaries:
+    name: Build ${{ matrix.os }} binary
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            artifact: ipman-linux-x64
+            ext: ""
+          - os: macos-latest
+            artifact: ipman-macos-arm64
+            ext: ""
+          - os: windows-latest
+            artifact: ipman-windows-x64
+            ext: ".exe"
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Set up Python
+        run: uv python install 3.13
+
+      - name: Install dependencies
+        run: uv sync --dev
+
+      - name: Install PyInstaller
+        run: uv pip install pyinstaller
+
+      - name: Build binary
+        run: >
+          uv run pyinstaller
+          --onefile
+          --name ipman
+          --paths src
+          scripts/pyinstaller-entry.py
+
+      - name: Rename artifact
+        shell: bash
+        run: |
+          mv dist/ipman${{ matrix.ext }} dist/${{ matrix.artifact }}${{ matrix.ext }}
+
+      - name: Upload to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/${{ matrix.artifact }}${{ matrix.ext }}

@@ -23,6 +23,16 @@ uv pip install ipman-cli
 curl -sSL https://raw.githubusercontent.com/twisker/ipman/main/install.sh | bash
 ```
 
+## Download Pre-built Binary (Windows / macOS / Linux)
+
+Download the latest binary from [GitHub Releases](https://github.com/twisker/ipman/releases):
+
+- `ipman-windows-x64.exe` — Windows
+- `ipman-macos-arm64` — macOS (Apple Silicon)
+- `ipman-linux-x64` — Linux
+
+Place the binary in your PATH and run `ipman --version` to verify.
+
 ## Verify Installation
 
 ```bash
