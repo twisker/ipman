@@ -275,7 +275,7 @@ security:
 hub:
   url: https://raw.githubusercontent.com/twisker/iphub/main
   # 镜像示例：
-  # url: https://cnb.cool/twisker/twisker/iphub/raw/main
+  # url: https://cnb.cool/lutuai/twisker/twisker/iphub/raw/main
 
 agent:
   default: auto          # auto | claude-code | openclaw
