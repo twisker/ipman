@@ -114,9 +114,8 @@
 
 | 优先级 | 任务 | 所属模块 | 责任人 | 状态 |
 |-------|------|----------|--------|------|
-| P0 | `_resolve_agent` 去重提取到公共模块 | utils | AI | 待开始 |
-| P0 | pyproject.toml 发布配置完善 | 基础设施 | AI | 待开始 |
-| P1 | ruff + mypy 全量检查修复 | 代码质量 | AI | 待开始 |
-| P1 | README.md 编写 | docs | AI | 待开始 |
-| P2 | TestPyPI 试发布验证 | CI/CD | AI | 待开始 |
-| P2 | GitHub Actions 发布工作流 | CI/CD | AI | 待开始 |
+| P0 | `_resolve_agent` 去重提取到公共模块 | utils | AI | 已完成 |
+| P0 | pyproject.toml 发布配置完善（动态版本） | 基础设施 | AI | 已完成 |
+| P1 | ruff + mypy 全量检查修复 | 代码质量 | AI | 已完成 |
+| P1 | README.md 更新 | docs | AI | 已完成 |
+| P2 | GitHub Actions 发布工作流 | CI/CD | AI | 已完成 |
