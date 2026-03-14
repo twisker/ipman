@@ -4,21 +4,44 @@
 
 # IpMan - Intelligence Package Manager
 
-*I can take on ten.*
+*I can take on ten — and stop the bad ones at the door.*
 
-> Agent skill virtual environment manager — like conda/uv, but for AI agent skills.
+> Agent skill virtual environment manager — like conda/uv, but for AI agent skills. With built-in defense against malicious skills.
 
-IpMan solves the growing problem of skill name collisions, version conflicts, and lack of isolated environments across AI agent tools like Claude Code and OpenClaw. It provides virtual environment management, dependency resolution, and IpHub for skill distribution.
+[36% of AI agent skills contain prompt injection. 824+ confirmed malicious skills exist in the wild.](https://snyk.io/blog/toxicskills-malicious-ai-agent-skills-clawhub/) IpMan doesn't just manage skills — it protects you from them.
+
+## Why IpMan?
+
+The AI agent skill ecosystem is the new software supply chain — and it's under attack. Skills run with **full agent permissions**, have **no sandbox by default**, and the barrier to publishing is just a Markdown file. IpMan provides:
+
+- **Risk assessment before installation** — every skill is scanned for red flags (credential theft, data exfiltration, obfuscated code, prompt injection)
+- **Four security modes** — from PERMISSIVE (install everything) to STRICT (only verified-safe skills)
+- **Community-driven threat reporting** — flag suspicious skills, report counts feed back into risk scoring
+- **Publish-time gatekeeping** — HIGH/EXTREME risk skills are blocked from IpHub at the door
 
 ## Features
 
+### Security First
+
+- **Risk Assessment Engine** — Detects credential harvesting, obfuscated code (base64/eval/exec), unauthorized network calls, sudo escalation, access to sensitive paths (~/.ssh, ~/.aws), and prompt injection patterns. Risk levels: LOW / MEDIUM / HIGH / EXTREME
+- **Security Modes** — PERMISSIVE, DEFAULT, CAUTIOUS, STRICT. Control the risk tolerance for your environment
+- **Smart Trust Model** — IpHub skills carry pre-assessed risk labels. Local/URL installs trigger mandatory on-device assessment. Override with `--vet` or `--no-vet`
+- **Security Logging** — All blocked/warned installs are logged to `~/.ipman/security.log`
+- **Community Reporting** — `ipman hub report <name>` to flag suspicious skills. Report counts are publicly visible
+
+### Package Management
+
 - **Virtual Environments** — Create isolated skill environments per project, user, or machine
-- **Skill Management** — Install, uninstall, list skills via agent native CLI
 - **IP Packages** — Bundle skills into distributable `.ip.yaml` files
 - **Dependency Resolution** — Recursive dependencies with version constraints (`>=`, `^`, `~`)
 - **Agent Agnostic** — Works with Claude Code, OpenClaw, and more via adapter plugins
-- **IpHub** — Search, browse, and publish skills to the community registry
-- **Cross-Platform** — Linux, macOS, Windows
+
+### IpHub Registry
+
+- **Search & Browse** — Find skills by keyword, filter by agent
+- **Publish** — Submit skills/IP packages via automated GitHub PR workflow
+- **Rankings** — Top skills by install count
+- **Mirror Support** — Configure alternative hub URLs for regional access (Alibaba Cloud CodeUp mirror available)
 
 ## Installation
 
@@ -33,77 +56,108 @@ uv pip install ipman
 ## Quick Start
 
 ```bash
-# Create a virtual skill environment for the current project
+# Create and activate a skill environment
 ipman env create myenv
-
-# Activate the environment
 ipman env activate myenv
 
-# Install a skill from IpHub
+# Install a skill (auto-assessed for security risks)
 ipman install web-scraper
 
-# Install from a local IP package file
+# Install from a local IP package (triggers mandatory risk scan)
 ipman install frontend-kit.ip.yaml
 
-# List installed skills
-ipman skill list
+# Force risk assessment on an IpHub skill
+ipman install suspicious-tool --vet
 
-# Pack current environment into an IP file
+# Install in strict security mode
+ipman install some-skill --security strict
+
+# Pack current environment
 ipman pack --name my-kit --version 1.0.0
 
-# Search IpHub
+# Search and publish to IpHub
 ipman hub search scraper
-
-# Publish a skill to IpHub
 ipman hub publish my-skill --description "My awesome skill"
 
-# Deactivate
-ipman env deactivate
+# Report a suspicious skill
+ipman hub report sketchy-tool --reason "Sends data to unknown server"
 ```
+
+## Security Modes
+
+| Mode | Behavior | Use case |
+|------|----------|----------|
+| `permissive` | Install everything, warn only on EXTREME | Trusted internal environments |
+| `default` | Block EXTREME, warn on HIGH | General use |
+| `cautious` | Block HIGH+EXTREME, warn on MEDIUM | Production environments |
+| `strict` | Only LOW allowed; re-assess all sources locally | High-security deployments |
+
+```bash
+# Set via CLI flag
+ipman install web-scraper --security cautious
+
+# Set via config file (~/.ipman/config.yaml)
+security:
+  mode: cautious
+```
+
+## Configuration
+
+IpMan reads `~/.ipman/config.yaml` for default settings:
+
+```yaml
+security:
+  mode: default          # permissive | default | cautious | strict
+  log_enabled: true
+  log_path: ~/.ipman/security.log
+
+hub:
+  url: https://raw.githubusercontent.com/twisker/iphub/main
+  # Mirror for restricted regions:
+  # url: https://codeup.aliyun.com/twisker/iphub/raw/main
+
+agent:
+  default: auto          # auto | claude-code | openclaw
+```
+
+Priority: CLI flags > environment variables (`IPMAN_HUB_URL`) > config file > defaults.
 
 ## CLI Reference
 
 | Command | Description |
 |---------|-------------|
+| **Environments** | |
 | `ipman env create <name>` | Create a new skill environment |
 | `ipman env activate <name>` | Activate an environment |
 | `ipman env deactivate` | Deactivate current environment |
 | `ipman env delete <name>` | Delete an environment |
 | `ipman env list` | List all environments |
 | `ipman env status` | Show active environment details |
+| **Skills** | |
 | `ipman install <source>` | Install a skill or IP package |
 | `ipman uninstall <name>` | Uninstall a skill |
 | `ipman skill list` | List installed skills |
 | `ipman pack` | Pack environment into .ip.yaml |
+| **IpHub** | |
 | `ipman hub search <query>` | Search IpHub registry |
 | `ipman hub info <name>` | Show skill/package details |
 | `ipman hub top` | Show most installed items |
 | `ipman hub publish <source>` | Publish to IpHub |
+| `ipman hub report <name>` | Report a suspicious skill |
 
 ## Architecture
 
 ```
 CLI Layer (Click)
     |
-Core Layer (environment, package, resolver)
+Security Layer (vetter, security modes, logging)
+    |
+Core Layer (environment, package, resolver, config)
     |
 Agent Adapter Layer (Claude Code, OpenClaw, ...)
     |
-IpHub Layer (reference registry, search, publish)
+IpHub Layer (registry, search, publish, stats, mirror)
 ```
-
-## Technology Stack
-
-| Component | Technology |
-|-----------|-----------|
-| Language | Python 3.10+ |
-| Package Manager | uv |
-| CLI Framework | Click |
-| Testing | pytest (176 tests) |
-| Linting | ruff |
-| Type Checking | mypy (strict) |
-| CI/CD | GitHub Actions |
-| IP Package Format | YAML |
 
 ## Roadmap
 
@@ -112,23 +166,18 @@ IpHub Layer (reference registry, search, publish)
 | Phase 1 | Virtual environments + agent CLI skill management | Done |
 | Phase 2 | IP package format + pack + install + dependency resolution | Done |
 | Phase 3 | IpHub (search, publish, stats) | Done |
-| Phase 4 | Polish, docs, PyPI release | In Progress |
+| Phase 4 | Polish, docs, PyPI release | Done |
+| Phase 5 | Security (risk engine, security modes, reporting, mirrors) | Planned |
 
 ## Development
 
 ```bash
-# Clone and setup
 git clone https://github.com/twisker/ipman.git
 cd ipman
 uv sync
 
-# Run tests
-uv run pytest
-
-# Lint
+uv run pytest              # 176 tests
 uv run ruff check src/ tests/
-
-# Type check
 uv run mypy src/ipman/
 ```
 
