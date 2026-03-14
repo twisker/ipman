@@ -26,6 +26,7 @@ class SkillRef:
     """Reference to a skill in an IP package."""
 
     name: str
+    version: str | None = None
     source: dict[str, Any] | None = None
     description: str | None = None
 
@@ -107,6 +108,7 @@ def parse_ip_file(
     skills = [
         SkillRef(
             name=s["name"],
+            version=s.get("version"),
             source=s.get("source"),
             description=s.get("description"),
         )
@@ -162,6 +164,8 @@ def dump_ip_file(pkg: IPPackage, path: Path) -> None:
     skills_out: list[dict[str, Any]] = []
     for s in pkg.skills:
         entry: dict[str, Any] = {"name": s.name}
+        if s.version:
+            entry["version"] = s.version
         if s.description:
             entry["description"] = s.description
         if s.source:
