@@ -13,10 +13,11 @@ IpMan solves the growing problem of skill name collisions, version conflicts, an
 ## Features
 
 - **Virtual Environments** — Create isolated skill environments per project, user, or machine
-- **Skill Management** — Install, uninstall, upgrade skills with full metadata tracking
-- **IP Packages** — Bundle skills into distributable Intelligence Packages (YAML-based)
+- **Skill Management** — Install, uninstall, list skills via agent native CLI
+- **IP Packages** — Bundle skills into distributable `.ip.yaml` files
+- **Dependency Resolution** — Recursive dependencies with version constraints (`>=`, `^`, `~`)
 - **Agent Agnostic** — Works with Claude Code, OpenClaw, and more via adapter plugins
-- **IpHub** — Search, download, and publish skills to the community
+- **IpHub** — Search, browse, and publish skills to the community registry
 - **Cross-Platform** — Linux, macOS, Windows
 
 ## Installation
@@ -27,54 +28,69 @@ pip install ipman
 
 # Via uv
 uv pip install ipman
-
-# Via curl (Unix-like)
-curl -sSL https://raw.githubusercontent.com/twisker/ipman/main/install.sh | bash
 ```
 
 ## Quick Start
 
 ```bash
 # Create a virtual skill environment for the current project
-ipman create myenv
+ipman env create myenv
 
 # Activate the environment
-ipman activate myenv
+ipman env activate myenv
 
-# Install a skill
+# Install a skill from IpHub
 ipman install web-scraper
+
+# Install from a local IP package file
+ipman install frontend-kit.ip.yaml
 
 # List installed skills
 ipman skill list
 
-# Export environment as an IP package
-ipman export myenv.ip.yaml
+# Pack current environment into an IP file
+ipman pack --name my-kit --version 1.0.0
+
+# Search IpHub
+ipman hub search scraper
+
+# Publish a skill to IpHub
+ipman hub publish my-skill --description "My awesome skill"
 
 # Deactivate
-ipman deactivate
+ipman env deactivate
 ```
+
+## CLI Reference
+
+| Command | Description |
+|---------|-------------|
+| `ipman env create <name>` | Create a new skill environment |
+| `ipman env activate <name>` | Activate an environment |
+| `ipman env deactivate` | Deactivate current environment |
+| `ipman env delete <name>` | Delete an environment |
+| `ipman env list` | List all environments |
+| `ipman env status` | Show active environment details |
+| `ipman install <source>` | Install a skill or IP package |
+| `ipman uninstall <name>` | Uninstall a skill |
+| `ipman skill list` | List installed skills |
+| `ipman pack` | Pack environment into .ip.yaml |
+| `ipman hub search <query>` | Search IpHub registry |
+| `ipman hub info <name>` | Show skill/package details |
+| `ipman hub top` | Show most installed items |
+| `ipman hub publish <source>` | Publish to IpHub |
 
 ## Architecture
 
 ```
 CLI Layer (Click)
     |
-Core Layer (environment, skill, package, resolver)
+Core Layer (environment, package, resolver)
     |
 Agent Adapter Layer (Claude Code, OpenClaw, ...)
     |
 IpHub Layer (reference registry, search, publish)
 ```
-
-## Module Overview
-
-| Module | Description |
-|--------|-------------|
-| `ipman.cli` | Command-line interface (Click-based subcommands) |
-| `ipman.core` | Core business logic — environments, skills, packages, dependency resolution |
-| `ipman.agents` | Agent tool adapters (plugin architecture) |
-| `ipman.hub` | IpHub client and publisher |
-| `ipman.utils` | Cross-platform utilities (symlinks, i18n, agent detection) |
 
 ## Technology Stack
 
@@ -83,34 +99,20 @@ IpHub Layer (reference registry, search, publish)
 | Language | Python 3.10+ |
 | Package Manager | uv |
 | CLI Framework | Click |
-| Testing | pytest |
+| Testing | pytest (176 tests) |
 | Linting | ruff |
-| Type Checking | mypy |
+| Type Checking | mypy (strict) |
 | CI/CD | GitHub Actions |
 | IP Package Format | YAML |
-
-## Directory Structure
-
-```
-src/ipman/
-├── cli/          # CLI commands
-├── core/         # Business logic
-├── agents/       # Agent adapters
-├── hub/          # IpHub
-└── utils/        # Utilities
-tests/
-docs/
-scripts/          # Version bump scripts
-```
 
 ## Roadmap
 
 | Phase | Focus | Status |
 |-------|-------|--------|
-| Phase 1 | CLI skeleton + virtual environments + agent CLI skill management | In Progress (Sprint 1 done) |
-| Phase 2 | IP package format + pack/unpack + dependency resolution | Planned |
-| Phase 3 | IpHub (reference registry, search, publish) | Designed |
-| Phase 4 | i18n, docs, Windows installer, PyPI release | Planned |
+| Phase 1 | Virtual environments + agent CLI skill management | Done |
+| Phase 2 | IP package format + pack + install + dependency resolution | Done |
+| Phase 3 | IpHub (search, publish, stats) | Done |
+| Phase 4 | Polish, docs, PyPI release | In Progress |
 
 ## Development
 
@@ -124,19 +126,11 @@ uv sync
 uv run pytest
 
 # Lint
-uv run ruff check src/
+uv run ruff check src/ tests/
 
 # Type check
-uv run mypy src/
+uv run mypy src/ipman/
 ```
-
-## Branching Strategy (Git Flow)
-
-- `main` — Stable releases
-- `dev` — Development integration
-- `feature/*` — Feature branches
-- `release/*` — Release preparation
-- `hotfix/*` — Emergency fixes
 
 ## License
 
