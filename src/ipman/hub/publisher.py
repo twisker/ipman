@@ -180,13 +180,33 @@ class IpHubPublisher:
     ) -> None:
         """Create or update a file on a branch via GitHub API."""
         encoded = base64.b64encode(content.encode()).decode()
-        self._gh([
+        args = [
             "api", "-X", "PUT",
             f"repos/{self.target_repo}/contents/{path}",
             "-f", f"message={message}",
             "-f", f"content={encoded}",
             "-f", f"branch={branch}",
-        ])
+        ]
+        # If file already exists, include its sha (required for update)
+        sha = self._get_file_sha(branch, path)
+        if sha:
+            args.extend(["-f", f"sha={sha}"])
+        self._gh(args)
+
+    def _get_file_sha(self, branch: str, path: str) -> str | None:
+        """Get the sha of an existing file, or None if not found."""
+        result = subprocess.run(
+            [
+                "gh", "api",
+                f"repos/{self.target_repo}/contents/{path}",
+                "-q", ".sha",
+                "--header", f"ref: {branch}",
+            ],
+            capture_output=True, text=True, check=False,
+        )
+        if result.returncode == 0 and result.stdout.strip():
+            return result.stdout.strip()
+        return None
 
     def _create_branch(self, branch: str) -> None:
         """Create a branch on the fork from upstream main."""
