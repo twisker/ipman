@@ -8,7 +8,7 @@ Skills are managed through agent native CLI commands. IpMan delegates to the und
 # From IpHub by short name
 ipman install web-scraper
 
-# From a local .ip.yaml file
+# From a local .ip.yaml file (triggers mandatory risk scan)
 ipman install frontend-kit.ip.yaml
 
 # With explicit agent
@@ -19,6 +19,15 @@ ipman install frontend-kit.ip.yaml --dry-run
 
 # Force local risk assessment on IpHub skill
 ipman install web-scraper --vet
+
+# Skip risk assessment on local file
+ipman install trusted-kit.ip.yaml --no-vet
+
+# Set security mode for this install
+ipman install web-scraper --security cautious
+
+# Auto-confirm security warnings
+ipman install risky-tool --yes
 ```
 
 ## Uninstall
