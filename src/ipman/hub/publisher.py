@@ -209,20 +209,42 @@ class IpHubPublisher:
         return None
 
     def _create_branch(self, branch: str) -> None:
-        """Create a branch on the fork from upstream main."""
+        """Create or reset a branch from upstream main HEAD."""
         # Get upstream main SHA
         result = self._gh([
             "api", f"repos/{_IPHUB_REPO}/git/ref/heads/main",
             "--jq", ".object.sha",
         ])
         sha = result.stdout.strip()
-        # Create branch
-        self._gh([
-            "api", "-X", "POST",
-            f"repos/{self.target_repo}/git/refs",
-            "-f", f"ref=refs/heads/{branch}",
-            "-f", f"sha={sha}",
-        ])
+
+        # Try create; if branch exists, update it instead
+        create_result = subprocess.run(
+            [
+                "gh", "api", "-X", "POST",
+                f"repos/{self.target_repo}/git/refs",
+                "-f", f"ref=refs/heads/{branch}",
+                "-f", f"sha={sha}",
+            ],
+            capture_output=True, text=True, check=False,
+        )
+        if create_result.returncode != 0:
+            if "Reference already exists" in (
+                create_result.stderr + create_result.stdout
+            ):
+                # Branch exists — update to latest main
+                self._gh([
+                    "api", "-X", "PATCH",
+                    f"repos/{self.target_repo}/git/refs/heads/{branch}",
+                    "-f", f"sha={sha}",
+                    "-F", "force=true",
+                ])
+            else:
+                msg = (
+                    create_result.stderr.strip()
+                    or create_result.stdout.strip()
+                    or "Failed to create branch"
+                )
+                raise PublishError(f"gh error: {msg}")
 
     def _create_pr(self, branch: str, title: str, body: str) -> str:
         """Create a PR to upstream main."""

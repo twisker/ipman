@@ -89,9 +89,23 @@ jobs:
           SCRIPT
 
       - name: Commit if changed
+        id: commit
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add index.yaml
-          git diff --cached --quiet || git commit -m "chore: rebuild index.yaml [skip ci]"
-          git push
+          if git diff --cached --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            git commit -m "chore: rebuild index.yaml"
+            git push
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Sync to CNB mirror
+        if: steps.commit.outputs.changed == 'true'
+        env:
+          CNB_TOKEN: ${{ secrets.CNB_TOKEN }}
+        run: |
+          git remote add cnb "https://x-access-token:${CNB_TOKEN}@cnb.cool/lutuai/twisker/iphub.git" 2>/dev/null || true
+          git push cnb main --force

@@ -27,3 +27,5 @@ IpMan manages AI agent skills the way conda/uv manages Python packages — with 
 - [Quick Start](getting-started/quickstart.md)
 - [CLI Reference](cli-reference.md)
 - [Security Guide](guide/security.md)
+- [GitHub Repository](https://github.com/twisker/ipman)
+- [PyPI Package](https://pypi.org/project/ipman-cli/)

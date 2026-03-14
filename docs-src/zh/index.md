@@ -26,3 +26,5 @@ IpMan 管理 AI Agent 技能的方式，就像 conda/uv 管理 Python 包一样 
 - [安装指南](getting-started/installation.md)
 - [快速上手](getting-started/quickstart.md)
 - [安全指南](guide/security.md)
+- [GitHub 源代码](https://github.com/twisker/ipman)
+- [PyPI 包页面](https://pypi.org/project/ipman-cli/)
