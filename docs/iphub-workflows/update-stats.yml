@@ -1,0 +1,128 @@
+# GitHub Actions workflow for twisker/iphub repo
+# Daily: collect install stats, generate ranking files, update README
+#
+# Generated files:
+#   stats/downloads.yaml          — raw stats data
+#   stats/top-10-skills.md        — Top 10 skills table (embeddable)
+#   stats/top-10-packages.md      — Top 10 IP packages table (embeddable)
+#   stats/top-50-all.md           — Top 50 combined table (embeddable)
+#
+# Copy this file to: twisker/iphub/.github/workflows/update-stats.yml
+
+name: Update Stats
+
+on:
+  schedule:
+    - cron: "0 2 * * *"  # Daily at 02:00 UTC
+  workflow_dispatch: {}   # Manual trigger
+
+permissions:
+  contents: write
+  issues: read
+
+jobs:
+  update:
+    name: Collect Stats and Update Rankings
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Collect stats from counter issues
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api graphql -f query='
+            query {
+              repository(owner: "twisker", name: "iphub") {
+                issues(labels: ["counter"], first: 100, states: OPEN) {
+                  nodes {
+                    title
+                    labels(first: 5) { nodes { name } }
+                    comments { totalCount }
+                    reactions(content: THUMBS_UP) { totalCount }
+                  }
+                }
+              }
+            }
+          ' | jq -c '.data.repository.issues.nodes[] | {
+            name: (.title | gsub("^\\[counter\\] "; "")),
+            type: (if (.labels.nodes | map(.name) | index("ip")) then "ip" else "skill" end),
+            installs: .comments.totalCount,
+            unique_users: .reactions.totalCount
+          }' | sort -t: -k4 -rn > /tmp/stats.jsonl
+
+      - name: Generate stats files
+        run: |
+          mkdir -p stats
+          TS=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+
+          # --- stats/downloads.yaml ---
+          {
+            echo "# Auto-generated — do not edit"
+            echo "updated: $TS"
+            echo "entries:"
+            while IFS= read -r line; do
+              echo "  - name: $(echo "$line" | jq -r .name)"
+              echo "    type: $(echo "$line" | jq -r .type)"
+              echo "    installs: $(echo "$line" | jq -r .installs)"
+              echo "    unique_users: $(echo "$line" | jq -r .unique_users)"
+            done < /tmp/stats.jsonl
+          } > stats/downloads.yaml
+
+          # --- Helper: generate markdown table ---
+          gen_table() {
+            local file="$1" title="$2" filter="$3" limit="$4"
+            {
+              echo "## $title"
+              echo ""
+              echo "*Updated: $TS*"
+              echo ""
+              echo "| # | Name | Type | Installs | Users |"
+              echo "|---|------|------|----------|-------|"
+              local i=1
+              while IFS= read -r line; do
+                local t=$(echo "$line" | jq -r .type)
+                if [ -n "$filter" ] && [ "$t" != "$filter" ]; then
+                  continue
+                fi
+                local n=$(echo "$line" | jq -r .name)
+                local inst=$(echo "$line" | jq -r .installs)
+                local u=$(echo "$line" | jq -r .unique_users)
+                echo "| $i | $n | $t | $inst | $u |"
+                i=$((i + 1))
+                [ $i -gt "$limit" ] && break
+              done < /tmp/stats.jsonl
+            } > "$file"
+          }
+
+          gen_table stats/top-10-skills.md   "Top 10 Skills"   "skill" 10
+          gen_table stats/top-10-packages.md "Top 10 Packages" "ip"    10
+          gen_table stats/top-50-all.md      "Top 50"          ""      50
+
+      - name: Inject rankings into README
+        run: |
+          inject() {
+            local marker="$1" file="$2"
+            if grep -q "<!-- ${marker}_START -->" README.md && [ -f "$file" ]; then
+              # Use awk for reliable multi-line replacement
+              awk -v start="<!-- ${marker}_START -->" \
+                  -v end="<!-- ${marker}_END -->" \
+                  -v file="$file" '
+                $0 == start { print; system("cat " file); skip=1; next }
+                $0 == end   { skip=0 }
+                !skip       { print }
+              ' README.md > README.tmp && mv README.tmp README.md
+            fi
+          }
+
+          inject "TOP_SKILLS"   stats/top-10-skills.md
+          inject "TOP_PACKAGES" stats/top-10-packages.md
+          inject "TOP_ALL"      stats/top-50-all.md
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add stats/ README.md index.yaml 2>/dev/null || true
+          git diff --cached --quiet || git commit -m "chore: update install stats [skip ci]"
+          git push

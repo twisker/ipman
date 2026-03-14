@@ -6,137 +6,111 @@
 
 *I can take on ten.*
 
-> Agent skill virtual environment manager — like conda/uv, but for AI agent skills.
+> Agent skill virtual environment manager — like conda/uv, but for AI agent skills. With built-in defense against malicious skills.
 
-IpMan solves the growing problem of skill name collisions, version conflicts, and lack of isolated environments across AI agent tools like Claude Code and OpenClaw. It provides virtual environment management, dependency resolution, and IpHub for skill distribution.
+**[Documentation](https://twisker.github.io/ipman)** | **[中文文档](https://twisker.github.io/ipman/zh/)** | **[中文 README](README.zh-cn.md)**
+
+---
+
+[36% of AI agent skills contain prompt injection. 824+ confirmed malicious skills exist in the wild.](https://snyk.io/blog/toxicskills-malicious-ai-agent-skills-clawhub/) IpMan doesn't just manage skills — it protects you from them.
+
+## Why IpMan?
+
+The AI agent skill ecosystem is the new software supply chain — and it's under attack. Skills run with **full agent permissions**, have **no sandbox by default**, and the barrier to publishing is just a Markdown file. IpMan provides:
+
+- **Risk assessment before installation** — every skill is scanned for red flags (credential theft, data exfiltration, obfuscated code, prompt injection)
+- **Four security modes** — from PERMISSIVE (install everything) to STRICT (only verified-safe skills)
+- **Community-driven threat reporting** — flag suspicious skills, report counts feed back into risk scoring
+- **Publish-time gatekeeping** — HIGH/EXTREME risk skills are blocked from IpHub at the door
 
 ## Features
 
+### Security First
+
+- **Risk Assessment Engine** — Detects credential harvesting, obfuscated code (base64/eval/exec), unauthorized network calls, sudo escalation, access to sensitive paths (~/.ssh, ~/.aws), and prompt injection patterns. Risk levels: LOW / MEDIUM / HIGH / EXTREME
+- **Security Modes** — PERMISSIVE, DEFAULT, CAUTIOUS, STRICT. Control the risk tolerance for your environment
+- **Smart Trust Model** — IpHub skills carry pre-assessed risk labels. Local/URL installs trigger mandatory on-device assessment. Override with `--vet` or `--no-vet`
+- **Security Logging** — All blocked/warned installs are logged to `~/.ipman/security.log`
+- **Community Reporting** — `ipman hub report <name>` to flag suspicious skills. Report counts are publicly visible
+
+### Package Management
+
 - **Virtual Environments** — Create isolated skill environments per project, user, or machine
-- **Skill Management** — Install, uninstall, upgrade skills with full metadata tracking
-- **IP Packages** — Bundle skills into distributable Intelligence Packages (YAML-based)
+- **IP Packages** — Bundle skills into distributable `.ip.yaml` files
+- **Dependency Resolution** — Recursive dependencies with version constraints (`>=`, `^`, `~`)
 - **Agent Agnostic** — Works with Claude Code, OpenClaw, and more via adapter plugins
-- **IpHub** — Search, download, and publish skills to the community
-- **Cross-Platform** — Linux, macOS, Windows
+
+### IpHub Registry
+
+- **Search & Browse** — Find skills by keyword, filter by agent
+- **Publish** — Submit skills/IP packages via automated GitHub PR workflow
+- **Rankings** — Top skills by install count
+- **Mirror Support** — Configure alternative hub URLs for regional access (CNB mirror available)
 
 ## Installation
 
 ```bash
 # Via PyPI
-pip install ipman
+pip install ipman-cli
 
 # Via uv
-uv pip install ipman
+uv pip install ipman-cli
 
-# Via curl (Unix-like)
+# Via curl (Linux / macOS)
 curl -sSL https://raw.githubusercontent.com/twisker/ipman/main/install.sh | bash
 ```
+
+Pre-built binaries for Windows/macOS/Linux are available on [GitHub Releases](https://github.com/twisker/ipman/releases).
 
 ## Quick Start
 
 ```bash
-# Create a virtual skill environment for the current project
-ipman create myenv
+# Create and activate a skill environment
+ipman env create myenv
+ipman env activate myenv
 
-# Activate the environment
-ipman activate myenv
-
-# Install a skill
+# Install a skill (auto-assessed for security risks)
 ipman install web-scraper
 
-# List installed skills
-ipman skill list
+# Install from a local IP package (triggers mandatory risk scan)
+ipman install frontend-kit.ip.yaml
 
-# Export environment as an IP package
-ipman export myenv.ip.yaml
+# Pack current environment
+ipman pack --name my-kit --version 1.0.0
 
-# Deactivate
-ipman deactivate
+# Search and publish to IpHub
+ipman hub search scraper
+ipman hub publish my-skill --description "My awesome skill"
+
+# Report a suspicious skill
+ipman hub report sketchy-tool --reason "Sends data to unknown server"
 ```
 
-## Architecture
+For the full guide, see the **[Documentation](https://twisker.github.io/ipman)**.
 
-```
-CLI Layer (Click)
-    |
-Core Layer (environment, skill, package, resolver)
-    |
-Agent Adapter Layer (Claude Code, OpenClaw, ...)
-    |
-IpHub Layer (reference registry, search, publish)
-```
+## Security Modes
 
-## Module Overview
+| Mode | Behavior | Use case |
+|------|----------|----------|
+| `permissive` | Install everything, warn only on EXTREME | Trusted internal environments |
+| `default` | Block EXTREME, warn on HIGH | General use |
+| `cautious` | Block HIGH+EXTREME, warn on MEDIUM | Production environments |
+| `strict` | Only LOW allowed; re-assess all sources locally | High-security deployments |
 
-| Module | Description |
-|--------|-------------|
-| `ipman.cli` | Command-line interface (Click-based subcommands) |
-| `ipman.core` | Core business logic — environments, skills, packages, dependency resolution |
-| `ipman.agents` | Agent tool adapters (plugin architecture) |
-| `ipman.hub` | IpHub client and publisher |
-| `ipman.utils` | Cross-platform utilities (symlinks, i18n, agent detection) |
+See the **[Security Guide](https://twisker.github.io/ipman/guide/security/)** for details.
 
-## Technology Stack
+## IpHub Rankings
 
-| Component | Technology |
-|-----------|-----------|
-| Language | Python 3.10+ |
-| Package Manager | uv |
-| CLI Framework | Click |
-| Testing | pytest |
-| Linting | ruff |
-| Type Checking | mypy |
-| CI/CD | GitHub Actions |
-| IP Package Format | YAML |
+<!-- TOP_SKILLS_START -->
+*Rankings will appear here once IpHub has install data.*
+<!-- TOP_SKILLS_END -->
 
-## Directory Structure
+<!-- TOP_PACKAGES_START -->
+<!-- TOP_PACKAGES_END -->
 
-```
-src/ipman/
-├── cli/          # CLI commands
-├── core/         # Business logic
-├── agents/       # Agent adapters
-├── hub/          # IpHub
-└── utils/        # Utilities
-tests/
-docs/
-scripts/          # Version bump scripts
-```
+## Star History
 
-## Roadmap
-
-| Phase | Focus | Status |
-|-------|-------|--------|
-| Phase 1 | CLI skeleton + virtual environments + agent CLI skill management | In Progress (Sprint 1 done) |
-| Phase 2 | IP package format + pack/unpack + dependency resolution | Planned |
-| Phase 3 | IpHub (reference registry, search, publish) | Designed |
-| Phase 4 | i18n, docs, Windows installer, PyPI release | Planned |
-
-## Development
-
-```bash
-# Clone and setup
-git clone https://github.com/twisker/ipman.git
-cd ipman
-uv sync
-
-# Run tests
-uv run pytest
-
-# Lint
-uv run ruff check src/
-
-# Type check
-uv run mypy src/
-```
-
-## Branching Strategy (Git Flow)
-
-- `main` — Stable releases
-- `dev` — Development integration
-- `feature/*` — Feature branches
-- `release/*` — Release preparation
-- `hotfix/*` — Emergency fixes
+[![Star History Chart](https://api.star-history.com/svg?repos=twisker/ipman&type=Date)](https://star-history.com/#twisker/ipman&Date)
 
 ## License
 

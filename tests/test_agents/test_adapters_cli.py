@@ -8,10 +8,9 @@ from unittest.mock import patch
 
 import pytest
 
-from ipman.agents.base import AgentAdapter, SkillInfo
+from ipman.agents.base import SkillInfo
 from ipman.agents.claude_code import ClaudeCodeAdapter
 from ipman.agents.openclaw import OpenClawAdapter
-
 
 # ---------------------------------------------------------------------------
 # ClaudeCodeAdapter skill CLI tests

@@ -29,8 +29,13 @@ class IpHubClient:
         self,
         cache_dir: Path | None = None,
         index_url: str = _INDEX_URL,
+        base_url: str | None = None,
     ) -> None:
-        self._index_url = index_url
+        self._base_url = base_url or (
+            "https://raw.githubusercontent.com"
+            f"/{_DEFAULT_REPO}/{_DEFAULT_BRANCH}"
+        )
+        self._index_url = index_url or f"{self._base_url}/index.yaml"
         self._cache_dir = cache_dir or Path.home() / ".ipman" / "cache"
         self._cache_file = self._cache_dir / "index.yaml"
         self._index: dict[str, Any] | None = None
@@ -94,3 +99,34 @@ class IpHubClient:
             if name in items:
                 return {"name": name, **items[name]}
         return None
+
+    def fetch_registry(
+        self, name: str, version: str | None = None,
+    ) -> dict[str, Any] | None:
+        """Fetch the full registry file for a skill or package.
+
+        For skills: fetches registry/@owner/<name>.yaml
+        For packages: fetches registry/@owner/<name>/<version>.yaml
+                      (defaults to latest version from index)
+        """
+        info = self.lookup(name)
+        if info is None:
+            return None
+
+        owner = info.get("owner", "").lstrip("@")
+        entry_type = info.get("type", "skill")
+
+        if entry_type == "skill":
+            url = self._registry_url(f"@{owner}/{name}.yaml")
+        else:
+            ver = version or info.get("latest", "1.0.0")
+            url = self._registry_url(f"@{owner}/{name}/{ver}.yaml")
+
+        with urllib.request.urlopen(url) as resp:
+            raw = resp.read().decode()
+        result: dict[str, Any] = yaml.safe_load(raw)
+        return result
+
+    def _registry_url(self, path: str) -> str:
+        """Build a URL for a registry file using the configured base."""
+        return f"{self._base_url}/registry/{path}"

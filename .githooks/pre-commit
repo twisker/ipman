@@ -10,8 +10,6 @@ if [ -z "$NON_VERSION_FILES" ]; then
   exit 0
 fi
 
-# 递增 patch 版本
-SCRIPT_DIR="$(git rev-parse --show-toplevel)/scripts"
-if [ -f "$SCRIPT_DIR/bump-patch.sh" ]; then
-  bash "$SCRIPT_DIR/bump-patch.sh"
-fi
+# 递增 patch 版本（跨平台 Python 脚本）
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+python3 "$REPO_ROOT/scripts/bump.py" patch

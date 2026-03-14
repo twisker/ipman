@@ -1,0 +1,29 @@
+# GitHub Actions workflow for twisker/iphub repo
+# Syncs main branch to CNB (cnb.cool) mirror on every push
+#
+# Required secret: CNB_TOKEN (personal access token with repo write)
+# Target repo: https://cnb.cool/lutuai/twisker/iphub
+#
+# Copy this file to: twisker/iphub/.github/workflows/sync-cnb.yml
+
+name: Sync to CNB Mirror
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  sync:
+    name: Push to CNB
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Push to CNB mirror
+        env:
+          CNB_TOKEN: ${{ secrets.CNB_TOKEN }}
+        run: |
+          git remote add cnb "https://x-access-token:${CNB_TOKEN}@cnb.cool/lutuai/twisker/iphub.git"
+          git push cnb main --force

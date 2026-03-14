@@ -77,13 +77,13 @@
 
 | 优先级 | 任务 | 所属模块 | 责任人 | 状态 |
 |-------|------|----------|--------|------|
-| P0 | 定义 IP 包 YAML schema | core/package | AI | 待开始 |
-| P0 | 实现 IP 包解析器 | core/package | AI | 待开始 |
-| P0 | 实现 `ipman pack` 命令 | CLI + core | AI | 待开始 |
-| P1 | 实现 `ipman unpack` / `ipman install <ip-file>` | CLI + core | AI | 待开始 |
-| P1 | 实现依赖解析引擎 | core/resolver | AI | 待开始 |
-| P1 | 实现 `ipman export` 命令（导出当前环境为 IP 文件） | CLI + core | AI | 待开始 |
-| P2 | 编写 IP 包管理测试 | tests | AI | 待开始 |
+| P0 | 定义 IP 包 YAML schema | core/package | AI | 已完成 |
+| P0 | 实现 IP 包解析器 | core/package | AI | 已完成 |
+| P0 | 实现 `ipman pack` 命令（合并原 export） | CLI + core | AI | 已完成 |
+| P1 | 实现 `ipman install <file.ip.yaml>` 本地 IP 文件安装 | CLI + core | AI | 已完成 |
+| P1 | 实现 `ipman install <short-name>` 基于 IpHub 的在线安装 | CLI + hub + core | AI | 已完成 |
+| P1 | 实现依赖解析引擎（版本匹配 + 递归依赖 + 循环检测） | core/resolver | AI | 已完成 |
+| P2 | 编写 IP 包管理测试（63 tests） | tests | AI | 已完成 |
 
 ---
 
@@ -91,12 +91,85 @@
 
 **目标：** 实现 IpHub 搜索、下载、发布功能
 
-> Sprint 拆分待 Phase 2 完成后细化。
+### Sprint 4（IpHub 搜索 + 发布）
+
+| 优先级 | 任务 | 所属模块 | 责任人 | 状态 |
+|-------|------|----------|--------|------|
+| P0 | 实现 `ipman hub search <query>` 命令 | cli/hub | AI | 已完成 |
+| P0 | 实现 `ipman hub info <name>` 命令 | cli/hub | AI | 已完成 |
+| P1 | 实现 `ipman hub top` 命令 | cli/hub | AI | 已完成 |
+| P1 | 实现发布引擎 hub/publisher.py | hub/publisher | AI | 已完成 |
+| P1 | 实现 `ipman hub publish <name>` Skill 发布 | cli/hub + hub/publisher | AI | 已完成 |
+| P1 | 实现 `ipman hub publish <file.ip.yaml>` IP 包发布 | cli/hub + hub/publisher | AI | 已完成 |
+| P2 | 安装统计上报（counter issue comment + reaction） | hub/stats | AI | 已完成 |
+| P2 | 编写 IpHub CLI + publisher 测试（26 tests） | tests | AI | 已完成 |
 
 ---
 
 ## Phase 4 -- 打磨与发布
 
-**目标：** 国际化、完整文档、Windows 安装包、PyPI 首次发布
+**目标：** 代码质量收尾、文档完善、PyPI 首次发布
 
-> Sprint 拆分待 Phase 3 完成后细化。
+### Sprint 5（代码质量 + 发布准备）
+
+| 优先级 | 任务 | 所属模块 | 责任人 | 状态 |
+|-------|------|----------|--------|------|
+| P0 | `_resolve_agent` 去重提取到公共模块 | utils | AI | 已完成 |
+| P0 | pyproject.toml 发布配置完善（动态版本） | 基础设施 | AI | 已完成 |
+| P1 | ruff + mypy 全量检查修复 | 代码质量 | AI | 已完成 |
+| P1 | README.md 更新 | docs | AI | 已完成 |
+| P2 | GitHub Actions 发布工作流 | CI/CD | AI | 已完成 |
+
+---
+
+## Phase 5 -- 安全与配置
+
+**目标：** 技能风险评估、安装安全策略、配置文件、IpHub 镜像
+
+> 需求来源：PRD v2.0 第7节（FR-S1 ~ FR-S9）
+
+### Sprint 6（风险评估引擎 + 配置文件）
+
+| 优先级 | 任务 | 所属模块 | 责任人 | 状态 |
+|-------|------|----------|--------|------|
+| P0 | 实现配置文件加载 (`~/.ipman/config.yaml`) | core/config | AI | 已完成 |
+| P0 | 实现风险评估引擎（红旗检测 + 权限分析 + 风险分级） | core/vetter | AI | 已完成 |
+| P1 | 实现安全模式（PERMISSIVE/DEFAULT/CAUTIOUS/STRICT） | core/security | AI | 已完成 |
+| P1 | 实现安全日志 (`~/.ipman/security.log`) | core/security | AI | 已完成 |
+| P2 | 编写风险评估 + 配置 + 安全模式测试（52 tests） | tests | AI | 已完成 |
+
+### Sprint 7（安装安全集成 + IpHub 举报 + 镜像）
+
+| 优先级 | 任务 | 所属模块 | 责任人 | 状态 |
+|-------|------|----------|--------|------|
+| P0 | install 命令集成安全策略（--security/--vet/--no-vet/--yes） | cli/skill | AI | 已完成 |
+| P0 | publish 命令集成发布时风险评估（阻止 HIGH/EXTREME） | cli/hub | AI | 已完成 |
+| P1 | `ipman hub report` 举报命令 | cli/hub | AI | 已完成 |
+| P1 | IpHub 镜像支持（config hub.url 驱动） | hub/client | AI | 已完成 |
+| P2 | CNB (cnb.cool) 镜像同步工作流模板 | CI/CD | AI | 已完成 |
+| P2 | 安装安全集成 + 举报测试（14 tests） | tests | AI | 已完成 |
+
+---
+
+## Phase 6 -- 国际化与分发
+
+**目标：** 多语言支持、文档翻译、多渠道分发、主页动态内容
+
+### Sprint 8（国际化 + 文档完善）
+
+| 优先级 | 任务 | 所属模块 | 责任人 | 状态 |
+|-------|------|----------|--------|------|
+| P0 | i18n 模块（LANG 检测 + 中英文消息目录） | utils/i18n | AI | 已完成 |
+| P0 | CLI 入口初始化 i18n | cli/main | AI | 已完成 |
+| P1 | MkDocs 中文文档（首页/安装/快速上手/安全） | docs-src/zh | AI | 已完成 |
+| P2 | README Star History 趋势图 | README | AI | 已完成 |
+| P2 | README Roadmap + test count 更新 | README | AI | 已完成 |
+
+### Sprint 9（多渠道分发）
+
+| 优先级 | 任务 | 所属模块 | 责任人 | 状态 |
+|-------|------|----------|--------|------|
+| P1 | curl+sh 一键安装脚本 | scripts/install.sh | AI | 已完成 |
+| P1 | iphub 定时统计 + README Top 排名 Action | CI/CD | AI | 已完成 |
+| P1 | 多平台 PyInstaller 打包（Linux/macOS/Windows） | CI/CD | AI | 已完成 |
+| P2 | GitHub Actions 发布时自动构建 + GitHub Release 上传 | CI/CD | AI | 已完成 |
