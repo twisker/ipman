@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import subprocess
 from pathlib import Path
 from textwrap import dedent
 from unittest.mock import MagicMock, patch
@@ -250,3 +251,43 @@ class TestHubPublish:
         result = runner.invoke(cli, ["hub", "publish", str(ip_file)])
         assert result.exit_code == 0, result.output
         mock_vet.assert_called_once()
+
+
+class TestHubReport:
+    """Test `ipman hub report`."""
+
+    @patch("ipman.cli.hub._submit_report")
+    @patch("ipman.cli.hub._get_hub_client")
+    @patch("ipman.cli.hub.get_github_username", return_value="reporter")
+    def test_report_skill(self, mock_user: MagicMock, mock_hub_fn: MagicMock, mock_submit: MagicMock) -> None:
+        hub = _mock_hub()
+        mock_hub_fn.return_value = hub
+        mock_submit.return_value = subprocess.CompletedProcess(
+            args=[], returncode=0, stdout="https://github.com/twisker/iphub/issues/1\n", stderr="",
+        )
+
+        runner = CliRunner()
+        result = runner.invoke(cli, [
+            "hub", "report", "web-scraper",
+            "--reason", "Sends data to unknown server",
+        ])
+        assert result.exit_code == 0, result.output
+        assert "reported" in result.output.lower() or "report" in result.output.lower()
+
+    def test_report_requires_reason(self) -> None:
+        runner = CliRunner()
+        result = runner.invoke(cli, ["hub", "report", "web-scraper"])
+        assert result.exit_code != 0
+
+    @patch("ipman.cli.hub._get_hub_client")
+    @patch("ipman.cli.hub.get_github_username", return_value="reporter")
+    def test_report_not_found(self, mock_user: MagicMock, mock_hub_fn: MagicMock) -> None:
+        hub = _mock_hub()
+        hub.lookup.return_value = None
+        mock_hub_fn.return_value = hub
+
+        runner = CliRunner()
+        result = runner.invoke(cli, [
+            "hub", "report", "nonexistent", "--reason", "test",
+        ])
+        assert result.exit_code != 0

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import subprocess
 from pathlib import Path
 from typing import Any
 
@@ -10,6 +11,23 @@ import click
 from ipman.core.vetter import RiskLevel, assess_risk, vet_skill_content
 from ipman.hub.client import IpHubClient
 from ipman.hub.publisher import IpHubPublisher, PublishError, get_github_username
+
+
+def _submit_report(
+    name: str, body: str,
+) -> subprocess.CompletedProcess[str]:
+    """Submit a report issue to IpHub via gh CLI."""
+    import subprocess as _sp
+    return _sp.run(
+        [
+            "gh", "issue", "create",
+            "--repo", "twisker/iphub",
+            "--title", f"[report] {name}",
+            "--body", body,
+            "--label", "report",
+        ],
+        capture_output=True, text=True, check=False,
+    )
 
 
 def _get_hub_client() -> IpHubClient:
@@ -186,3 +204,32 @@ def publish(
         except PublishError as e:
             raise click.ClickException(str(e)) from e
         click.secho(f"PR created: {pr_url}", fg="green")
+
+
+@hub.command("report")
+@click.argument("name")
+@click.option("--reason", "-r", required=True,
+              help="Reason for reporting (required).")
+def report_cmd(name: str, reason: str) -> None:
+    """Report a suspicious skill or package."""
+    try:
+        username = get_github_username()
+    except PublishError as e:
+        raise click.ClickException(str(e)) from e
+
+    client = _get_hub_client()
+    entry = client.lookup(name)
+    if entry is None:
+        raise click.ClickException(f"'{name}' not found in IpHub.")
+
+    body = f"Report by @{username}: {reason}"
+    result = _submit_report(name, body)
+    if result.returncode != 0:
+        msg = result.stderr.strip() or "Failed to submit report"
+        raise click.ClickException(msg)
+
+    click.secho(
+        f"Reported '{name}'. Thank you for helping keep "
+        f"IpHub safe.",
+        fg="green",
+    )
