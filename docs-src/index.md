@@ -1,8 +1,12 @@
+<p align="center">
+  <img src="images/IpMan.jpg" alt="IpMan Banner" width="600" />
+</p>
+
 # IpMan - Intelligence Package Manager
 
-*I can take on ten — and stop the bad ones at the door.*
+*I can take on ten.*
 
-Agent skill virtual environment manager with built-in defense against malicious skills.
+> Agent skill virtual environment manager — like conda/uv, but for AI agent skills. With built-in defense against malicious skills.
 
 ## What is IpMan?
 

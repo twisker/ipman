@@ -4,7 +4,7 @@
 
 # IpMan - Intelligence Package Manager
 
-*I can take on ten — and stop the bad ones at the door.*
+*I can take on ten.*
 
 > Agent skill virtual environment manager — like conda/uv, but for AI agent skills. With built-in defense against malicious skills.
 
