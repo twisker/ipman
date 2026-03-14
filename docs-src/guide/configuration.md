@@ -13,7 +13,7 @@ security:
 hub:
   url: https://raw.githubusercontent.com/twisker/iphub/main
   # CNB mirror (cnb.cool):
-  # url: https://cnb.cool/lutuai/twisker/twisker/iphub/raw/main
+  # url: https://cnb.cool/lutuai/twisker/iphub/raw/main
 
 agent:
   default: auto          # auto | claude-code | openclaw
@@ -32,18 +32,18 @@ For regions with GitHub access issues:
 
 ```yaml
 hub:
-  url: https://cnb.cool/lutuai/twisker/twisker/iphub/raw/main
+  url: https://cnb.cool/lutuai/twisker/iphub/raw/main
 ```
 
 Or via CLI:
 
 ```bash
-ipman hub search scraper --hub-url https://cnb.cool/lutuai/twisker/twisker/iphub/raw/main
+ipman hub search scraper --hub-url https://cnb.cool/lutuai/twisker/iphub/raw/main
 ```
 
 Or via environment variable:
 
 ```bash
-export IPMAN_HUB_URL=https://cnb.cool/lutuai/twisker/twisker/iphub/raw/main
+export IPMAN_HUB_URL=https://cnb.cool/lutuai/twisker/iphub/raw/main
 ipman install web-scraper
 ```

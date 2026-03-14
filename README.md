@@ -114,7 +114,7 @@ security:
 hub:
   url: https://raw.githubusercontent.com/twisker/iphub/main
   # Mirror for restricted regions:
-  # url: https://cnb.cool/lutuai/twisker/twisker/iphub/raw/main
+  # url: https://cnb.cool/lutuai/twisker/iphub/raw/main
 
 agent:
   default: auto          # auto | claude-code | openclaw
