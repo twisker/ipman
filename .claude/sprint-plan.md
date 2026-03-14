@@ -91,7 +91,18 @@
 
 **目标：** 实现 IpHub 搜索、下载、发布功能
 
-> Sprint 拆分待 Phase 2 完成后细化。
+### Sprint 4（IpHub 搜索 + 发布）
+
+| 优先级 | 任务 | 所属模块 | 责任人 | 状态 |
+|-------|------|----------|--------|------|
+| P0 | 实现 `ipman hub search <query>` 命令 | cli/hub | AI | 待开始 |
+| P0 | 实现 `ipman hub info <name>` 命令 | cli/hub | AI | 待开始 |
+| P1 | 实现 `ipman hub top` 命令 | cli/hub | AI | 待开始 |
+| P1 | 实现发布引擎 hub/publisher.py | hub/publisher | AI | 待开始 |
+| P1 | 实现 `ipman hub publish <name>` Skill 发布 | cli/hub + hub/publisher | AI | 待开始 |
+| P1 | 实现 `ipman hub publish <file.ip.yaml>` IP 包发布 | cli/hub + hub/publisher | AI | 待开始 |
+| P2 | 安装统计上报（counter issue comment + reaction） | hub/stats | AI | 待开始 |
+| P2 | 编写 IpHub CLI + publisher 测试 | tests | AI | 待开始 |
 
 ---
 
