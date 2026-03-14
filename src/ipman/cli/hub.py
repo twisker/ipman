@@ -31,8 +31,10 @@ def _submit_report(
 
 
 def _get_hub_client() -> IpHubClient:
-    """Create a default IpHubClient instance."""
-    return IpHubClient()
+    """Create an IpHubClient using configured hub URL."""
+    from ipman.core.config import load_config
+    cfg = load_config()
+    return IpHubClient(base_url=cfg.hub_url)
 
 
 @click.group()

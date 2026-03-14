@@ -76,9 +76,10 @@ def _enforce_security(
 
 
 def _get_hub_client() -> IpHubClient:
-    """Create a default IpHubClient instance."""
+    """Create an IpHubClient using configured hub URL."""
     from ipman.hub.client import IpHubClient
-    return IpHubClient()
+    cfg = load_config()
+    return IpHubClient(base_url=cfg.hub_url)
 
 
 def _install_from_hub(
