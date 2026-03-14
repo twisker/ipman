@@ -7,6 +7,7 @@ from pathlib import Path
 from textwrap import dedent
 from unittest.mock import MagicMock, patch
 
+import pytest
 import yaml
 from click.testing import CliRunner
 
@@ -14,7 +15,6 @@ from ipman.cli.main import cli
 from ipman.core.config import SecurityMode, load_config
 from ipman.core.security import Action, decide_action
 from ipman.core.vetter import assess_risk, vet_skill_content
-
 
 # ---------------------------------------------------------------------------
 # 1. Config → vetter → security full chain (no CLI, pure logic)
@@ -48,7 +48,7 @@ class TestConfigToSecurityChain:
         cfg = load_config(config_dir=tmp_path)
 
         # Simulate medium risk (new author, low installs)
-        from ipman.core.vetter import RiskFlag, RiskLevel, vet_skill_metadata
+        from ipman.core.vetter import vet_skill_metadata
         flags = vet_skill_metadata(author="@newbie", installs=0, reports=0)
         report = assess_risk(flags, skill_name="new-skill")
 
@@ -68,10 +68,9 @@ class TestConfigToSecurityChain:
         assert action == Action.INSTALL
 
     def test_env_override_trumps_config(
-        self, tmp_path: Path, monkeypatch: "pytest.MonkeyPatch",
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """Env var IPMAN_SECURITY_MODE overrides config file."""
-        import pytest
         config_file = tmp_path / "config.yaml"
         config_file.write_text(yaml.dump({"security": {"mode": "permissive"}}))
         monkeypatch.setenv("IPMAN_SECURITY_MODE", "strict")

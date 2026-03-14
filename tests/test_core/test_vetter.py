@@ -2,17 +2,13 @@
 
 from __future__ import annotations
 
-import pytest
-
 from ipman.core.vetter import (
-    RiskLevel,
     RiskFlag,
-    VetReport,
+    RiskLevel,
+    assess_risk,
     vet_skill_content,
     vet_skill_metadata,
-    assess_risk,
 )
-
 
 # ---------------------------------------------------------------------------
 # Red flag detection (content scanning)
@@ -59,7 +55,7 @@ class TestVetSkillContent:
     def test_detect_dynamic_code_eval(self) -> None:
         # NOTE: This test verifies our DETECTOR catches dangerous patterns.
         # The string below is test input for the scanner, not executed code.
-        content = 'result = eval(user_input)'  # noqa: S307
+        content = 'result = eval(user_input)'
         flags = vet_skill_content(content)
         assert any(f.id == "obfuscated-code" for f in flags)
 

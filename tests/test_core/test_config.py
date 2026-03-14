@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from ipman.core.config import IpManConfig, load_config, SecurityMode
+from ipman.core.config import IpManConfig, SecurityMode, load_config
 
 
 class TestSecurityMode:

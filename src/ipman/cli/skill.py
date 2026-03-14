@@ -11,7 +11,7 @@ from ipman.agents.base import AgentAdapter
 from ipman.cli._common import resolve_agent as _resolve_agent
 from ipman.core.config import SecurityMode, load_config
 from ipman.core.security import Action, decide_action, log_security_event
-from ipman.core.vetter import RiskLevel, VetReport, assess_risk, vet_skill_content
+from ipman.core.vetter import VetReport, assess_risk, vet_skill_content
 
 if TYPE_CHECKING:
     from ipman.hub.client import IpHubClient
