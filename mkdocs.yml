@@ -44,6 +44,11 @@ nav:
   - Security:
       - Risk Assessment: security/risk-assessment.md
       - Security Modes: security/modes.md
+  - 中文文档:
+      - 首页: zh/index.md
+      - 安装指南: zh/getting-started/installation.md
+      - 快速上手: zh/getting-started/quickstart.md
+      - 安全指南: zh/guide/security.md
 
 markdown_extensions:
   - admonition
