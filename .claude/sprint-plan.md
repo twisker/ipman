@@ -148,3 +148,28 @@
 | P1 | 实现 IpHub 镜像支持（config hub.url / --hub-url / IPMAN_HUB_URL） | hub/client | AI | 待开始 |
 | P2 | 实现阿里云云效镜像同步 GitHub Actions 工作流 | CI/CD (iphub repo) | AI | 待开始 |
 | P2 | 编写安装安全集成 + 举报 + 镜像测试 | tests | AI | 待开始 |
+
+---
+
+## Phase 6 -- 国际化与分发
+
+**目标：** 多语言支持、文档翻译、多渠道分发、主页动态内容
+
+### Sprint 8（国际化 + 文档完善）
+
+| 优先级 | 任务 | 所属模块 | 责任人 | 状态 |
+|-------|------|----------|--------|------|
+| P0 | 实现 i18n 模块（LANG 环境变量检测，中英文自动切换） | utils/i18n | AI | 待开始 |
+| P0 | CLI 所有命令帮助文本中英文化 | cli/* | AI | 待开始 |
+| P1 | MkDocs 文档站中文翻译 | docs-src | AI | 待开始 |
+| P2 | README 动态展示 Top 10 排名（GitHub Actions 定时生成） | CI/CD | AI | 待开始 |
+| P2 | README GitHub Stars 趋势图（star-history badge） | README | AI | 待开始 |
+
+### Sprint 9（多渠道分发）
+
+| 优先级 | 任务 | 所属模块 | 责任人 | 状态 |
+|-------|------|----------|--------|------|
+| P1 | curl+sh 一键安装脚本（Unix-like） | scripts/install.sh | AI | 待开始 |
+| P1 | Windows PyInstaller 打包（.exe） | CI/CD | AI | 待开始 |
+| P2 | Windows 安装包（.msi 或 Inno Setup） | CI/CD | AI | 待开始 |
+| P2 | GitHub Actions 发布时自动构建多平台二进制 | CI/CD | AI | 待开始 |
