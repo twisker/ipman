@@ -67,7 +67,7 @@ class ClaudeCodeAdapter(AgentAdapter):
             return []
         return [
             SkillInfo(
-                name=p.get("name", ""),
+                name=p.get("id", p.get("name", "")),
                 version=p.get("version", ""),
                 enabled=p.get("enabled", True),
             )
