@@ -9,6 +9,9 @@ import click
 
 from ipman.agents.base import AgentAdapter
 from ipman.cli._common import resolve_agent as _resolve_agent
+from ipman.core.config import SecurityMode, load_config
+from ipman.core.security import Action, decide_action, log_security_event
+from ipman.core.vetter import RiskLevel, VetReport, assess_risk, vet_skill_content
 
 if TYPE_CHECKING:
     from ipman.hub.client import IpHubClient
@@ -17,6 +20,59 @@ if TYPE_CHECKING:
 def _is_ip_file(source: str) -> bool:
     """Check if the source argument looks like an .ip.yaml file path."""
     return source.endswith(".ip.yaml")
+
+
+def _run_vet(content: str, skill_name: str) -> VetReport:
+    """Run risk assessment on skill content."""
+    flags = vet_skill_content(content)
+    return assess_risk(flags, skill_name=skill_name)
+
+
+def _enforce_security(
+    report: VetReport,
+    mode: SecurityMode,
+    source: str,
+) -> bool:
+    """Enforce security policy. Returns True if install should proceed."""
+    action = decide_action(report.risk_level, mode)
+    cfg = load_config()
+
+    if action == Action.BLOCK:
+        click.secho(
+            f"BLOCKED: '{report.skill_name}' — "
+            f"risk {report.risk_level.name}",
+            fg="red", err=True,
+        )
+        for f in report.flags:
+            click.secho(f"  {f.description}", fg="red", err=True)
+        if cfg.log_enabled:
+            log_security_event(
+                log_path=cfg.log_path,
+                skill_name=report.skill_name,
+                source=source,
+                risk_level=report.risk_level,
+                action=action,
+            )
+        return False
+
+    if action in (Action.WARN_INSTALL, Action.WARN_CONFIRM):
+        click.secho(
+            f"WARNING: '{report.skill_name}' — "
+            f"risk {report.risk_level.name}",
+            fg="yellow", err=True,
+        )
+        for f in report.flags:
+            click.secho(f"  {f.description}", fg="yellow", err=True)
+        if cfg.log_enabled:
+            log_security_event(
+                log_path=cfg.log_path,
+                skill_name=report.skill_name,
+                source=source,
+                risk_level=report.risk_level,
+                action=action,
+            )
+
+    return True
 
 
 def _get_hub_client() -> IpHubClient:
@@ -129,19 +185,76 @@ def _install_from_ip_file(
               help="Agent tool to use (e.g. claude-code, openclaw).")
 @click.option("--dry-run", is_flag=True, default=False,
               help="Show what would be installed without executing.")
-def install(source: str, agent_name: str | None, dry_run: bool) -> None:
+@click.option("--security", "security_mode", default=None,
+              type=click.Choice(
+                  ["permissive", "default", "cautious", "strict"],
+                  case_sensitive=False,
+              ),
+              help="Security mode override.")
+@click.option("--vet", "force_vet", is_flag=True, default=False,
+              help="Force local risk assessment (even for IpHub).")
+@click.option("--no-vet", "skip_vet", is_flag=True, default=False,
+              help="Skip local risk assessment.")
+@click.option("--yes", "auto_yes", is_flag=True, default=False,
+              help="Auto-confirm security warnings.")
+def install(
+    source: str,
+    agent_name: str | None,
+    dry_run: bool,
+    security_mode: str | None,
+    force_vet: bool,
+    skip_vet: bool,
+    auto_yes: bool,
+) -> None:
     """Install a skill or an IP package.
 
     SOURCE can be a skill name (e.g. web-scraper) or an .ip.yaml file path.
     """
     adapter = _resolve_agent(agent_name)
 
-    if _is_ip_file(source):
-        _install_from_ip_file(Path(source), adapter, dry_run=dry_run)
-        return
+    # Resolve security mode
+    cfg = load_config()
+    mode = SecurityMode(security_mode) if security_mode else cfg.security_mode
 
-    # Short name — resolve via IpHub
-    _install_from_hub(source, adapter, dry_run=dry_run)
+    is_local = _is_ip_file(source)
+
+    # Determine whether to run local vet
+    should_vet = False
+    if skip_vet:
+        should_vet = False
+    elif force_vet:
+        should_vet = True
+    elif is_local:
+        # Local/URL sources: always vet by default
+        should_vet = True
+    elif mode == SecurityMode.STRICT:
+        # STRICT mode: vet everything
+        should_vet = True
+    # else: IpHub source in non-STRICT mode → trust existing label
+
+    # Run vet if needed
+    if should_vet and not dry_run:
+        if is_local:
+            path = Path(source)
+            if not path.exists():
+                raise click.ClickException(
+                    f"IP file not found: {path}",
+                )
+            content = path.read_text(encoding="utf-8")
+            report = _run_vet(content, skill_name=source)
+        else:
+            # For hub skills, vet the registry content
+            report = _run_vet("", skill_name=source)
+
+        if not _enforce_security(report, mode, source):
+            raise SystemExit(1)
+
+    if is_local:
+        _install_from_ip_file(
+            Path(source), adapter, dry_run=dry_run,
+        )
+    else:
+        _install_from_hub(source, adapter, dry_run=dry_run)
 
 
 @click.command()
