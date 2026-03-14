@@ -37,7 +37,7 @@
 | cli/pack | `tests/test_cli/test_pack.py` | >= 70% | 10 tests passed | 已完成 |
 | cli/install (IP) | `tests/test_cli/test_install_ip.py` | >= 70% | 8 tests passed | 已完成 |
 | cli/install (Hub) | `tests/test_cli/test_install_hub.py` | >= 70% | 7 tests passed | 已完成 |
-| cli/hub | `tests/test_cli/test_hub.py` | >= 70% | -- | 待开始 |
+| cli/hub | `tests/test_cli/test_hub.py` | >= 70% | 12 tests passed | 已完成 |
 
 ---
 
@@ -88,3 +88,6 @@
 | Sprint 3 | cli/pack | pack 命令 | `tests/test_cli/test_pack.py` | 10/10 通过 |
 | Sprint 3 | cli/install (IP) | .ip.yaml 本地文件安装 | `tests/test_cli/test_install_ip.py` | 8/8 通过 |
 | Sprint 3 | cli/install (Hub) | IpHub 短名称安装 + fetch_registry | `tests/test_cli/test_install_hub.py` | 7/7 通过 |
+| Sprint 4 | cli/hub | search/info/top/publish CLI 命令 | `tests/test_cli/test_hub.py` | 12/12 通过 |
+| Sprint 4 | hub/publisher | 发布引擎 (fork/push/PR) | `tests/test_hub/test_publisher.py` | 10/10 通过 |
+| Sprint 4 | hub/stats | 安装统计上报 | `tests/test_hub/test_stats.py` | 4/4 通过 |

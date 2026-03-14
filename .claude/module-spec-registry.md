@@ -18,7 +18,7 @@
 | cli/env | 虚拟环境命令（create/activate/deactivate/delete/list/status） | -- | `src/ipman/cli/env.py` | 已完成 |
 | cli/skill | 技能命令（install/uninstall/list，通过 agent CLI 执行） | -- | `src/ipman/cli/skill.py` | 已完成 |
 | cli/pack | IP 包打包命令（pack，合并原 export） | -- | `src/ipman/cli/pack.py` | 已完成 |
-| cli/hub | IpHub 命令（search/publish/top） | -- | `src/ipman/cli/hub.py` | 待开始 |
+| cli/hub | IpHub 命令（search/info/top/publish） | `.claude/research/iphub-design.md` | `src/ipman/cli/hub.py` | 已完成 |
 
 ---
 
@@ -50,7 +50,8 @@
 | 模块 | 说明 | 设计文档 | 源代码目录 | 状态 |
 |------|------|---------|----------|------|
 | hub/client | IpHub 客户端（index.yaml 拉取/缓存/搜索 + fetch_registry） | `.claude/research/iphub-design.md` | `src/ipman/hub/client.py` | 已完成 |
-| hub/publisher | 发布逻辑（fork + 创建注册文件 + 提 PR） | `.claude/research/iphub-design.md` | `src/ipman/hub/publisher.py` | 待开始 |
+| hub/publisher | 发布引擎（fork + 创建注册文件 + 提 PR via gh CLI） | `.claude/research/iphub-design.md` | `src/ipman/hub/publisher.py` | 已完成 |
+| hub/stats | 安装统计上报（counter issue comment + reaction） | `.claude/research/iphub-design.md` | `src/ipman/hub/stats.py` | 已完成 |
 
 ---
 
@@ -89,3 +90,6 @@
 | `tests/test_core/test_package.py` | core/package | 16 | 已完成 |
 | `tests/test_core/test_resolver.py` | core/resolver | 19 | 已完成 |
 | `tests/test_hub/test_client.py` | hub/client | 12 | 已完成 |
+| `tests/test_hub/test_publisher.py` | hub/publisher | 10 | 已完成 |
+| `tests/test_hub/test_stats.py` | hub/stats | 4 | 已完成 |
+| `tests/test_cli/test_hub.py` | cli/hub | 12 | 已完成 |
