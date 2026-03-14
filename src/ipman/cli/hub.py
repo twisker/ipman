@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import click
 
 from ipman.hub.client import IpHubClient
+from ipman.hub.publisher import IpHubPublisher, PublishError, get_github_username
 
 
 def _get_hub_client() -> IpHubClient:
@@ -91,3 +94,55 @@ def top(limit: int) -> None:
         name = click.style(e["name"], bold=True)
         installs = e.get("installs", 0)
         click.echo(f"  {i}. {tag} {name}  ({installs} installs)")
+
+
+@hub.command()
+@click.argument("source")
+@click.option("--description", "-d", default="", help="Skill/package description.")
+@click.option("--license", "license_", default=None, help="License (e.g. MIT).")
+@click.option("--homepage", default=None, help="Project homepage URL.")
+def publish(source: str, description: str, license_: str | None, homepage: str | None) -> None:
+    """Publish a skill or IP package to IpHub.
+
+    SOURCE can be a skill name (e.g. web-scraper) or an .ip.yaml file path.
+    """
+    try:
+        username = get_github_username()
+    except PublishError as e:
+        raise click.ClickException(str(e)) from e
+
+    publisher = IpHubPublisher(username=username)
+
+    if source.endswith(".ip.yaml"):
+        # Publish IP package
+        path = Path(source)
+        if not path.exists():
+            raise click.ClickException(f"File not found: {source}")
+
+        from ipman.core.package import parse_ip_file
+        pkg = parse_ip_file(path)
+
+        click.echo(f"Publishing package '{pkg.name}' v{pkg.version} as @{username}...")
+        try:
+            pr_url = publisher.publish_package(pkg)
+        except PublishError as e:
+            raise click.ClickException(str(e)) from e
+        click.secho(f"PR created: {pr_url}", fg="green")
+    else:
+        # Publish skill
+        if not description:
+            raise click.ClickException(
+                "Description is required for skill publishing. Use --description."
+            )
+
+        click.echo(f"Publishing skill '{source}' as @{username}...")
+        try:
+            pr_url = publisher.publish_skill(
+                name=source,
+                description=description,
+                license_=license_,
+                homepage=homepage,
+            )
+        except PublishError as e:
+            raise click.ClickException(str(e)) from e
+        click.secho(f"PR created: {pr_url}", fg="green")

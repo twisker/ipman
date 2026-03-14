@@ -1,7 +1,9 @@
-"""Tests for `ipman hub` CLI commands (search/info/top)."""
+"""Tests for `ipman hub` CLI commands (search/info/top/publish)."""
 
 from __future__ import annotations
 
+from pathlib import Path
+from textwrap import dedent
 from unittest.mock import MagicMock, patch
 
 from click.testing import CliRunner
@@ -140,9 +142,72 @@ class TestHubTop:
         with patch("ipman.cli.hub._get_hub_client", return_value=hub):
             result = runner.invoke(cli, ["hub", "top"])
         assert result.exit_code == 0, result.output
-        # web-scraper has most installs (1234), should appear first
-        lines = result.output.strip().split("\n")
         content = result.output
         assert "web-scraper" in content
         assert "git-helper" in content
         assert "frontend-toolkit" in content
+
+
+SAMPLE_IP_FILE = dedent("""\
+    name: my-toolkit
+    version: "1.0.0"
+    description: "My toolkit"
+    skills:
+      - name: skill-a
+""")
+
+
+class TestHubPublish:
+    """Test `ipman hub publish`."""
+
+    @patch("ipman.cli.hub.IpHubPublisher")
+    @patch("ipman.cli.hub.get_github_username", return_value="twisker")
+    def test_publish_skill(self, mock_user: MagicMock, mock_pub_cls: MagicMock) -> None:
+        publisher = MagicMock()
+        publisher.publish_skill.return_value = "https://github.com/twisker/iphub/pull/1"
+        mock_pub_cls.return_value = publisher
+
+        runner = CliRunner()
+        result = runner.invoke(cli, [
+            "hub", "publish", "web-scraper",
+            "--description", "Browser automation",
+        ])
+        assert result.exit_code == 0, result.output
+        assert "pull/1" in result.output
+        publisher.publish_skill.assert_called_once()
+
+    @patch("ipman.cli.hub.IpHubPublisher")
+    @patch("ipman.cli.hub.get_github_username", return_value="twisker")
+    def test_publish_skill_requires_description(self, mock_user: MagicMock, mock_pub_cls: MagicMock) -> None:
+        runner = CliRunner()
+        result = runner.invoke(cli, ["hub", "publish", "web-scraper"])
+        assert result.exit_code != 0
+        assert "description" in result.output.lower()
+
+    @patch("ipman.cli.hub.IpHubPublisher")
+    @patch("ipman.cli.hub.get_github_username", return_value="twisker")
+    def test_publish_package(self, mock_user: MagicMock, mock_pub_cls: MagicMock, tmp_path: Path) -> None:
+        publisher = MagicMock()
+        publisher.publish_package.return_value = "https://github.com/twisker/iphub/pull/2"
+        mock_pub_cls.return_value = publisher
+
+        ip_file = tmp_path / "my-toolkit.ip.yaml"
+        ip_file.write_text(SAMPLE_IP_FILE)
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["hub", "publish", str(ip_file)])
+        assert result.exit_code == 0, result.output
+        assert "pull/2" in result.output
+        publisher.publish_package.assert_called_once()
+
+    @patch("ipman.cli.hub.get_github_username")
+    def test_publish_not_authenticated(self, mock_user: MagicMock) -> None:
+        from ipman.hub.publisher import PublishError
+        mock_user.side_effect = PublishError("GitHub authentication required.")
+
+        runner = CliRunner()
+        result = runner.invoke(cli, [
+            "hub", "publish", "test", "--description", "x",
+        ])
+        assert result.exit_code != 0
+        assert "github" in result.output.lower() or "auth" in result.output.lower()
