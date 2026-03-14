@@ -1,0 +1,60 @@
+docs_dir: docs-src
+site_name: IpMan Documentation
+site_url: https://twisker.github.io/ipman
+site_description: Intelligence Package Manager — Agent skill virtual environment manager
+site_author: twisker
+repo_url: https://github.com/twisker/ipman
+repo_name: twisker/ipman
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: amber
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: amber
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.sections
+    - navigation.expand
+    - content.code.copy
+    - search.highlight
+
+nav:
+  - Home: index.md
+  - Getting Started:
+      - Installation: getting-started/installation.md
+      - Quick Start: getting-started/quickstart.md
+  - User Guide:
+      - Virtual Environments: guide/environments.md
+      - Skill Management: guide/skills.md
+      - IP Packages: guide/packages.md
+      - IpHub: guide/iphub.md
+      - Security: guide/security.md
+      - Configuration: guide/configuration.md
+  - CLI Reference: cli-reference.md
+  - IP Package Spec: ip-package-spec.md
+  - Security:
+      - Risk Assessment: security/risk-assessment.md
+      - Security Modes: security/modes.md
+  - 中文文档:
+      - 首页: zh/index.md
+      - 安装指南: zh/getting-started/installation.md
+      - 快速上手: zh/getting-started/quickstart.md
+      - 安全指南: zh/guide/security.md
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - tables
+  - attr_list
