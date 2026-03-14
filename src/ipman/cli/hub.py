@@ -163,12 +163,20 @@ def publish(
                 "HIGH/EXTREME risk items cannot be published."
             )
 
+        vet_summary = "\n".join(
+            f"- {f.description}" for f in report.flags
+        ) if report.flags else "No issues detected."
+
         click.echo(
             f"Publishing package '{pkg.name}' v{pkg.version} "
-            f"as @{username}...",
+            f"as @{username} (risk: {report.risk_level.name})...",
         )
         try:
-            pr_url = publisher.publish_package(pkg)
+            pr_url = publisher.publish_package(
+                pkg,
+                risk_level=report.risk_level.name,
+                vet_summary=vet_summary,
+            )
         except PublishError as e:
             raise click.ClickException(str(e)) from e
         click.secho(f"PR created: {pr_url}", fg="green")
@@ -195,13 +203,22 @@ def publish(
                 "HIGH/EXTREME risk items cannot be published."
             )
 
-        click.echo(f"Publishing skill '{source}' as @{username}...")
+        vet_summary = "\n".join(
+            f"- {f.description}" for f in report.flags
+        ) if report.flags else "No issues detected."
+
+        click.echo(
+            f"Publishing skill '{source}' as @{username} "
+            f"(risk: {report.risk_level.name})...",
+        )
         try:
             pr_url = publisher.publish_skill(
                 name=source,
                 description=description,
                 license_=license_,
                 homepage=homepage,
+                risk_level=report.risk_level.name,
+                vet_summary=vet_summary,
             )
         except PublishError as e:
             raise click.ClickException(str(e)) from e

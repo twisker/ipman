@@ -60,6 +60,7 @@ def generate_skill_registry(
     homepage: str | None = None,
     keywords: list[str] | None = None,
     agents: dict[str, dict[str, str]] | None = None,
+    risk_level: str | None = None,
 ) -> dict[str, Any]:
     """Generate a skill registry dict (for registry/@owner/<name>.yaml)."""
     data: dict[str, Any] = {
@@ -76,6 +77,8 @@ def generate_skill_registry(
         data["keywords"] = keywords
     if agents:
         data["agents"] = agents
+    if risk_level:
+        data["risk_level"] = risk_level
     return data
 
 
@@ -86,6 +89,7 @@ def generate_package_registry(
     author: str,
     license_: str | None = None,
     homepage: str | None = None,
+    risk_level: str | None = None,
 ) -> dict[str, Any]:
     """Generate a package meta.yaml dict."""
     data: dict[str, Any] = {
@@ -98,6 +102,8 @@ def generate_package_registry(
         data["license"] = license_
     if homepage:
         data["homepage"] = homepage
+    if risk_level:
+        data["risk_level"] = risk_level
     return data
 
 
@@ -221,6 +227,8 @@ class IpHubPublisher:
         license_: str | None = None,
         homepage: str | None = None,
         keywords: list[str] | None = None,
+        risk_level: str = "LOW",
+        vet_summary: str = "",
     ) -> str:
         """Publish a skill to IpHub. Returns PR URL."""
         self.ensure_fork()
@@ -233,6 +241,7 @@ class IpHubPublisher:
             homepage=homepage,
             keywords=keywords,
             agents=agents,
+            risk_level=risk_level,
         )
         content = _dump_yaml(registry)
 
@@ -244,13 +253,26 @@ class IpHubPublisher:
             branch, path, content, f"Register skill: {name}",
         )
 
+        pr_body = (
+            f"Register `{name}` skill by @{self.username}.\n\n"
+            f"## Risk Assessment\n\n"
+            f"**Risk Level:** {risk_level}\n\n"
+        )
+        if vet_summary:
+            pr_body += f"**Details:**\n{vet_summary}\n"
+
         return self._create_pr(
             branch,
             f"Register skill: {name}",
-            f"Register `{name}` skill by @{self.username}.",
+            pr_body,
         )
 
-    def publish_package(self, pkg: IPPackage) -> str:
+    def publish_package(
+        self,
+        pkg: IPPackage,
+        risk_level: str = "LOW",
+        vet_summary: str = "",
+    ) -> str:
         """Publish an IP package to IpHub. Returns PR URL."""
         self.ensure_fork()
 
@@ -263,6 +285,7 @@ class IpHubPublisher:
             description=pkg.description,
             author=f"@{self.username}",
             license_=pkg.license,
+            risk_level=risk_level,
         )
         meta_content = _dump_yaml(meta)
         meta_path = (
@@ -285,8 +308,17 @@ class IpHubPublisher:
             f"Add {pkg.name} v{pkg.version}",
         )
 
+        pr_body = (
+            f"Register `{pkg.name}` v{pkg.version}"
+            f" by @{self.username}.\n\n"
+            f"## Risk Assessment\n\n"
+            f"**Risk Level:** {risk_level}\n\n"
+        )
+        if vet_summary:
+            pr_body += f"**Details:**\n{vet_summary}\n"
+
         return self._create_pr(
             branch,
             f"Register package: {pkg.name} v{pkg.version}",
-            f"Register `{pkg.name}` v{pkg.version} by @{self.username}.",
+            pr_body,
         )
