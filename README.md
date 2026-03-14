@@ -173,6 +173,15 @@ IpHub Layer (registry, search, publish, stats, mirror)
 | Phase 5 | Security (risk engine, security modes, reporting, mirrors) | Done |
 | Phase 6 | Internationalization + multi-platform distribution | In Progress |
 
+## IpHub Rankings
+
+<!-- TOP_SKILLS_START -->
+*Rankings will appear here once IpHub has install data.*
+<!-- TOP_SKILLS_END -->
+
+<!-- TOP_PACKAGES_START -->
+<!-- TOP_PACKAGES_END -->
+
 ## Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=twisker/ipman&type=Date)](https://star-history.com/#twisker/ipman&Date)
