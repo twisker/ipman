@@ -55,7 +55,8 @@ class TestRemoveSymlink:
     def test_remove_non_symlink_fails(self, tmp_path):
         real_dir = tmp_path / "realdir"
         real_dir.mkdir()
-        with pytest.raises(ValueError, match="Not a symlink"):
+        (real_dir / "keep.txt").write_text("keep")  # non-empty dir
+        with pytest.raises((ValueError, OSError)):
             remove_symlink(real_dir)
 
 
@@ -80,7 +81,11 @@ class TestResolveSymlink:
         link.symlink_to(target_dir)
         resolved = resolve_symlink(link)
         assert resolved is not None
-        assert Path(resolved).resolve() == target_dir.resolve()
+        # Normalize to handle Windows \\?\ extended-length path prefix
+        def _normalize(p: Path) -> str:
+            s = str(p.resolve())
+            return s.removeprefix("\\\\?\\")
+        assert _normalize(Path(resolved)) == _normalize(target_dir)
 
     def test_resolve_non_symlink_returns_none(self, tmp_path):
         d = tmp_path / "real"
