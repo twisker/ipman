@@ -6,22 +6,8 @@ from pathlib import Path
 
 import click
 
-from ipman.agents.base import AgentAdapter
-from ipman.agents.registry import detect_agent, get_adapter
+from ipman.cli._common import resolve_agent as _resolve_agent
 from ipman.core.package import IPPackage, SkillRef, dump_ip_file
-
-
-def _resolve_agent(agent_name: str | None) -> AgentAdapter:
-    """Resolve adapter from --agent flag or auto-detection."""
-    if agent_name:
-        return get_adapter(agent_name)
-    detected = detect_agent()
-    if detected is None:
-        raise click.ClickException(
-            "No agent detected. Use --agent to specify one "
-            "(e.g. --agent claude-code)."
-        )
-    return detected
 
 
 @click.command()
