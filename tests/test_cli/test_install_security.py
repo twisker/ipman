@@ -7,12 +7,10 @@ from pathlib import Path
 from textwrap import dedent
 from unittest.mock import MagicMock, patch
 
-import pytest
 from click.testing import CliRunner
 
 from ipman.cli.main import cli
 from ipman.core.vetter import RiskLevel
-
 
 SAMPLE_IP = dedent("""\
     name: test-kit

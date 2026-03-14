@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import pytest
-
 from ipman.core.config import SecurityMode
 from ipman.core.security import (
     Action,
@@ -13,7 +11,6 @@ from ipman.core.security import (
     log_security_event,
 )
 from ipman.core.vetter import RiskLevel
-
 
 # ---------------------------------------------------------------------------
 # Decision matrix

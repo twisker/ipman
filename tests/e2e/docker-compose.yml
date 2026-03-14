@@ -1,0 +1,23 @@
+services:
+  claude-code:
+    build:
+      context: .
+      dockerfile: Dockerfile.claude-code
+      args:
+        IPMAN_VERSION: ${IPMAN_VERSION:-latest}
+    environment:
+      - AGENT=claude-code
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+    volumes:
+      - ./scenarios:/workspace/scenarios:ro
+
+  openclaw:
+    build:
+      context: .
+      dockerfile: Dockerfile.openclaw
+      args:
+        IPMAN_VERSION: ${IPMAN_VERSION:-latest}
+    environment:
+      - AGENT=openclaw
+    volumes:
+      - ./scenarios:/workspace/scenarios:ro

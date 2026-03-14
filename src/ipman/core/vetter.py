@@ -105,18 +105,14 @@ def vet_skill_content(content: str) -> list[RiskFlag]:
     seen_ids: set[str] = set()
 
     for flag_id, pattern, severity in _PATTERNS:
-        if pattern.search(content):
-            # Deduplicate by flag_id (same id can come from
-            # multiple pattern variants like eval + base64)
-            if flag_id not in seen_ids:
-                seen_ids.add(flag_id)
-                match = pattern.search(content)
-                snippet = match.group(0) if match else ""
-                flags.append(RiskFlag(
-                    id=flag_id,
-                    description=f"Detected: {snippet}",
-                    severity=severity,
-                ))
+        match = pattern.search(content)
+        if match and flag_id not in seen_ids:
+            seen_ids.add(flag_id)
+            flags.append(RiskFlag(
+                id=flag_id,
+                description=f"Detected: {match.group(0)}",
+                severity=severity,
+            ))
 
     return flags
 

@@ -62,11 +62,12 @@ Reference a skill by its short name registered on IpHub:
 skills:
   - name: web-scraper
   - name: css-helper
+    version: "1.0.0"
 ```
 
 At install time, IpMan resolves the name via IpHub's index, retrieves the agent-specific install source, and calls the agent's native CLI.
 
-> **Note:** Skills have no version constraint. Agent CLIs install the latest version from the source. The installed version is determined by the agent's native marketplace/hub.
+> **Note:** The `version` field is optional and records the installed version at pack time (for reproducibility). Agent CLIs always install the latest version from the source — the version field is informational, not a constraint.
 
 #### Direct Source Mode
 

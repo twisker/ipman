@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from ipman.utils.i18n import detect_locale, t, set_locale
+from ipman.utils.i18n import detect_locale, set_locale, t
 
 
 class TestDetectLocale:

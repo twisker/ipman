@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import os
 from dataclasses import dataclass, field
 from enum import Enum
@@ -87,10 +88,8 @@ def load_config(
 
     env_mode = os.environ.get("IPMAN_SECURITY_MODE")
     if env_mode:
-        try:
+        with contextlib.suppress(ValueError):
             mode = SecurityMode(env_mode)
-        except ValueError:
-            pass  # ignore invalid env value
 
     return IpManConfig(
         security_mode=mode,

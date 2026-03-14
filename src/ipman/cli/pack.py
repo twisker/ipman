@@ -50,7 +50,10 @@ def pack(
 
     # Read skills from agent
     skills_info = adapter.list_skills()
-    skill_refs = [SkillRef(name=s.name) for s in skills_info]
+    skill_refs = [
+        SkillRef(name=s.name, version=s.version or None)
+        for s in skills_info
+    ]
 
     pkg = IPPackage(
         name=name,

@@ -137,7 +137,17 @@ class IpHubPublisher:
 
     def __init__(self, username: str) -> None:
         self.username = username
-        self.fork_repo = f"{username}/iphub"
+        self._is_owner = self._check_owner(username)
+        self.target_repo = (
+            _IPHUB_REPO if self._is_owner
+            else f"{username}/iphub"
+        )
+
+    @staticmethod
+    def _check_owner(username: str) -> bool:
+        """Check if the user is the iphub repo owner."""
+        owner = _IPHUB_REPO.split("/")[0]
+        return username.lower() == owner.lower()
 
     def _gh(self, args: list[str]) -> subprocess.CompletedProcess[str]:
         """Run a gh CLI command."""
@@ -151,7 +161,12 @@ class IpHubPublisher:
         return result
 
     def ensure_fork(self) -> None:
-        """Fork the iphub repo if not already forked."""
+        """Fork the iphub repo if not already forked.
+
+        Skipped for the repo owner (can't fork own repo).
+        """
+        if self._is_owner:
+            return
         self._gh(["repo", "fork", _IPHUB_REPO, "--clone=false"])
 
     def _push_file(
@@ -161,7 +176,7 @@ class IpHubPublisher:
         encoded = base64.b64encode(content.encode()).decode()
         self._gh([
             "api", "-X", "PUT",
-            f"repos/{self.fork_repo}/contents/{path}",
+            f"repos/{self.target_repo}/contents/{path}",
             "-f", f"message={message}",
             "-f", f"content={encoded}",
             "-f", f"branch={branch}",
@@ -178,17 +193,20 @@ class IpHubPublisher:
         # Create branch
         self._gh([
             "api", "-X", "POST",
-            f"repos/{self.fork_repo}/git/refs",
+            f"repos/{self.target_repo}/git/refs",
             "-f", f"ref=refs/heads/{branch}",
             "-f", f"sha={sha}",
         ])
 
     def _create_pr(self, branch: str, title: str, body: str) -> str:
-        """Create a PR from fork branch to upstream main."""
+        """Create a PR to upstream main."""
+        # Owner: PR within same repo (head=branch)
+        # Contributor: PR from fork (head=user:branch)
+        head = branch if self._is_owner else f"{self.username}:{branch}"
         result = self._gh([
             "pr", "create",
             "--repo", _IPHUB_REPO,
-            "--head", f"{self.username}:{branch}",
+            "--head", head,
             "--base", "main",
             "--title", title,
             "--body", body,

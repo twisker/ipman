@@ -1,0 +1,26 @@
+# E2E test environment with Claude Code
+FROM node:22-slim
+
+# System deps
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 python3-pip python3-venv curl git jq \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Claude Code CLI
+RUN npm install -g @anthropic-ai/claude-code
+
+# Install ipman from PyPI (or local wheel via build arg)
+ARG IPMAN_VERSION=latest
+RUN pip3 install --break-system-packages \
+    $([ "$IPMAN_VERSION" = "latest" ] && echo "ipman-cli" || echo "ipman-cli==$IPMAN_VERSION")
+
+# Verify installations
+RUN claude --version || echo "Claude Code installed (version check may require auth)"
+RUN ipman --version
+
+WORKDIR /workspace
+COPY scenarios/ /workspace/scenarios/
+COPY run-tests.sh /workspace/
+
+ENTRYPOINT ["bash", "/workspace/run-tests.sh"]
+CMD ["claude-code"]

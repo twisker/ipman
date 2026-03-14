@@ -93,7 +93,7 @@ def detect_locale() -> str:
 
 def set_locale(locale: str) -> None:
     """Manually set the active locale."""
-    global _locale  # noqa: PLW0603
+    global _locale
     _locale = locale
 
 

@@ -116,20 +116,26 @@ class TestIpHubPublisher:
     """Test the publish workflow (fork → create file → PR)."""
 
     @patch("ipman.hub.publisher.subprocess.run")
-    def test_ensure_fork(self, mock_run: MagicMock) -> None:
+    def test_ensure_fork_contributor(self, mock_run: MagicMock) -> None:
+        """Non-owner should call gh repo fork."""
         mock_run.return_value = subprocess.CompletedProcess(
-            args=[], returncode=0, stdout="twisker/iphub\n", stderr="",
+            args=[], returncode=0, stdout="alice/iphub\n", stderr="",
         )
-        publisher = IpHubPublisher(username="twisker")
+        publisher = IpHubPublisher(username="alice")
         publisher.ensure_fork()
-        # Should call gh repo fork
         assert any(
             "fork" in str(c) for c in mock_run.call_args_list
         )
 
+    def test_ensure_fork_owner_skips(self) -> None:
+        """Owner should skip fork (can't fork own repo)."""
+        publisher = IpHubPublisher(username="twisker")
+        # Should not raise, just return
+        publisher.ensure_fork()
+
     @patch("ipman.hub.publisher.subprocess.run")
-    def test_publish_skill(self, mock_run: MagicMock) -> None:
-        """Full skill publish flow should fork, create branch, push file, create PR."""
+    def test_publish_skill_owner(self, mock_run: MagicMock) -> None:
+        """Owner publish: skip fork, push directly to main repo."""
         mock_run.return_value = subprocess.CompletedProcess(
             args=[], returncode=0, stdout="OK\n", stderr="",
         )
@@ -141,8 +147,28 @@ class TestIpHubPublisher:
                 "claude-code": {"plugin": "web-scraper@twisker-plugins"},
             },
         )
-        # Should have made multiple gh calls
+        # Should have made gh calls (branch + push + PR, no fork)
         assert mock_run.call_count >= 3
+        # No fork call
+        assert not any(
+            "fork" in str(c) for c in mock_run.call_args_list
+        )
+
+    @patch("ipman.hub.publisher.subprocess.run")
+    def test_publish_skill_contributor(self, mock_run: MagicMock) -> None:
+        """Contributor publish: fork + push to fork + PR."""
+        mock_run.return_value = subprocess.CompletedProcess(
+            args=[], returncode=0, stdout="OK\n", stderr="",
+        )
+        publisher = IpHubPublisher(username="alice")
+        publisher.publish_skill(
+            name="web-scraper",
+            description="Browser automation",
+        )
+        assert mock_run.call_count >= 4  # fork + branch + push + PR
+        assert any(
+            "fork" in str(c) for c in mock_run.call_args_list
+        )
 
     @patch("ipman.hub.publisher.subprocess.run")
     def test_publish_skill_gh_failure(self, mock_run: MagicMock) -> None:
@@ -150,7 +176,8 @@ class TestIpHubPublisher:
         mock_run.return_value = subprocess.CompletedProcess(
             args=[], returncode=1, stdout="", stderr="permission denied",
         )
-        publisher = IpHubPublisher(username="twisker")
+        # Use non-owner so ensure_fork actually calls gh
+        publisher = IpHubPublisher(username="alice")
         with pytest.raises(PublishError):
             publisher.ensure_fork()
 
