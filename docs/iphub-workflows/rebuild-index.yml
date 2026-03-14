@@ -102,8 +102,10 @@ jobs:
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Trigger CNB sync
+      - name: Sync to CNB mirror
         if: steps.commit.outputs.changed == 'true'
-        run: gh workflow run sync-cnb.yml
         env:
-          GH_TOKEN: ${{ github.token }}
+          CNB_TOKEN: ${{ secrets.CNB_TOKEN }}
+        run: |
+          git remote add cnb "https://x-access-token:${CNB_TOKEN}@cnb.cool/lutuai/twisker/iphub.git" 2>/dev/null || true
+          git push cnb main --force
