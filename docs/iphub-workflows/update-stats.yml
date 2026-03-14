@@ -1,0 +1,92 @@
+# GitHub Actions workflow for twisker/iphub repo
+# Daily: collect install stats from counter issues, update index + README
+#
+# Copy this file to: twisker/iphub/.github/workflows/update-stats.yml
+
+name: Update Stats
+
+on:
+  schedule:
+    - cron: "0 2 * * *"  # Daily at 02:00 UTC
+  workflow_dispatch: {}   # Manual trigger
+
+permissions:
+  contents: write
+  issues: read
+
+jobs:
+  update:
+    name: Collect Stats and Update Rankings
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Collect stats from counter issues
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Fetch all issues with [counter] label
+          gh api graphql -f query='
+            query {
+              repository(owner: "twisker", name: "iphub") {
+                issues(labels: ["counter"], first: 100, states: OPEN) {
+                  nodes {
+                    title
+                    comments { totalCount }
+                    reactions(content: THUMBS_UP) { totalCount }
+                  }
+                }
+              }
+            }
+          ' --jq '.data.repository.issues.nodes[] |
+            {
+              name: (.title | gsub("^\\[counter\\] "; "")),
+              installs: .comments.totalCount,
+              unique_users: .reactions.totalCount
+            }
+          ' > /tmp/stats.jsonl
+
+          # Build stats/downloads.yaml
+          mkdir -p stats
+          echo "# Auto-generated — do not edit" > stats/downloads.yaml
+          echo "updated: $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> stats/downloads.yaml
+          echo "entries:" >> stats/downloads.yaml
+          sort -t: -k3 -rn /tmp/stats.jsonl | while IFS= read -r line; do
+            name=$(echo "$line" | jq -r .name)
+            installs=$(echo "$line" | jq -r .installs)
+            users=$(echo "$line" | jq -r .unique_users)
+            echo "  - name: $name" >> stats/downloads.yaml
+            echo "    installs: $installs" >> stats/downloads.yaml
+            echo "    unique_users: $users" >> stats/downloads.yaml
+          done
+
+      - name: Update README rankings
+        run: |
+          # Generate Top 10 markdown table
+          TOP=$(head -12 stats/downloads.yaml | tail -10)
+          TABLE="| # | Name | Installs | Users |\n|---|------|----------|-------|\n"
+          i=1
+          while IFS= read -r line; do
+            name=$(echo "$line" | jq -r .name)
+            installs=$(echo "$line" | jq -r .installs)
+            users=$(echo "$line" | jq -r .unique_users)
+            TABLE="${TABLE}| $i | $name | $installs | $users |\n"
+            i=$((i + 1))
+            [ $i -gt 10 ] && break
+          done < /tmp/stats.jsonl
+
+          # Replace between markers in README
+          if grep -q "<!-- TOP_START -->" README.md; then
+            sed -i "/<!-- TOP_START -->/,/<!-- TOP_END -->/c\\
+<!-- TOP_START -->\\
+$(echo -e "$TABLE")\\
+<!-- TOP_END -->" README.md
+          fi
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add stats/ README.md index.yaml 2>/dev/null || true
+          git diff --cached --quiet || git commit -m "chore: update install stats [skip ci]"
+          git push
