@@ -7,6 +7,7 @@ from typing import Any
 
 import click
 
+from ipman.core.vetter import RiskLevel, assess_risk, vet_skill_content
 from ipman.hub.client import IpHubClient
 from ipman.hub.publisher import IpHubPublisher, PublishError, get_github_username
 
@@ -126,7 +127,26 @@ def publish(
         from ipman.core.package import parse_ip_file
         pkg = parse_ip_file(path)
 
-        click.echo(f"Publishing package '{pkg.name}' v{pkg.version} as @{username}...")
+        # Pre-publish risk assessment
+        content = path.read_text(encoding="utf-8")
+        flags = vet_skill_content(content)
+        report = assess_risk(flags, skill_name=pkg.name)
+        if report.risk_level >= RiskLevel.HIGH:
+            click.secho(
+                f"Publish blocked: '{pkg.name}' rated "
+                f"{report.risk_level.name}",
+                fg="red", err=True,
+            )
+            for f in report.flags:
+                click.secho(f"  {f.description}", fg="red", err=True)
+            raise click.ClickException(
+                "HIGH/EXTREME risk items cannot be published."
+            )
+
+        click.echo(
+            f"Publishing package '{pkg.name}' v{pkg.version} "
+            f"as @{username}...",
+        )
         try:
             pr_url = publisher.publish_package(pkg)
         except PublishError as e:
@@ -136,7 +156,23 @@ def publish(
         # Publish skill
         if not description:
             raise click.ClickException(
-                "Description is required for skill publishing. Use --description."
+                "Description is required for skill publishing. "
+                "Use --description."
+            )
+
+        # Pre-publish risk assessment on description
+        flags = vet_skill_content(description)
+        report = assess_risk(flags, skill_name=source)
+        if report.risk_level >= RiskLevel.HIGH:
+            click.secho(
+                f"Publish blocked: '{source}' rated "
+                f"{report.risk_level.name}",
+                fg="red", err=True,
+            )
+            for f in report.flags:
+                click.secho(f"  {f.description}", fg="red", err=True)
+            raise click.ClickException(
+                "HIGH/EXTREME risk items cannot be published."
             )
 
         click.echo(f"Publishing skill '{source}' as @{username}...")

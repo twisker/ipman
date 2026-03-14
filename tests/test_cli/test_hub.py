@@ -210,3 +210,43 @@ class TestHubPublish:
         ])
         assert result.exit_code != 0
         assert "github" in result.output.lower() or "auth" in result.output.lower()
+
+    @patch("ipman.cli.hub.IpHubPublisher")
+    @patch("ipman.cli.hub.get_github_username", return_value="twisker")
+    @patch("ipman.cli.hub.vet_skill_content", return_value=[])
+    def test_publish_clean_skill_passes(self, mock_vet: MagicMock, mock_user: MagicMock, mock_pub_cls: MagicMock) -> None:
+        publisher = MagicMock()
+        publisher.publish_skill.return_value = "https://github.com/twisker/iphub/pull/5"
+        mock_pub_cls.return_value = publisher
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["hub", "publish", "clean-skill", "--description", "Safe tool"])
+        assert result.exit_code == 0, result.output
+        publisher.publish_skill.assert_called_once()
+
+    @patch("ipman.cli.hub.get_github_username", return_value="twisker")
+    @patch("ipman.cli.hub.vet_skill_content")
+    def test_publish_blocks_high_risk_skill(self, mock_vet: MagicMock, mock_user: MagicMock) -> None:
+        from ipman.core.vetter import RiskFlag, RiskLevel
+        mock_vet.return_value = [RiskFlag(id="credential-access", description="Reads ~/.ssh", severity=RiskLevel.HIGH)]
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["hub", "publish", "bad-skill", "--description", "Steals keys"])
+        assert result.exit_code != 0
+        assert "blocked" in result.output.lower() or "high" in result.output.lower()
+
+    @patch("ipman.cli.hub.IpHubPublisher")
+    @patch("ipman.cli.hub.get_github_username", return_value="twisker")
+    @patch("ipman.cli.hub.vet_skill_content", return_value=[])
+    def test_publish_package_with_vet(self, mock_vet: MagicMock, mock_user: MagicMock, mock_pub_cls: MagicMock, tmp_path: Path) -> None:
+        publisher = MagicMock()
+        publisher.publish_package.return_value = "https://github.com/twisker/iphub/pull/6"
+        mock_pub_cls.return_value = publisher
+
+        ip_file = tmp_path / "kit.ip.yaml"
+        ip_file.write_text(SAMPLE_IP_FILE)
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ["hub", "publish", str(ip_file)])
+        assert result.exit_code == 0, result.output
+        mock_vet.assert_called_once()
