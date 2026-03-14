@@ -8,6 +8,10 @@
 
 > Agent skill virtual environment manager — like conda/uv, but for AI agent skills. With built-in defense against malicious skills.
 
+**[Documentation](https://twisker.github.io/ipman)** | **[中文文档](https://twisker.github.io/ipman/zh/)** | **[中文 README](README.zh-cn.md)**
+
+---
+
 [36% of AI agent skills contain prompt injection. 824+ confirmed malicious skills exist in the wild.](https://snyk.io/blog/toxicskills-malicious-ai-agent-skills-clawhub/) IpMan doesn't just manage skills — it protects you from them.
 
 ## Why IpMan?
@@ -41,7 +45,7 @@ The AI agent skill ecosystem is the new software supply chain — and it's under
 - **Search & Browse** — Find skills by keyword, filter by agent
 - **Publish** — Submit skills/IP packages via automated GitHub PR workflow
 - **Rankings** — Top skills by install count
-- **Mirror Support** — Configure alternative hub URLs for regional access (CNB mirror (cnb.cool) available)
+- **Mirror Support** — Configure alternative hub URLs for regional access (CNB mirror available)
 
 ## Installation
 
@@ -56,6 +60,8 @@ uv pip install ipman-cli
 curl -sSL https://raw.githubusercontent.com/twisker/ipman/main/install.sh | bash
 ```
 
+Pre-built binaries for Windows/macOS/Linux are available on [GitHub Releases](https://github.com/twisker/ipman/releases).
+
 ## Quick Start
 
 ```bash
@@ -69,12 +75,6 @@ ipman install web-scraper
 # Install from a local IP package (triggers mandatory risk scan)
 ipman install frontend-kit.ip.yaml
 
-# Force risk assessment on an IpHub skill
-ipman install suspicious-tool --vet
-
-# Install in strict security mode
-ipman install some-skill --security strict
-
 # Pack current environment
 ipman pack --name my-kit --version 1.0.0
 
@@ -86,6 +86,8 @@ ipman hub publish my-skill --description "My awesome skill"
 ipman hub report sketchy-tool --reason "Sends data to unknown server"
 ```
 
+For the full guide, see the **[Documentation](https://twisker.github.io/ipman)**.
+
 ## Security Modes
 
 | Mode | Behavior | Use case |
@@ -95,83 +97,7 @@ ipman hub report sketchy-tool --reason "Sends data to unknown server"
 | `cautious` | Block HIGH+EXTREME, warn on MEDIUM | Production environments |
 | `strict` | Only LOW allowed; re-assess all sources locally | High-security deployments |
 
-```bash
-# Set via CLI flag
-ipman install web-scraper --security cautious
-
-# Set via config file (~/.ipman/config.yaml)
-security:
-  mode: cautious
-```
-
-## Configuration
-
-IpMan reads `~/.ipman/config.yaml` for default settings:
-
-```yaml
-security:
-  mode: default          # permissive | default | cautious | strict
-  log_enabled: true
-  log_path: ~/.ipman/security.log
-
-hub:
-  url: https://raw.githubusercontent.com/twisker/iphub/main
-  # Mirror for restricted regions:
-  # url: https://cnb.cool/lutuai/twisker/iphub/raw/main
-
-agent:
-  default: auto          # auto | claude-code | openclaw
-```
-
-Priority: CLI flags > environment variables (`IPMAN_HUB_URL`) > config file > defaults.
-
-## CLI Reference
-
-| Command | Description |
-|---------|-------------|
-| **Environments** | |
-| `ipman env create <name>` | Create a new skill environment |
-| `ipman env activate <name>` | Activate an environment |
-| `ipman env deactivate` | Deactivate current environment |
-| `ipman env delete <name>` | Delete an environment |
-| `ipman env list` | List all environments |
-| `ipman env status` | Show active environment details |
-| **Skills** | |
-| `ipman install <source>` | Install a skill or IP package |
-| `ipman uninstall <name>` | Uninstall a skill |
-| `ipman skill list` | List installed skills |
-| `ipman pack` | Pack environment into .ip.yaml |
-| **IpHub** | |
-| `ipman hub search <query>` | Search IpHub registry |
-| `ipman hub info <name>` | Show skill/package details |
-| `ipman hub top` | Show most installed items |
-| `ipman hub publish <source>` | Publish to IpHub |
-| `ipman hub report <name>` | Report a suspicious skill |
-
-## Architecture
-
-```
-CLI Layer (Click)
-    |
-Security Layer (vetter, security modes, logging)
-    |
-Core Layer (environment, package, resolver, config)
-    |
-Agent Adapter Layer (Claude Code, OpenClaw, ...)
-    |
-IpHub Layer (registry, search, publish, stats, mirror)
-```
-
-## Roadmap
-
-| Phase | Focus | Status |
-|-------|-------|--------|
-| Phase 1 | Virtual environments + agent CLI skill management | Done |
-| Phase 2 | IP package format + pack + install + dependency resolution | Done |
-| Phase 3 | IpHub (search, publish, stats) | Done |
-| Phase 4 | Polish, docs, PyPI release | Done |
-| Phase 5 | Security (risk engine, security modes, reporting, mirrors) | Done |
-| Phase 6 | Internationalization + multi-platform distribution | In Progress |
+See the **[Security Guide](https://twisker.github.io/ipman/guide/security/)** for details.
 
 ## IpHub Rankings
 
@@ -185,18 +111,6 @@ IpHub Layer (registry, search, publish, stats, mirror)
 ## Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=twisker/ipman&type=Date)](https://star-history.com/#twisker/ipman&Date)
-
-## Development
-
-```bash
-git clone https://github.com/twisker/ipman.git
-cd ipman
-uv sync
-
-uv run pytest              # 252 tests
-uv run ruff check src/ tests/
-uv run mypy src/ipman/
-```
 
 ## License
 
