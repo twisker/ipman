@@ -5,9 +5,35 @@ on:
     tags: ["v*"]
 
 jobs:
-  # --- Job 1: PyPI publish ---
+  # --- Job 1: Generate changelog + create GitHub Release ---
+  release:
+    name: Create Release with Changelog
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # full history for git-cliff
+
+      - name: Generate changelog for this release
+        uses: orhun/git-cliff-action@v4
+        id: cliff
+        with:
+          config: cliff.toml
+          args: --latest --strip header
+        env:
+          OUTPUT: CHANGELOG-release.md
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          body_path: CHANGELOG-release.md
+
+  # --- Job 2: PyPI publish ---
   publish:
     name: Publish to PyPI
+    needs: release
     runs-on: ubuntu-latest
     environment: release
     permissions:
@@ -33,9 +59,10 @@ jobs:
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
 
-  # --- Job 2: Multi-platform binaries ---
+  # --- Job 3: Multi-platform binaries ---
   binaries:
     name: Build ${{ matrix.os }} binary
+    needs: release
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
