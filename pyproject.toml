@@ -1,6 +1,6 @@
 [project]
 name = "ipman"
-version = "0.1.2"
+dynamic = ["version"]
 description = "Intelligence Package Manager - Agent skill virtual environment manager"
 readme = "README.md"
 license = "Apache-2.0"
@@ -51,6 +51,10 @@ Documentation = "https://github.com/twisker/ipman#readme"
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[tool.hatch.version]
+path = "VERSION"
+pattern = "(?P<version>.+)"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/ipman"]

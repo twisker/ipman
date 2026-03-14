@@ -1,3 +1,5 @@
 """IpMan - Intelligence Package Manager."""
 
-__version__ = "0.1.2"
+from importlib.metadata import version as _version
+
+__version__ = _version("ipman")
