@@ -132,11 +132,11 @@
 
 | 优先级 | 任务 | 所属模块 | 责任人 | 状态 |
 |-------|------|----------|--------|------|
-| P0 | 实现配置文件加载 (`~/.ipman/config.yaml`) | core/config | AI | 待开始 |
-| P0 | 实现风险评估引擎（红旗检测 + 权限分析 + 风险分级） | core/vetter | AI | 待开始 |
-| P1 | 实现安全模式（PERMISSIVE/DEFAULT/CAUTIOUS/STRICT） | core/security | AI | 待开始 |
-| P1 | 实现安全日志 (`~/.ipman/security.log`) | core/security | AI | 待开始 |
-| P2 | 编写风险评估 + 配置 + 安全模式测试 | tests | AI | 待开始 |
+| P0 | 实现配置文件加载 (`~/.ipman/config.yaml`) | core/config | AI | 已完成 |
+| P0 | 实现风险评估引擎（红旗检测 + 权限分析 + 风险分级） | core/vetter | AI | 已完成 |
+| P1 | 实现安全模式（PERMISSIVE/DEFAULT/CAUTIOUS/STRICT） | core/security | AI | 已完成 |
+| P1 | 实现安全日志 (`~/.ipman/security.log`) | core/security | AI | 已完成 |
+| P2 | 编写风险评估 + 配置 + 安全模式测试（52 tests） | tests | AI | 已完成 |
 
 ### Sprint 7（安装安全集成 + IpHub 举报 + 镜像）
 
