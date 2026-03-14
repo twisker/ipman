@@ -25,9 +25,11 @@ git flow release start 0.2.0
 ### 2. Finalize Version
 
 ```bash
-echo "0.2.0" > VERSION
-git add VERSION
-git commit -m "release: v0.2.0"
+# Minor 版本升级（自动 commit）
+bash scripts/bump-minor.sh
+
+# 或 Major 版本升级
+# bash scripts/bump-major.sh
 ```
 
 此时可做最后调整：更新文档、修复 last-minute 问题等。
@@ -75,10 +77,25 @@ git push origin main dev --tags
 ## Version Numbering
 
 - `VERSION` 文件为唯一版本源
-- 开发期间 patch 由 pre-commit hook 自动递增
-- 发布时手动设置为正式版本号（如 `0.2.0`）
+- 开发期间 patch 由 pre-commit hook 自动递增（`.githooks/pre-commit` → `scripts/bump-patch.sh`）
+- 发布时使用脚本设置正式版本号：
 - `pyproject.toml` 通过 hatchling 动态读取 `VERSION`
 - `__init__.py` 通过 `importlib.metadata` 读取安装元数据
+
+### 版本号脚本
+
+```bash
+# Minor 版本升级（如 0.1.x → 0.2.0），重置 patch 为 0
+bash scripts/bump-minor.sh
+
+# Major 版本升级（如 0.x.x → 1.0.0），重置 minor 和 patch 为 0
+bash scripts/bump-major.sh
+
+# Patch 自动递增（每次 commit 由 pre-commit hook 自动调用，无需手动执行）
+# bash scripts/bump-patch.sh
+```
+
+发布时推荐流程：在 release 分支上调用 `bump-minor.sh` 或 `bump-major.sh`，而非手动编辑 `VERSION` 文件。
 
 ## Checklist
 
