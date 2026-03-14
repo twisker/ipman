@@ -170,7 +170,12 @@ IpHub Layer (registry, search, publish, stats, mirror)
 | Phase 2 | IP package format + pack + install + dependency resolution | Done |
 | Phase 3 | IpHub (search, publish, stats) | Done |
 | Phase 4 | Polish, docs, PyPI release | Done |
-| Phase 5 | Security (risk engine, security modes, reporting, mirrors) | Planned |
+| Phase 5 | Security (risk engine, security modes, reporting, mirrors) | Done |
+| Phase 6 | Internationalization + multi-platform distribution | In Progress |
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=twisker/ipman&type=Date)](https://star-history.com/#twisker/ipman&Date)
 
 ## Development
 
@@ -179,7 +184,7 @@ git clone https://github.com/twisker/ipman.git
 cd ipman
 uv sync
 
-uv run pytest              # 176 tests
+uv run pytest              # 252 tests
 uv run ruff check src/ tests/
 uv run mypy src/ipman/
 ```
