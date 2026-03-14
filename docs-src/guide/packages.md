@@ -28,8 +28,12 @@ version: "1.0.0"
 description: "My skill collection"
 skills:
   - name: web-scraper
+    version: "d5c15b861cd2"
   - name: css-helper
+    version: "1.0.0"
 dependencies:
   - name: base-utils
     version: ">=1.0.0"
 ```
+
+The `version` field on skills is optional — it records the installed version at pack time for reproducibility. `ipman pack` captures it automatically from the agent CLI.

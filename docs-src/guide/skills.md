@@ -43,6 +43,15 @@ ipman skill list
 ipman skill list --agent openclaw
 ```
 
+Output shows skill identifier and version:
+
+```
+  agent-sdk-dev@claude-plugins-official v1.0.0
+  code-review@claude-plugins-official vd5c15b861cd2
+```
+
+The skill identifier format is agent-specific (e.g., Claude Code uses `name@marketplace`).
+
 ## Agent Detection
 
 IpMan auto-detects the agent tool used in your project directory. Override with `--agent`:
