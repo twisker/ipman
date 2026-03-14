@@ -28,6 +28,70 @@ def _is_ip_file(source: str) -> bool:
     return source.endswith(".ip.yaml")
 
 
+def _get_hub_client() -> "IpHubClient":  # noqa: F821
+    """Create a default IpHubClient instance."""
+    from ipman.hub.client import IpHubClient
+    return IpHubClient()
+
+
+def _install_from_hub(
+    name: str, adapter: AgentAdapter, *, dry_run: bool = False,
+) -> None:
+    """Install a skill or IP package by short name via IpHub."""
+    hub = _get_hub_client()
+    info = hub.lookup(name)
+    if info is None:
+        raise click.ClickException(
+            f"'{name}' not found in IpHub. "
+            "Check the name or use a file path for local .ip.yaml files."
+        )
+
+    entry_type = info.get("type", "skill")
+
+    if entry_type == "skill":
+        if dry_run:
+            click.echo(f"Would install skill: {name} (from IpHub)")
+            return
+        result = adapter.install_skill(name)
+        if result.returncode == 0:
+            click.secho(f"Installed '{name}' via {adapter.display_name}.", fg="green")
+        else:
+            msg = result.stderr.strip() or result.stdout.strip() or "Unknown error"
+            click.secho(f"Install failed: {msg}", fg="red", err=True)
+            raise SystemExit(1)
+    else:
+        # IP package — fetch version file and install all skills
+        registry = hub.fetch_registry(name)
+        if registry is None:
+            raise click.ClickException(f"Failed to fetch registry for '{name}'.")
+
+        skills = registry.get("skills", [])
+        if not skills:
+            click.secho(f"No skills in package '{name}'.", fg="yellow")
+            return
+
+        if dry_run:
+            click.echo(f"Would install {len(skills)} skill(s) from package '{name}':")
+            for s in skills:
+                click.echo(f"  {s['name']}")
+            return
+
+        ok, failed = 0, 0
+        for s in skills:
+            r = adapter.install_skill(s["name"])
+            if r.returncode == 0:
+                click.secho(f"  Installed '{s['name']}'", fg="green")
+                ok += 1
+            else:
+                msg = r.stderr.strip() or r.stdout.strip() or "Unknown error"
+                click.secho(f"  Failed '{s['name']}': {msg}", fg="red", err=True)
+                failed += 1
+
+        click.echo(f"\n{ok} installed, {failed} failed (from package '{name}')")
+        if failed:
+            raise SystemExit(1)
+
+
 def _install_from_ip_file(
     path: Path, adapter: AgentAdapter, *, dry_run: bool = False,
 ) -> None:
@@ -85,23 +149,8 @@ def install(source: str, agent_name: str | None, dry_run: bool) -> None:
         _install_from_ip_file(Path(source), adapter, dry_run=dry_run)
         return
 
-    # Single skill install (original behavior)
-    if dry_run:
-        click.echo(f"Would install skill: {source}")
-        return
-
-    result = adapter.install_skill(source)
-    if result.returncode == 0:
-        click.secho(
-            f"Installed '{source}' via {adapter.display_name}.",
-            fg="green",
-        )
-        if result.stdout.strip():
-            click.echo(result.stdout.strip())
-    else:
-        msg = result.stderr.strip() or result.stdout.strip() or "Unknown error"
-        click.secho(f"Install failed: {msg}", fg="red", err=True)
-        raise SystemExit(1)
+    # Short name — resolve via IpHub
+    _install_from_hub(source, adapter, dry_run=dry_run)
 
 
 @click.command()

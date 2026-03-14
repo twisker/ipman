@@ -94,3 +94,36 @@ class IpHubClient:
             if name in items:
                 return {"name": name, **items[name]}
         return None
+
+    def fetch_registry(
+        self, name: str, version: str | None = None,
+    ) -> dict[str, Any] | None:
+        """Fetch the full registry file for a skill or package.
+
+        For skills: fetches registry/@owner/<name>.yaml
+        For packages: fetches registry/@owner/<name>/<version>.yaml
+                      (defaults to latest version from index)
+        """
+        info = self.lookup(name)
+        if info is None:
+            return None
+
+        owner = info.get("owner", "").lstrip("@")
+        entry_type = info.get("type", "skill")
+
+        if entry_type == "skill":
+            url = self._registry_url(f"@{owner}/{name}.yaml")
+        else:
+            ver = version or info.get("latest", "1.0.0")
+            url = self._registry_url(f"@{owner}/{name}/{ver}.yaml")
+
+        with urllib.request.urlopen(url) as resp:
+            raw = resp.read().decode()
+        return yaml.safe_load(raw)
+
+    def _registry_url(self, path: str) -> str:
+        """Build a raw GitHub URL for a registry file."""
+        return (
+            "https://raw.githubusercontent.com"
+            f"/{_DEFAULT_REPO}/{_DEFAULT_BRANCH}/registry/{path}"
+        )

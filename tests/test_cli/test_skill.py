@@ -16,41 +16,59 @@ class TestSkillInstall:
     def setup_method(self) -> None:
         self.runner = CliRunner()
 
+    @patch("ipman.cli.skill._get_hub_client")
     @patch("ipman.cli.skill.detect_agent")
-    def test_install_success(self, mock_detect: MagicMock) -> None:
+    def test_install_success(self, mock_detect: MagicMock, mock_hub: MagicMock) -> None:
         adapter = MagicMock()
+        adapter.name = "claude-code"
         adapter.display_name = "Claude Code"
         adapter.install_skill.return_value = subprocess.CompletedProcess(
             args=[], returncode=0, stdout="Installed web-scraper\n", stderr="",
         )
         mock_detect.return_value = adapter
+        hub = MagicMock()
+        hub.lookup.return_value = {"name": "web-scraper", "type": "skill"}
+        hub.fetch_registry.return_value = {"name": "web-scraper", "type": "skill", "agents": {}}
+        mock_hub.return_value = hub
 
         result = self.runner.invoke(cli, ["install", "web-scraper"])
         assert result.exit_code == 0
         assert "web-scraper" in result.output
         adapter.install_skill.assert_called_once_with("web-scraper")
 
+    @patch("ipman.cli.skill._get_hub_client")
     @patch("ipman.cli.skill.detect_agent")
-    def test_install_failure(self, mock_detect: MagicMock) -> None:
+    def test_install_failure(self, mock_detect: MagicMock, mock_hub: MagicMock) -> None:
         adapter = MagicMock()
+        adapter.name = "claude-code"
         adapter.display_name = "Claude Code"
         adapter.install_skill.return_value = subprocess.CompletedProcess(
             args=[], returncode=1, stdout="", stderr="Plugin not found",
         )
         mock_detect.return_value = adapter
+        hub = MagicMock()
+        hub.lookup.return_value = {"name": "nonexistent", "type": "skill"}
+        hub.fetch_registry.return_value = {"name": "nonexistent", "type": "skill", "agents": {}}
+        mock_hub.return_value = hub
 
         result = self.runner.invoke(cli, ["install", "nonexistent"])
         assert result.exit_code == 1
         assert "failed" in result.output.lower() or "Plugin not found" in result.output
 
+    @patch("ipman.cli.skill._get_hub_client")
     @patch("ipman.cli.skill.get_adapter")
-    def test_install_with_agent_flag(self, mock_get: MagicMock) -> None:
+    def test_install_with_agent_flag(self, mock_get: MagicMock, mock_hub: MagicMock) -> None:
         adapter = MagicMock()
+        adapter.name = "openclaw"
         adapter.display_name = "OpenClaw"
         adapter.install_skill.return_value = subprocess.CompletedProcess(
             args=[], returncode=0, stdout="OK\n", stderr="",
         )
         mock_get.return_value = adapter
+        hub = MagicMock()
+        hub.lookup.return_value = {"name": "web-scraper", "type": "skill"}
+        hub.fetch_registry.return_value = {"name": "web-scraper", "type": "skill", "agents": {}}
+        mock_hub.return_value = hub
 
         result = self.runner.invoke(cli, ["install", "web-scraper", "--agent", "openclaw"])
         assert result.exit_code == 0

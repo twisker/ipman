@@ -124,14 +124,21 @@ class TestInstallIPFile:
         mock_resolve.assert_called_once_with("openclaw")
 
     def test_install_single_skill_still_works(self) -> None:
-        """Existing `ipman install <name>` behavior is preserved."""
+        """Existing `ipman install <name>` behavior is preserved (via IpHub)."""
         adapter = MagicMock()
+        adapter.name = "claude-code"
         adapter.display_name = "Claude Code"
         adapter.install_skill.return_value = subprocess.CompletedProcess(
             args=[], returncode=0, stdout="OK\n", stderr="",
         )
+        hub = MagicMock()
+        hub.lookup.return_value = {"name": "web-scraper", "type": "skill"}
+        hub.fetch_registry.return_value = {"name": "web-scraper", "type": "skill", "agents": {}}
         runner = CliRunner()
-        with patch("ipman.cli.skill._resolve_agent", return_value=adapter):
+        with (
+            patch("ipman.cli.skill._resolve_agent", return_value=adapter),
+            patch("ipman.cli.skill._get_hub_client", return_value=hub),
+        ):
             result = runner.invoke(cli, ["install", "web-scraper"])
         assert result.exit_code == 0
         adapter.install_skill.assert_called_once_with("web-scraper")
