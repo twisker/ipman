@@ -169,8 +169,7 @@
 
 | 优先级 | 任务 | 所属模块 | 责任人 | 状态 |
 |-------|------|----------|--------|------|
-| P1 | curl+sh 一键安装脚本（Unix-like） | scripts/install.sh | AI | 已完成 |
-| P1 | iphub 定时统计 + README Top 排名 Action | CI/CD (iphub repo) | AI | 待开始 |
-| P1 | Windows PyInstaller 打包（.exe） | CI/CD | AI | 待开始 |
-| P2 | Windows 安装包（.msi 或 Inno Setup） | CI/CD | AI | 待开始 |
-| P2 | GitHub Actions 发布时自动构建多平台二进制 | CI/CD | AI | 待开始 |
+| P1 | curl+sh 一键安装脚本 | scripts/install.sh | AI | 已完成 |
+| P1 | iphub 定时统计 + README Top 排名 Action | CI/CD | AI | 已完成 |
+| P1 | 多平台 PyInstaller 打包（Linux/macOS/Windows） | CI/CD | AI | 已完成 |
+| P2 | GitHub Actions 发布时自动构建 + GitHub Release 上传 | CI/CD | AI | 已完成 |
