@@ -47,10 +47,13 @@ The AI agent skill ecosystem is the new software supply chain — and it's under
 
 ```bash
 # Via PyPI
-pip install ipman
+pip install ipman-cli
 
 # Via uv
-uv pip install ipman
+uv pip install ipman-cli
+
+# Via curl (Linux / macOS)
+curl -sSL https://raw.githubusercontent.com/twisker/ipman/main/install.sh | bash
 ```
 
 ## Quick Start

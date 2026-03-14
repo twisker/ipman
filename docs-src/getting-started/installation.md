@@ -8,13 +8,19 @@
 ## Install via PyPI
 
 ```bash
-pip install ipman
+pip install ipman-cli
 ```
 
 ## Install via uv
 
 ```bash
-uv pip install ipman
+uv pip install ipman-cli
+```
+
+## Install via curl (Linux / macOS)
+
+```bash
+curl -sSL https://raw.githubusercontent.com/twisker/ipman/main/install.sh | bash
 ```
 
 ## Verify Installation
