@@ -8,7 +8,10 @@
 
 | 编号 | 事项 | 关联 Sprint | 优先级 | 状态 |
 |------|------|------------|--------|------|
-| H06 | 确认是否开始 Sprint 5（Phase 4 — 打磨与发布） | Sprint 5 | P0 | 待办 |
+| H06 | 在 PyPI 配置 Trusted Publisher（绑定 GitHub repo + workflow） | Sprint 5 | P0 | 待办 |
+| H07 | 在 GitHub repo Settings → Pages 启用 gh-pages 分支 | Sprint 5 | P1 | 待办 |
+| H08 | 在阿里云云效创建 iphub 镜像公开仓库 | Sprint 7 | P1 | 待办 |
+| H09 | 确认是否开始 Sprint 6（Phase 5 — 安全与配置） | Sprint 6 | P0 | 待办 |
 
 ---
 
