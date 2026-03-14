@@ -1,0 +1,97 @@
+# GitHub Actions workflow for twisker/iphub repo
+# Rebuilds index.yaml after any push to main (e.g. after PR merge)
+#
+# Copy this file to: twisker/iphub/.github/workflows/rebuild-index.yml
+
+name: Rebuild Index
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "registry/**"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  rebuild:
+    name: Rebuild index.yaml
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate index.yaml from registry
+        run: |
+          python3 - << 'SCRIPT'
+          import yaml
+          from pathlib import Path
+
+          index = {"skills": {}, "packages": {}}
+
+          registry = Path("registry")
+          if not registry.exists():
+              with open("index.yaml", "w") as f:
+                  f.write("# IpHub Index\n")
+                  yaml.dump(index, f, sort_keys=False)
+              exit(0)
+
+          for owner_dir in sorted(registry.iterdir()):
+              if not owner_dir.is_dir():
+                  continue
+              owner = owner_dir.name
+
+              for item in sorted(owner_dir.iterdir()):
+                  if item.is_file() and item.suffix == ".yaml":
+                      data = yaml.safe_load(item.read_text()) or {}
+                      name = data.get("name", item.stem)
+                      entry = {
+                          "owner": owner,
+                          "type": data.get("type", "skill"),
+                          "description": data.get("description", ""),
+                      }
+                      if "agents" in data:
+                          entry["agents"] = list(data["agents"].keys())
+                      if "risk_level" in data:
+                          entry["risk_level"] = data["risk_level"]
+                      index["skills"][name] = entry
+
+                  elif item.is_dir():
+                      meta_file = item / "meta.yaml"
+                      if not meta_file.exists():
+                          continue
+                      meta = yaml.safe_load(meta_file.read_text()) or {}
+                      name = meta.get("name", item.name)
+                      versions = sorted(
+                          [f.stem for f in item.glob("*.yaml")
+                           if f.name != "meta.yaml"],
+                          reverse=True,
+                      )
+                      entry = {
+                          "owner": owner,
+                          "type": "ip",
+                          "description": meta.get("description", ""),
+                          "latest": versions[0] if versions else "",
+                          "versions": versions,
+                      }
+                      if "risk_level" in meta:
+                          entry["risk_level"] = meta["risk_level"]
+                      index["packages"][name] = entry
+
+          with open("index.yaml", "w") as f:
+              f.write("# IpHub Index — auto-generated\n")
+              yaml.dump(index, f, default_flow_style=False,
+                        allow_unicode=True, sort_keys=False)
+
+          print(f"Index rebuilt: {len(index['skills'])} skills, "
+                f"{len(index['packages'])} packages")
+          SCRIPT
+
+      - name: Commit if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add index.yaml
+          git diff --cached --quiet || git commit -m "chore: rebuild index.yaml [skip ci]"
+          git push
