@@ -287,13 +287,13 @@ agent:
 | FR-S8.1 | Mirror URL configurable via: config file `hub.url`, CLI flag `--hub-url <url>`, or environment variable `IPMAN_HUB_URL`. |
 | FR-S8.2 | Mirror URLs point to alternative hosting of the same index.yaml and registry file structure. |
 
-### 7.10 Alibaba Cloud CodeUp Mirror
+### 7.10 CODING (coding.net) Mirror
 
 | ID | Description |
 |----|-------------|
-| FR-S9 | An official IpHub mirror shall be maintained on Alibaba Cloud CodeUp (Yunxiao) as a public repository. |
-| FR-S9.1 | A GitHub Actions workflow on the main iphub repo shall auto-sync to CodeUp on every merge to main. |
-| FR-S9.2 | Users in regions with GitHub access limitations can configure `hub.url` to point to the CodeUp mirror URL. |
+| FR-S9 | An official IpHub mirror shall be maintained on CODING (coding.net) (Yunxiao) as a public repository. |
+| FR-S9.1 | A GitHub Actions workflow on the main iphub repo shall auto-sync to CODING on every merge to main. |
+| FR-S9.2 | Users in regions with GitHub access limitations can configure `hub.url` to point to the CODING mirror URL. |
 
 ---
 

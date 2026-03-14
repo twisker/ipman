@@ -275,7 +275,7 @@ security:
 hub:
   url: https://raw.githubusercontent.com/twisker/iphub/main
   # 镜像示例：
-  # url: https://codeup.aliyun.com/twisker/iphub/raw/main
+  # url: https://twisker.coding.net/twisker/iphub/raw/main
 
 agent:
   default: auto          # auto | claude-code | openclaw
@@ -289,13 +289,13 @@ agent:
 | FR-S8.1 | 镜像 URL 可通过以下方式配置：配置文件 `hub.url`、命令行参数 `--hub-url <url>`、环境变量 `IPMAN_HUB_URL`。 |
 | FR-S8.2 | 镜像 URL 指向具有相同 index.yaml 和注册文件结构的替代托管。 |
 
-### 7.10 阿里云云效镜像
+### 7.10 阿里云CODING镜像
 
 | 需求ID | 描述 |
 |--------|------|
-| FR-S9 | 须在阿里云云效（CodeUp）上以公开代码库形式维护一个官方 IpHub 镜像。 |
-| FR-S9.1 | 主 iphub 仓库上的 GitHub Actions 工作流在每次合并到 main 时自动同步到云效。 |
-| FR-S9.2 | GitHub 访问受限地区的用户可将 `hub.url` 配置为云效镜像 URL。 |
+| FR-S9 | 须在CODING (coding.net)上以公开代码库形式维护一个官方 IpHub 镜像。 |
+| FR-S9.1 | 主 iphub 仓库上的 GitHub Actions 工作流在每次合并到 main 时自动同步到CODING。 |
+| FR-S9.2 | GitHub 访问受限地区的用户可将 `hub.url` 配置为CODING镜像 URL。 |
 
 ---
 
