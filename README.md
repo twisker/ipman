@@ -41,7 +41,7 @@ The AI agent skill ecosystem is the new software supply chain — and it's under
 - **Search & Browse** — Find skills by keyword, filter by agent
 - **Publish** — Submit skills/IP packages via automated GitHub PR workflow
 - **Rankings** — Top skills by install count
-- **Mirror Support** — Configure alternative hub URLs for regional access (CODING mirror (coding.net) available)
+- **Mirror Support** — Configure alternative hub URLs for regional access (CNB mirror (cnb.cool) available)
 
 ## Installation
 
@@ -114,7 +114,7 @@ security:
 hub:
   url: https://raw.githubusercontent.com/twisker/iphub/main
   # Mirror for restricted regions:
-  # url: https://twisker.coding.net/twisker/iphub/raw/main
+  # url: https://cnb.cool/twisker/twisker/iphub/raw/main
 
 agent:
   default: auto          # auto | claude-code | openclaw

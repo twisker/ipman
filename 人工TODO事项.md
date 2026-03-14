@@ -10,7 +10,7 @@
 |------|------|------------|--------|------|
 | H06 | 在 PyPI 配置 Trusted Publisher（绑定 GitHub repo + workflow） | Sprint 5 | P0 | 待办 |
 | H07 | 在 GitHub repo Settings → Pages 启用 gh-pages 分支 | Sprint 5 | P1 | 待办 |
-| H08 | 在 CODING (coding.net) 创建 iphub 镜像公开仓库 | Sprint 7 | P1 | 待办 |
+| H08 | 在 CNB (cnb.cool) 创建 iphub 镜像公开仓库 | Sprint 7 | P1 | 待办 |
 | H09 | 确认是否开始 Sprint 6（Phase 5 — 安全与配置） | Sprint 6 | P0 | 待办 |
 
 ---

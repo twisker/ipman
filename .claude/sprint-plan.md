@@ -146,7 +146,7 @@
 | P0 | publish 命令集成发布时风险评估（阻止 HIGH/EXTREME） | cli/hub + hub/publisher | AI | 待开始 |
 | P1 | 实现 `ipman hub report` 举报命令 + 举报次数统计 | cli/hub + hub/stats | AI | 待开始 |
 | P1 | 实现 IpHub 镜像支持（config hub.url / --hub-url / IPMAN_HUB_URL） | hub/client | AI | 待开始 |
-| P2 | 实现CODING 镜像同步 GitHub Actions 工作流 | CI/CD (iphub repo) | AI | 待开始 |
+| P2 | 实现CNB (cnb.cool) 镜像同步 GitHub Actions 工作流 | CI/CD (iphub repo) | AI | 待开始 |
 | P2 | 编写安装安全集成 + 举报 + 镜像测试 | tests | AI | 待开始 |
 
 ---
