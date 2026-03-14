@@ -2,4 +2,4 @@
 
 from importlib.metadata import version as _version
 
-__version__ = _version("ipman")
+__version__ = _version("ipman-cli")

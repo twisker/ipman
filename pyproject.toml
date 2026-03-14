@@ -1,5 +1,5 @@
 [project]
-name = "ipman"
+name = "ipman-cli"
 dynamic = ["version"]
 description = "Intelligence Package Manager - Agent skill virtual environment manager"
 readme = "README.md"
