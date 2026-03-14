@@ -119,3 +119,32 @@
 | P1 | ruff + mypy 全量检查修复 | 代码质量 | AI | 已完成 |
 | P1 | README.md 更新 | docs | AI | 已完成 |
 | P2 | GitHub Actions 发布工作流 | CI/CD | AI | 已完成 |
+
+---
+
+## Phase 5 -- 安全与配置
+
+**目标：** 技能风险评估、安装安全策略、配置文件、IpHub 镜像
+
+> 需求来源：PRD v2.0 第7节（FR-S1 ~ FR-S9）
+
+### Sprint 6（风险评估引擎 + 配置文件）
+
+| 优先级 | 任务 | 所属模块 | 责任人 | 状态 |
+|-------|------|----------|--------|------|
+| P0 | 实现配置文件加载 (`~/.ipman/config.yaml`) | core/config | AI | 待开始 |
+| P0 | 实现风险评估引擎（红旗检测 + 权限分析 + 风险分级） | core/vetter | AI | 待开始 |
+| P1 | 实现安全模式（PERMISSIVE/DEFAULT/CAUTIOUS/STRICT） | core/security | AI | 待开始 |
+| P1 | 实现安全日志 (`~/.ipman/security.log`) | core/security | AI | 待开始 |
+| P2 | 编写风险评估 + 配置 + 安全模式测试 | tests | AI | 待开始 |
+
+### Sprint 7（安装安全集成 + IpHub 举报 + 镜像）
+
+| 优先级 | 任务 | 所属模块 | 责任人 | 状态 |
+|-------|------|----------|--------|------|
+| P0 | install 命令集成安全策略（IpHub 信任 / 本地评估 / --vet / --no-vet） | cli/skill | AI | 待开始 |
+| P0 | publish 命令集成发布时风险评估（阻止 HIGH/EXTREME） | cli/hub + hub/publisher | AI | 待开始 |
+| P1 | 实现 `ipman hub report` 举报命令 + 举报次数统计 | cli/hub + hub/stats | AI | 待开始 |
+| P1 | 实现 IpHub 镜像支持（config hub.url / --hub-url / IPMAN_HUB_URL） | hub/client | AI | 待开始 |
+| P2 | 实现阿里云云效镜像同步 GitHub Actions 工作流 | CI/CD (iphub repo) | AI | 待开始 |
+| P2 | 编写安装安全集成 + 举报 + 镜像测试 | tests | AI | 待开始 |

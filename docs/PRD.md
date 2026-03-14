@@ -175,5 +175,127 @@ IpMan is a pure command-line tool focused on managing Agent skill environments. 
 
 ---
 
-**Document Version**: 1.1  
-**Last Updated**: 2025-03-13
+## 7. Security Requirements (v2.0)
+
+> Added 2026-03-14. Addresses the growing threat of malicious AI agent skills.
+> References: [Skill Vetter](https://clawhub.ai/spclaudehome/skill-vetter), [Snyk ToxicSkills](https://snyk.io/blog/toxicskills-malicious-ai-agent-skills-clawhub/)
+
+### 7.1 Threat Context
+
+The AI agent skill ecosystem faces severe security threats:
+- 36% of ClawHub skills contain prompt injection (Snyk ToxicSkills, Feb 2026)
+- 13.4% have critical security issues; 824+ confirmed malicious skills
+- Attack techniques: credential theft, data exfiltration, obfuscated code, prompt injection
+- Skills run with full agent permissions — no sandbox by default
+
+### 7.2 Skill Risk Assessment Engine
+
+| ID | Description |
+|----|-------------|
+| FR-S1 | IpMan shall include a built-in risk assessment engine that analyzes skills and IP packages for security risks. The engine shall be inspired by [Skill Vetter](https://clawhub.ai/spclaudehome/skill-vetter) or directly invoke it where applicable. |
+| FR-S1.1 | Risk classification: 🟢 LOW (no issues), 🟡 MEDIUM (some concerns), 🔴 HIGH (red flags), ⛔ EXTREME (likely malicious). |
+| FR-S1.2 | Red flag detection: curl/wget to unknown URLs, credential harvesting (API keys, tokens, ~/.ssh, ~/.aws), obfuscated code (base64, minified, eval/exec), sudo/root requests, network calls to raw IPs, access to agent memory files. |
+| FR-S1.3 | Permission scope analysis: file read/write scope, network call targets, command execution, scope minimality check (Principle of Least Privilege). |
+| FR-S1.4 | Source reputation check: author history, download count, repo age/stars, community reviews. |
+| FR-S1.5 | Output: structured risk report with risk level, detected flags, permission summary, and verdict (SAFE TO INSTALL / INSTALL WITH CAUTION / DO NOT INSTALL). |
+
+### 7.3 IpHub Report & Flag System
+
+| ID | Description |
+|----|-------------|
+| FR-S2 | IpHub shall support a community-driven reporting mechanism for flagging suspicious skills/packages. |
+| FR-S2.1 | Report submission via `ipman hub report <name> --reason <description>`. |
+| FR-S2.2 | Report count tracked as metadata in IpHub registry, visible in `ipman hub info` output with prominent display. |
+| FR-S2.3 | Upon receiving a report, the system re-runs risk assessment on the reported item and updates the risk label. |
+| FR-S2.4 | High report counts contribute to elevated risk classification as an input signal. |
+
+### 7.4 Publish-Time Risk Assessment
+
+| ID | Description |
+|----|-------------|
+| FR-S3 | When publishing via `ipman hub publish`, the risk assessment engine is automatically invoked before creating the PR. |
+| FR-S3.1 | Risk level is included in the registry file metadata. |
+| FR-S3.2 | If risk level is HIGH or EXTREME, the publish is blocked with an explanation. |
+| FR-S3.3 | Risk assessment results are included in the PR body for reviewer reference. |
+
+### 7.5 Install-Time Security Enforcement
+
+| ID | Description |
+|----|-------------|
+| FR-S4 | IpMan shall enforce security policies during installation based on the active security mode. |
+| FR-S4.1 | **IpHub source (default trust):** Trust existing risk label from IpHub; skip local assessment unless in STRICT mode or `--vet` flag is specified. |
+| FR-S4.2 | **Local file / URL / custom hub source:** Always run local risk assessment before installation unless `--no-vet` flag is specified. |
+| FR-S4.3 | Install-time action matrix: |
+
+| Risk Level | PERMISSIVE | DEFAULT | CAUTIOUS | STRICT |
+|-----------|------------|---------|----------|--------|
+| 🟢 LOW | Install | Install | Install | Install |
+| 🟡 MEDIUM | Install | Install | Warn+Install | Warn+Confirm |
+| 🔴 HIGH | Install | Warn+Install | Block | Block |
+| ⛔ EXTREME | Warn+Install | Block | Block | Block |
+
+| ID | Description |
+|----|-------------|
+| FR-S4.4 | **Block:** Refuse installation, display risk report, log to security log file. |
+| FR-S4.5 | **Warn+Confirm:** Display warning, require explicit user confirmation (bypass with `--yes`). |
+
+### 7.6 Security Mode Levels
+
+| ID | Description |
+|----|-------------|
+| FR-S5 | IpMan shall support four security mode levels: PERMISSIVE, DEFAULT, CAUTIOUS, STRICT. |
+| FR-S5.1 | Security mode priority: CLI flag `--security <mode>` > config file `security.mode` > built-in default (DEFAULT). |
+| FR-S5.2 | In STRICT mode, all install sources trigger local risk assessment, regardless of existing IpHub labels. |
+
+### 7.7 Security Logging
+
+| ID | Description |
+|----|-------------|
+| FR-S6 | When a skill/IP is blocked or warned, a log entry is written to the security log file. |
+| FR-S6.1 | Log entry includes: timestamp, skill name, source, risk level, risk details, action taken (blocked/warned/installed). |
+| FR-S6.2 | Log path configurable via config file; default: `~/.ipman/security.log`. |
+| FR-S6.3 | Logging can be disabled via config: `security.log_enabled: false`. |
+
+### 7.8 Configuration File
+
+| ID | Description |
+|----|-------------|
+| FR-S7 | IpMan shall support a YAML configuration file at `~/.ipman/config.yaml` for default parameter values. |
+| FR-S7.1 | Supported fields: `security.mode`, `security.log_enabled`, `security.log_path`, `hub.url`, `agent.default`. |
+| FR-S7.2 | Priority order: CLI flags > environment variables > config file > built-in defaults. |
+
+Example:
+```yaml
+# ~/.ipman/config.yaml
+security:
+  mode: default          # permissive | default | cautious | strict
+  log_enabled: true
+  log_path: ~/.ipman/security.log
+
+hub:
+  url: https://raw.githubusercontent.com/twisker/iphub/main
+
+agent:
+  default: auto          # auto | claude-code | openclaw
+```
+
+### 7.9 IpHub Mirror Support
+
+| ID | Description |
+|----|-------------|
+| FR-S8 | IpMan shall support alternative IpHub registry URLs for regional access or network restrictions. |
+| FR-S8.1 | Mirror URL configurable via: config file `hub.url`, CLI flag `--hub-url <url>`, or environment variable `IPMAN_HUB_URL`. |
+| FR-S8.2 | Mirror URLs point to alternative hosting of the same index.yaml and registry file structure. |
+
+### 7.10 Alibaba Cloud CodeUp Mirror
+
+| ID | Description |
+|----|-------------|
+| FR-S9 | An official IpHub mirror shall be maintained on Alibaba Cloud CodeUp (Yunxiao) as a public repository. |
+| FR-S9.1 | A GitHub Actions workflow on the main iphub repo shall auto-sync to CodeUp on every merge to main. |
+| FR-S9.2 | Users in regions with GitHub access limitations can configure `hub.url` to point to the CodeUp mirror URL. |
+
+---
+
+**Document Version**: 2.0
+**Last Updated**: 2026-03-14
