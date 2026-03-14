@@ -22,8 +22,8 @@
 |------|---------|-----------|-----------|------|
 | core/environment | `tests/test_core/test_environment.py` | >= 80% | 30 tests passed | 已完成 |
 | core/skill | `tests/test_core/test_skill.py` | >= 80% | -- | 待开始 |
-| core/package | `tests/test_core/test_package.py` | >= 80% | -- | 待开始 |
-| core/resolver | `tests/test_core/test_resolver.py` | >= 80% | -- | 待开始 |
+| core/package | `tests/test_core/test_package.py` | >= 80% | 16 tests passed | 已完成 |
+| core/resolver | `tests/test_core/test_resolver.py` | >= 80% | 19 tests passed | 已完成 |
 | core/registry | `tests/test_core/test_registry.py` | >= 80% | -- | 待开始 |
 
 ---
@@ -33,8 +33,10 @@
 | 模块 | 测试文件 | 覆盖率要求 | 当前覆盖率 | 状态 |
 |------|---------|-----------|-----------|------|
 | cli/env | `tests/test_cli/test_env.py` | >= 70% | 10 tests passed | 已完成 |
-| cli/skill | `tests/test_cli/test_skill.py` | >= 70% | -- | 待开始 |
-| cli/pack | `tests/test_cli/test_pack.py` | >= 70% | -- | 待开始 |
+| cli/skill | `tests/test_cli/test_skill.py` | >= 70% | 9 tests passed | 已完成 |
+| cli/pack | `tests/test_cli/test_pack.py` | >= 70% | 10 tests passed | 已完成 |
+| cli/install (IP) | `tests/test_cli/test_install_ip.py` | >= 70% | 8 tests passed | 已完成 |
+| cli/install (Hub) | `tests/test_cli/test_install_hub.py` | >= 70% | 7 tests passed | 已完成 |
 | cli/hub | `tests/test_cli/test_hub.py` | >= 70% | -- | 待开始 |
 
 ---
@@ -77,3 +79,12 @@
 | Sprint 1 | utils/symlink | 跨平台软链接创建/删除/验证 | `tests/test_core/test_symlink.py` | 10/10 通过 |
 | Sprint 1 | cli/env | CLI env 子命令集成测试（CliRunner） | `tests/test_cli/test_env.py` | 10/10 通过 |
 | Sprint 1 | cli/main | CLI 主入口帮助/版本 | `tests/test_cli/test_main.py` | 3/3 通过 |
+| Sprint 2 | agents/claude_code | Claude Code 适配器 skill CLI 封装 | `tests/test_agents/test_claude_code.py` | 10/10 通过 |
+| Sprint 2 | agents/openclaw | OpenClaw 适配器 CLI 封装 | `tests/test_agents/test_openclaw.py` | 10/10 通过 |
+| Sprint 2 | cli/skill | install/uninstall/list 命令 | `tests/test_cli/test_skill.py` | 9/9 通过 |
+| Sprint 2 | hub/client | IpHub index 拉取/缓存/搜索/lookup | `tests/test_hub/test_client.py` | 12/12 通过 |
+| Sprint 3 | core/package | IP 包数据模型 + 解析 + 序列化 | `tests/test_core/test_package.py` | 16/16 通过 |
+| Sprint 3 | core/resolver | 版本匹配 + 递归解析 + 循环检测 | `tests/test_core/test_resolver.py` | 19/19 通过 |
+| Sprint 3 | cli/pack | pack 命令 | `tests/test_cli/test_pack.py` | 10/10 通过 |
+| Sprint 3 | cli/install (IP) | .ip.yaml 本地文件安装 | `tests/test_cli/test_install_ip.py` | 8/8 通过 |
+| Sprint 3 | cli/install (Hub) | IpHub 短名称安装 + fetch_registry | `tests/test_cli/test_install_hub.py` | 7/7 通过 |

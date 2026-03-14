@@ -16,8 +16,8 @@
 |------|------|---------|----------|------|
 | cli/main | CLI 主入口，Click group 定义 | -- | `src/ipman/cli/main.py` | 已完成 |
 | cli/env | 虚拟环境命令（create/activate/deactivate/delete/list/status） | -- | `src/ipman/cli/env.py` | 已完成 |
-| cli/skill | 技能命令（install/uninstall/list，通过 agent CLI 执行） | -- | `src/ipman/cli/skill.py` | 待开始 |
-| cli/pack | IP 包命令（pack/unpack/export） | -- | `src/ipman/cli/pack.py` | 待开始 |
+| cli/skill | 技能命令（install/uninstall/list，通过 agent CLI 执行） | -- | `src/ipman/cli/skill.py` | 已完成 |
+| cli/pack | IP 包打包命令（pack，合并原 export） | -- | `src/ipman/cli/pack.py` | 已完成 |
 | cli/hub | IpHub 命令（search/publish/top） | -- | `src/ipman/cli/hub.py` | 待开始 |
 
 ---
@@ -28,8 +28,8 @@
 |------|------|---------|----------|------|
 | core/environment | 虚拟环境生命周期管理（创建/激活/删除/切换/状态/prompt tag） | -- | `src/ipman/core/environment.py` | 已完成 |
 | core/skill | 技能安装/卸载调度（解析 IpHub 引用 → 调用 agent CLI） | -- | `src/ipman/core/skill.py` | 待开始 |
-| core/package | IP 包的解析/打包/导出 | -- | `src/ipman/core/package.py` | 待开始 |
-| core/resolver | 依赖解析引擎 | -- | `src/ipman/core/resolver.py` | 待开始 |
+| core/package | IP 包数据模型 + 解析 + 序列化 | `.claude/research/iphub-design.md` | `src/ipman/core/package.py` | 已完成 |
+| core/resolver | 依赖解析引擎（版本匹配 + 递归 + 循环检测） | `.claude/research/iphub-design.md` | `src/ipman/core/resolver.py` | 已完成 |
 | core/registry | 本地元数据注册表 | -- | `src/ipman/core/registry.py` | 待开始 |
 
 ---
@@ -49,7 +49,7 @@
 
 | 模块 | 说明 | 设计文档 | 源代码目录 | 状态 |
 |------|------|---------|----------|------|
-| hub/client | IpHub 客户端（index.yaml 拉取/缓存/搜索） | `.claude/research/iphub-design.md` | `src/ipman/hub/client.py` | 待开始 |
+| hub/client | IpHub 客户端（index.yaml 拉取/缓存/搜索 + fetch_registry） | `.claude/research/iphub-design.md` | `src/ipman/hub/client.py` | 已完成 |
 | hub/publisher | 发布逻辑（fork + 创建注册文件 + 提 PR） | `.claude/research/iphub-design.md` | `src/ipman/hub/publisher.py` | 待开始 |
 
 ---
@@ -82,3 +82,10 @@
 | `tests/test_core/test_symlink.py` | utils/symlink | 10 | 已完成 |
 | `tests/test_cli/test_env.py` | cli/env | 10 | 已完成 |
 | `tests/test_cli/test_main.py` | cli/main | 3 | 已完成 |
+| `tests/test_cli/test_skill.py` | cli/skill | 9 | 已完成 |
+| `tests/test_cli/test_pack.py` | cli/pack | 10 | 已完成 |
+| `tests/test_cli/test_install_ip.py` | cli/install (IP file) | 8 | 已完成 |
+| `tests/test_cli/test_install_hub.py` | cli/install (IpHub) | 7 | 已完成 |
+| `tests/test_core/test_package.py` | core/package | 16 | 已完成 |
+| `tests/test_core/test_resolver.py` | core/resolver | 19 | 已完成 |
+| `tests/test_hub/test_client.py` | hub/client | 12 | 已完成 |
