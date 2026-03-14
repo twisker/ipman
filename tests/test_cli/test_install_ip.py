@@ -5,12 +5,11 @@ from __future__ import annotations
 import subprocess
 from pathlib import Path
 from textwrap import dedent
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, patch
 
 from click.testing import CliRunner
 
 from ipman.cli.main import cli
-
 
 SAMPLE_IP = dedent("""\
     name: frontend-kit

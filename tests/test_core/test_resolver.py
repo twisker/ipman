@@ -5,13 +5,11 @@ from __future__ import annotations
 import pytest
 
 from ipman.core.resolver import (
-    VersionConstraint,
-    parse_constraint,
-    version_matches,
-    resolve_dependencies,
     CyclicDependencyError,
+    parse_constraint,
+    resolve_dependencies,
+    version_matches,
 )
-
 
 # ---------------------------------------------------------------------------
 # VersionConstraint parsing

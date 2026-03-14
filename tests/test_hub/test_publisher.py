@@ -3,20 +3,17 @@
 from __future__ import annotations
 
 import subprocess
-from pathlib import Path
-from textwrap import dedent
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 from ipman.hub.publisher import (
-    get_github_username,
-    generate_skill_registry,
-    generate_package_registry,
     IpHubPublisher,
     PublishError,
+    generate_package_registry,
+    generate_skill_registry,
+    get_github_username,
 )
-
 
 # ---------------------------------------------------------------------------
 # GitHub identity
@@ -89,7 +86,7 @@ class TestGeneratePackageRegistry:
         assert meta["name"] == "frontend-toolkit"
 
     def test_version_data(self) -> None:
-        from ipman.core.package import IPPackage, SkillRef, DependencyRef
+        from ipman.core.package import DependencyRef, IPPackage, SkillRef
 
         pkg = IPPackage(
             name="frontend-toolkit",

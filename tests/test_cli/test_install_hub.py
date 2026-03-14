@@ -10,7 +10,6 @@ from click.testing import CliRunner
 
 from ipman.cli.main import cli
 
-
 SKILL_REGISTRY = {
     "type": "skill",
     "name": "web-scraper",

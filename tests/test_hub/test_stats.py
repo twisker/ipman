@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from ipman.hub.stats import report_install, StatsError
+from ipman.hub.stats import StatsError, report_install
 
 
 class TestReportInstall:

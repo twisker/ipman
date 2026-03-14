@@ -108,6 +108,15 @@
 
 ## Phase 4 -- 打磨与发布
 
-**目标：** 国际化、完整文档、Windows 安装包、PyPI 首次发布
+**目标：** 代码质量收尾、文档完善、PyPI 首次发布
 
-> Sprint 拆分待 Phase 3 完成后细化。
+### Sprint 5（代码质量 + 发布准备）
+
+| 优先级 | 任务 | 所属模块 | 责任人 | 状态 |
+|-------|------|----------|--------|------|
+| P0 | `_resolve_agent` 去重提取到公共模块 | utils | AI | 待开始 |
+| P0 | pyproject.toml 发布配置完善 | 基础设施 | AI | 待开始 |
+| P1 | ruff + mypy 全量检查修复 | 代码质量 | AI | 待开始 |
+| P1 | README.md 编写 | docs | AI | 待开始 |
+| P2 | TestPyPI 试发布验证 | CI/CD | AI | 待开始 |
+| P2 | GitHub Actions 发布工作流 | CI/CD | AI | 待开始 |

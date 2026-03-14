@@ -8,14 +8,13 @@ from textwrap import dedent
 import pytest
 
 from ipman.core.package import (
+    DependencyRef,
     IPPackage,
     SkillRef,
-    DependencyRef,
-    parse_ip_file,
-    dump_ip_file,
     ValidationError,
+    dump_ip_file,
+    parse_ip_file,
 )
-
 
 # ---------------------------------------------------------------------------
 # SkillRef tests

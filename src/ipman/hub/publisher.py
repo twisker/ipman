@@ -14,6 +14,14 @@ from ipman.core.package import IPPackage
 _IPHUB_REPO = "twisker/iphub"
 
 
+def _dump_yaml(data: dict[str, Any]) -> str:
+    """Dump dict to YAML string with standard formatting."""
+    return yaml.dump(
+        data, default_flow_style=False,
+        allow_unicode=True, sort_keys=False,
+    )
+
+
 # ---------------------------------------------------------------------------
 # Exceptions
 # ---------------------------------------------------------------------------
@@ -208,13 +216,15 @@ class IpHubPublisher:
             keywords=keywords,
             agents=agents,
         )
-        content = yaml.dump(registry, default_flow_style=False, allow_unicode=True, sort_keys=False)
+        content = _dump_yaml(registry)
 
         branch = f"publish/{name}"
         self._create_branch(branch)
 
         path = f"registry/@{self.username}/{name}.yaml"
-        self._push_file(branch, path, content, f"Register skill: {name}")
+        self._push_file(
+            branch, path, content, f"Register skill: {name}",
+        )
 
         return self._create_pr(
             branch,
@@ -236,15 +246,26 @@ class IpHubPublisher:
             author=f"@{self.username}",
             license_=pkg.license,
         )
-        meta_content = yaml.dump(meta, default_flow_style=False, allow_unicode=True, sort_keys=False)
-        meta_path = f"registry/@{self.username}/{pkg.name}/meta.yaml"
-        self._push_file(branch, meta_path, meta_content, f"Register package: {pkg.name}")
+        meta_content = _dump_yaml(meta)
+        meta_path = (
+            f"registry/@{self.username}/{pkg.name}/meta.yaml"
+        )
+        self._push_file(
+            branch, meta_path, meta_content,
+            f"Register package: {pkg.name}",
+        )
 
         # version file
         version_data = generate_version_data(pkg)
-        version_content = yaml.dump(version_data, default_flow_style=False, allow_unicode=True, sort_keys=False)
-        version_path = f"registry/@{self.username}/{pkg.name}/{pkg.version}.yaml"
-        self._push_file(branch, version_path, version_content, f"Add {pkg.name} v{pkg.version}")
+        version_content = _dump_yaml(version_data)
+        version_path = (
+            f"registry/@{self.username}"
+            f"/{pkg.name}/{pkg.version}.yaml"
+        )
+        self._push_file(
+            branch, version_path, version_content,
+            f"Add {pkg.name} v{pkg.version}",
+        )
 
         return self._create_pr(
             branch,

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 import click
 
@@ -75,7 +76,7 @@ def top(limit: int) -> None:
     client = _get_hub_client()
     index = client.fetch_index()
 
-    entries: list[dict] = []
+    entries: list[dict[str, Any]] = []
     for section in ("skills", "packages"):
         items = index.get(section, {})
         for name, data in items.items():
@@ -101,7 +102,10 @@ def top(limit: int) -> None:
 @click.option("--description", "-d", default="", help="Skill/package description.")
 @click.option("--license", "license_", default=None, help="License (e.g. MIT).")
 @click.option("--homepage", default=None, help="Project homepage URL.")
-def publish(source: str, description: str, license_: str | None, homepage: str | None) -> None:
+def publish(
+    source: str, description: str,
+    license_: str | None, homepage: str | None,
+) -> None:
     """Publish a skill or IP package to IpHub.
 
     SOURCE can be a skill name (e.g. web-scraper) or an .ip.yaml file path.

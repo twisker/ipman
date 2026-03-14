@@ -137,7 +137,7 @@ class TestPackCommand:
                 "--output", str(output),
             ])
         assert result.exit_code != 0
-        assert "already exists" in result.output.lower() or "already exists" in (result.exception and str(result.exception) or "").lower()
+        assert "already exists" in result.output.lower() or "already exists" in ((result.exception and str(result.exception)) or "").lower()
         # File should not be modified
         assert output.read_text() == "old content"
 

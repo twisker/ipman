@@ -3,11 +3,15 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import click
 
 from ipman.agents.base import AgentAdapter
 from ipman.cli._common import resolve_agent as _resolve_agent
+
+if TYPE_CHECKING:
+    from ipman.hub.client import IpHubClient
 
 
 def _is_ip_file(source: str) -> bool:
@@ -15,7 +19,7 @@ def _is_ip_file(source: str) -> bool:
     return source.endswith(".ip.yaml")
 
 
-def _get_hub_client() -> "IpHubClient":  # noqa: F821
+def _get_hub_client() -> IpHubClient:
     """Create a default IpHubClient instance."""
     from ipman.hub.client import IpHubClient
     return IpHubClient()

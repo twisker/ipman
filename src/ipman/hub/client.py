@@ -119,7 +119,8 @@ class IpHubClient:
 
         with urllib.request.urlopen(url) as resp:
             raw = resp.read().decode()
-        return yaml.safe_load(raw)
+        result: dict[str, Any] = yaml.safe_load(raw)
+        return result
 
     def _registry_url(self, path: str) -> str:
         """Build a raw GitHub URL for a registry file."""

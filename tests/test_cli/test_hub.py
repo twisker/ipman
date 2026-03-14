@@ -10,7 +10,6 @@ from click.testing import CliRunner
 
 from ipman.cli.main import cli
 
-
 SAMPLE_INDEX = {
     "skills": {
         "web-scraper": {
