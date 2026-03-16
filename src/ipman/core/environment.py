@@ -189,12 +189,24 @@ def activate_env(
         msg = f"Environment '{name}' does not exist"
         raise FileNotFoundError(msg)
 
-    config = _read_project_config(project_path)
-    if not config:
-        msg = "No ipman.yaml found. Run 'ipman create' first."
+    # Read agent info from env metadata
+    meta_file = env_path / "env.yaml"
+    if not meta_file.exists():
+        msg = f"Environment '{name}' has no metadata (env.yaml missing)"
         raise FileNotFoundError(msg)
+    meta = yaml.safe_load(meta_file.read_text(encoding="utf-8")) or {}
+    agent_name = meta.get("agent")
+    if not agent_name:
+        msg = f"Environment '{name}' metadata missing 'agent' field"
+        raise ValueError(msg)
 
-    agent_config_dir_name = config.get("agent_config_dir", ".claude")
+    from ipman.agents.registry import get_adapter
+    adapter = get_adapter(agent_name)
+    agent_config_dir_name = adapter.config_dir_name
+
+    # Ensure project config exists (for all scopes)
+    _ensure_project_config(project_path, adapter)
+
     agent_config_path = project_path / agent_config_dir_name
     backup_path = project_path / f"{agent_config_dir_name}.bak"
 
@@ -232,7 +244,13 @@ def deactivate_env(
         msg = "No environment is currently active"
         raise RuntimeError(msg)
 
-    agent_config_dir_name = config.get("agent_config_dir", ".claude")
+    agent_config_dir_name = config.get("agent_config_dir")
+    if not agent_config_dir_name:
+        # Fall back to reading from the active env's metadata
+        active_name = config["active_env"]
+        # Try to find the active env across all scopes
+        agent_config_dir_name = _resolve_agent_config_dir(active_name, project_path)
+
     agent_config_path = project_path / agent_config_dir_name
     backup_path = project_path / f"{agent_config_dir_name}.bak"
 
@@ -357,6 +375,23 @@ def generate_deactivate_script(shell: str = "bash") -> str:
 # ---------------------------------------------------------------------------
 # Internal helpers
 # ---------------------------------------------------------------------------
+
+def _resolve_agent_config_dir(env_name: str, project_path: Path) -> str:
+    """Resolve agent config dir name by searching env metadata across all scopes."""
+    for scope in Scope:
+        try:
+            env_path = get_env_path(env_name, scope, project_path)
+        except ValueError:
+            continue
+        meta_file = env_path / "env.yaml"
+        if meta_file.exists():
+            meta = yaml.safe_load(meta_file.read_text(encoding="utf-8")) or {}
+            agent_name = meta.get("agent")
+            if agent_name:
+                from ipman.agents.registry import get_adapter
+                return get_adapter(agent_name).config_dir_name
+    return ".claude"  # fallback default
+
 
 def _is_windows() -> bool:
     import sys
