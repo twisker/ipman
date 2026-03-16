@@ -59,6 +59,12 @@ class IPPackage:
     dependencies: list[DependencyRef] = field(default_factory=list)
     author: dict[str, str] | None = None
     license: str | None = None
+    tags: list[str] = field(default_factory=list)
+    summary: str | None = None
+    homepage: str | None = None
+    repository: str | None = None
+    icon: str | None = None
+    links: list[dict[str, str]] = field(default_factory=list)
 
 
 # ---------------------------------------------------------------------------
@@ -134,6 +140,12 @@ def parse_ip_file(
         dependencies=dependencies,
         author=data.get("author"),
         license=data.get("license"),
+        tags=data.get("tags", []),
+        summary=data.get("summary"),
+        homepage=data.get("homepage"),
+        repository=data.get("repository"),
+        icon=data.get("icon"),
+        links=data.get("links", []),
     )
 
 
@@ -159,6 +171,19 @@ def dump_ip_file(pkg: IPPackage, path: Path) -> None:
         data["author"] = pkg.author
     if pkg.license:
         data["license"] = pkg.license
+
+    if pkg.tags:
+        data["tags"] = pkg.tags
+    if pkg.summary:
+        data["summary"] = pkg.summary
+    if pkg.homepage:
+        data["homepage"] = pkg.homepage
+    if pkg.repository:
+        data["repository"] = pkg.repository
+    if pkg.icon:
+        data["icon"] = pkg.icon
+    if pkg.links:
+        data["links"] = pkg.links
 
     # Skills
     skills_out: list[dict[str, Any]] = []
