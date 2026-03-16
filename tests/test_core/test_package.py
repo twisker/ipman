@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import textwrap
 from pathlib import Path
 from textwrap import dedent
 
 import pytest
+import yaml
 
 from ipman.core.package import (
     DependencyRef,
@@ -270,3 +272,74 @@ class TestDumpIPFile:
         text = output.read_text()
         assert "source:" in text
         assert "plugin:" in text
+
+
+# ---------------------------------------------------------------------------
+# New optional fields tests
+# ---------------------------------------------------------------------------
+
+
+def test_parse_ip_file_with_new_fields(tmp_path):
+    """New optional fields (tags, summary, etc.) are parsed correctly."""
+    content = textwrap.dedent("""\
+        name: extended-kit
+        version: "1.0.0"
+        description: "Test kit"
+        skills:
+          - name: skill-a
+        tags: [frontend, react]
+        summary: "A test summary"
+        homepage: "https://example.com"
+        repository: "https://github.com/test/repo"
+        icon: "https://example.com/icon.png"
+        links:
+          - title: "Guide"
+            url: "https://example.com/guide"
+    """)
+    f = tmp_path / "extended.ip.yaml"
+    f.write_text(content)
+    pkg = parse_ip_file(f)
+    assert pkg.tags == ["frontend", "react"]
+    assert pkg.summary == "A test summary"
+    assert pkg.homepage == "https://example.com"
+    assert pkg.repository == "https://github.com/test/repo"
+    assert pkg.icon == "https://example.com/icon.png"
+    assert pkg.links == [{"title": "Guide", "url": "https://example.com/guide"}]
+
+
+def test_parse_ip_file_without_new_fields(tmp_path):
+    """Old files without new fields still parse (backward compat)."""
+    content = textwrap.dedent("""\
+        name: old-kit
+        version: "1.0.0"
+        description: "Old format"
+        skills:
+          - name: skill-a
+    """)
+    f = tmp_path / "old.ip.yaml"
+    f.write_text(content)
+    pkg = parse_ip_file(f)
+    assert pkg.tags == []
+    assert pkg.summary is None
+    assert pkg.homepage is None
+    assert pkg.links == []
+
+
+def test_dump_ip_file_with_new_fields(tmp_path):
+    """New fields are written to .ip.yaml."""
+    pkg = IPPackage(
+        name="dump-test", version="1.0.0", description="Test",
+        skills=[SkillRef(name="s1")],
+        tags=["ai", "coding"],
+        summary="A summary",
+        homepage="https://example.com",
+    )
+    out = tmp_path / "dump.ip.yaml"
+    dump_ip_file(pkg, out)
+    data = yaml.safe_load(out.read_text())
+    assert data["tags"] == ["ai", "coding"]
+    assert data["summary"] == "A summary"
+    assert data["homepage"] == "https://example.com"
+    assert "repository" not in data  # None fields omitted
+    assert "icon" not in data
+    assert "links" not in data

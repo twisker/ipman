@@ -12,6 +12,7 @@ from ipman.hub.publisher import (
     PublishError,
     generate_package_registry,
     generate_skill_registry,
+    generate_version_data,
     get_github_username,
 )
 
@@ -69,7 +70,8 @@ class TestGenerateSkillRegistry:
             author="@alice",
             keywords=["testing", "qa"],
         )
-        assert result["keywords"] == ["testing", "qa"]
+        # keywords migrated to tags field
+        assert result["tags"] == ["testing", "qa"]
 
 
 class TestGeneratePackageRegistry:
@@ -148,7 +150,7 @@ class TestIpHubPublisher:
             },
         )
         # Should have made gh calls (branch + push + PR, no fork)
-        assert mock_run.call_count >= 3
+        assert mock_run.call_count >= 3  # branch + push + PR
         # No fork call
         assert not any(
             "fork" in str(c) for c in mock_run.call_args_list
@@ -198,3 +200,75 @@ class TestIpHubPublisher:
         publisher = IpHubPublisher(username="twisker")
         publisher.publish_package(pkg)
         assert mock_run.call_count >= 3
+
+
+# ---------------------------------------------------------------------------
+# New fields: tags, summary, changelog
+# ---------------------------------------------------------------------------
+
+
+def test_generate_package_registry_with_new_fields():
+    result = generate_package_registry(
+        name="test-pkg", description="Test", author="@tester",
+        tags=["ai", "coding"], summary="A summary",
+        repository="https://github.com/test/repo",
+        icon="https://example.com/icon.png",
+        links=[{"title": "Guide", "url": "https://example.com"}],
+    )
+    assert result["tags"] == ["ai", "coding"]
+    assert result["summary"] == "A summary"
+    assert result["repository"] == "https://github.com/test/repo"
+    assert result["icon"] == "https://example.com/icon.png"
+    assert result["links"] == [{"title": "Guide", "url": "https://example.com"}]
+
+
+def test_generate_skill_registry_with_tags():
+    result = generate_skill_registry(
+        name="test-skill", description="Test", author="@tester",
+        tags=["css", "layout"], summary="A CSS helper",
+    )
+    assert result["tags"] == ["css", "layout"]
+    assert result["summary"] == "A CSS helper"
+
+
+def test_generate_skill_registry_keywords_fallback():
+    """keywords used as fallback when tags not provided."""
+    result = generate_skill_registry(
+        name="test-skill", description="Test", author="@tester",
+        keywords=["old-tag"],
+    )
+    assert result["tags"] == ["old-tag"]
+
+
+def test_generate_skill_registry_tags_over_keywords():
+    """tags takes precedence over keywords."""
+    result = generate_skill_registry(
+        name="test-skill", description="Test", author="@tester",
+        keywords=["old"], tags=["new"],
+    )
+    assert result["tags"] == ["new"]
+
+
+def test_generate_version_data_with_changelog():
+    from ipman.core.package import IPPackage, SkillRef
+    pkg = IPPackage(
+        name="test", version="2.0.0", description="Test",
+        skills=[SkillRef(name="s1")],
+    )
+    changelog = {
+        "summary": "Added new skill",
+        "added": ["s1"],
+    }
+    result = generate_version_data(pkg, changelog=changelog)
+    assert result["changelog"]["summary"] == "Added new skill"
+    assert result["changelog"]["added"] == ["s1"]
+
+
+def test_generate_version_data_without_changelog():
+    from ipman.core.package import IPPackage, SkillRef
+    pkg = IPPackage(
+        name="test", version="1.0.0", description="Test",
+        skills=[SkillRef(name="s1")],
+    )
+    result = generate_version_data(pkg)
+    assert "changelog" not in result

@@ -68,6 +68,7 @@ class IpHubClient:
         self,
         query: str,
         agent: str | None = None,
+        tag: str | None = None,
     ) -> list[dict[str, Any]]:
         """Search index by keyword and optional agent filter."""
         index = self._index or self.fetch_index()
@@ -78,6 +79,8 @@ class IpHubClient:
             items = index.get(section, {})
             for name, info in items.items():
                 if agent and agent not in info.get("agents", []):
+                    continue
+                if tag and tag not in info.get("tags", []):
                     continue
                 desc = info.get("description", "").lower()
                 if q and q not in name.lower() and q not in desc:

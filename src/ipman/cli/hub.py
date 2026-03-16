@@ -45,10 +45,11 @@ def hub() -> None:
 @hub.command()
 @click.argument("query", default="")
 @click.option("--agent", default=None, help="Filter by agent (e.g. claude-code).")
-def search(query: str, agent: str | None) -> None:
+@click.option("--tag", default=None, help="Filter by tag (e.g. frontend).")
+def search(query: str, agent: str | None, tag: str | None) -> None:
     """Search IpHub for skills and packages."""
     client = _get_hub_client()
-    results = client.search(query, agent=agent)
+    results = client.search(query, agent=agent, tag=tag)
 
     if not results:
         click.echo("No results found.")
@@ -89,10 +90,24 @@ def info(name: str) -> None:
     users = entry.get("unique_users", 0)
     click.echo(f"  Installs:    {installs} ({users} unique users)")
 
+    if entry.get("tags"):
+        click.echo(f"  Tags:        {', '.join(entry['tags'])}")
+    if entry.get("summary"):
+        click.echo(f"  Summary:     {entry['summary'].strip()}")
+    if entry.get("homepage"):
+        click.echo(f"  Homepage:    {entry['homepage']}")
+    if entry.get("repository"):
+        click.echo(f"  Repository:  {entry['repository']}")
+    if entry.get("links"):
+        click.echo("  Links:")
+        for link in entry["links"]:
+            click.echo(f"    - {link.get('title', '')}: {link.get('url', '')}")
+
 
 @hub.command()
 @click.option("--limit", "-n", default=10, help="Number of entries to show.")
-def top(limit: int) -> None:
+@click.option("--tag", default=None, help="Filter by tag.")
+def top(limit: int, tag: str | None) -> None:
     """Show most installed skills and packages."""
     client = _get_hub_client()
     index = client.fetch_index()
@@ -104,6 +119,9 @@ def top(limit: int) -> None:
             entries.append({"name": name, **data})
 
     entries.sort(key=lambda e: e.get("installs", 0), reverse=True)
+
+    if tag:
+        entries = [e for e in entries if tag in e.get("tags", [])]
 
     if not entries:
         click.echo("No entries in IpHub.")

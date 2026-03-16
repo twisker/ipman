@@ -48,7 +48,7 @@ def _mock_hub() -> MagicMock:
     hub = MagicMock()
     hub._index = SAMPLE_INDEX
     hub.fetch_index.return_value = SAMPLE_INDEX
-    hub.search.side_effect = lambda q, agent=None: [
+    hub.search.side_effect = lambda q, agent=None, tag=None: [
         {"name": n, **info}
         for section in ("skills", "packages")
         for n, info in SAMPLE_INDEX.get(section, {}).items()
@@ -251,6 +251,74 @@ class TestHubPublish:
         result = runner.invoke(cli, ["hub", "publish", str(ip_file)])
         assert result.exit_code == 0, result.output
         mock_vet.assert_called_once()
+
+
+class TestHubSearchTag:
+    """Test `ipman hub search --tag`."""
+
+    def test_search_with_tag(self) -> None:
+        hub = _mock_hub()
+        runner = CliRunner()
+        with patch("ipman.cli.hub._get_hub_client", return_value=hub):
+            result = runner.invoke(cli, ["hub", "search", "--tag", "frontend"])
+        assert result.exit_code == 0
+
+
+class TestHubInfoNewFields:
+    """Test `ipman hub info` shows tags, summary, links."""
+
+    def test_info_shows_tags(self) -> None:
+        hub = _mock_hub()
+        hub.lookup.side_effect = None
+        hub.lookup.return_value = {
+            "name": "test-skill",
+            "type": "skill",
+            "owner": "@tester",
+            "description": "Test",
+            "tags": ["frontend", "css"],
+            "summary": "A test skill",
+            "installs": 100,
+            "unique_users": 50,
+        }
+        runner = CliRunner()
+        with patch("ipman.cli.hub._get_hub_client", return_value=hub):
+            result = runner.invoke(cli, ["hub", "info", "test-skill"])
+        assert result.exit_code == 0
+        assert "frontend" in result.output
+        assert "A test skill" in result.output
+
+    def test_info_shows_links(self) -> None:
+        hub = _mock_hub()
+        hub.lookup.side_effect = None
+        hub.lookup.return_value = {
+            "name": "link-skill",
+            "type": "skill",
+            "owner": "@dev",
+            "description": "Has links",
+            "homepage": "https://example.com",
+            "repository": "https://github.com/dev/link-skill",
+            "links": [{"title": "Docs", "url": "https://docs.example.com"}],
+            "installs": 10,
+            "unique_users": 5,
+        }
+        runner = CliRunner()
+        with patch("ipman.cli.hub._get_hub_client", return_value=hub):
+            result = runner.invoke(cli, ["hub", "info", "link-skill"])
+        assert result.exit_code == 0
+        assert "https://example.com" in result.output
+        assert "https://github.com/dev/link-skill" in result.output
+        assert "Docs" in result.output
+
+
+class TestHubTopTag:
+    """Test `ipman hub top --tag`."""
+
+    def test_top_with_tag(self) -> None:
+        hub = _mock_hub()
+        runner = CliRunner()
+        with patch("ipman.cli.hub._get_hub_client", return_value=hub):
+            result = runner.invoke(cli, ["hub", "top", "--tag", "frontend"])
+        assert result.exit_code == 0
 
 
 class TestHubReport:
