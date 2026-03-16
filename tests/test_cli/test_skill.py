@@ -148,3 +148,31 @@ class TestSkillList:
         assert result.exit_code == 0
         assert "test-skill" in result.output
         mock_resolve.assert_called_once_with("openclaw")
+
+
+from ipman.cli.skill import _classify_source
+
+
+class TestClassifySource:
+    def test_ip_file(self):
+        assert _classify_source("kit.ip.yaml") == "ip_file"
+
+    def test_ip_file_with_path(self):
+        assert _classify_source("./path/to/kit.ip.yaml") == "ip_file"
+
+    def test_local_dir(self, tmp_path):
+        skill_dir = tmp_path / "my-skill"
+        skill_dir.mkdir()
+        assert _classify_source(str(skill_dir)) == "local_skill"
+
+    def test_local_dir_relative(self, tmp_path, monkeypatch):
+        skill_dir = tmp_path / "my-skill"
+        skill_dir.mkdir()
+        monkeypatch.chdir(tmp_path)
+        assert _classify_source("./my-skill") == "local_skill"
+
+    def test_hub_name(self):
+        assert _classify_source("web-scraper") == "hub_name"
+
+    def test_hub_name_not_existing(self):
+        assert _classify_source("nonexistent-skill") == "hub_name"

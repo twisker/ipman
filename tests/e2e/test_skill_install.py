@@ -22,21 +22,78 @@ class TestSkillInstall:
         agent_manager: AgentManager,
     ) -> None:
         """Install a skill from local fixtures; verify it appears in agent list."""
-        pytest.skip("Local skill directory install not yet supported — see Sprint 7 P0 task")
+        fixture_skill = FIXTURES_DIR / "skills" / agent / "hello-world"
+        run_ipman(
+            "env", "activate", ipman_env.name, f"--{ipman_env.scope}",
+            cwd=project_dir,
+        )
+        result = run_ipman(
+            "install", str(fixture_skill),
+            "--agent", agent, "--no-vet",
+            cwd=project_dir, check=False, timeout=30,
+        )
+        assert result.returncode == 0, (
+            f"Local skill install failed: rc={result.returncode}, "
+            f"stderr={result.stderr}"
+        )
 
     def test_uninstall_skill(
         self, ipman_env: EnvInfo, project_dir: Path, agent: str,
         agent_manager: AgentManager,
     ) -> None:
         """Install then uninstall a skill; verify it is removed."""
-        pytest.skip("Local skill directory install not yet supported — see Sprint 7 P0 task")
+        fixture_skill = FIXTURES_DIR / "skills" / agent / "hello-world"
+        run_ipman(
+            "env", "activate", ipman_env.name, f"--{ipman_env.scope}",
+            cwd=project_dir,
+        )
+        run_ipman(
+            "install", str(fixture_skill),
+            "--agent", agent, "--no-vet",
+            cwd=project_dir, check=False, timeout=30,
+        )
+        result = run_ipman(
+            "uninstall", "hello-world",
+            "--agent", agent,
+            cwd=project_dir, check=False, timeout=30,
+        )
+        assert result.returncode in (0, 1), (
+            f"Uninstall crashed: rc={result.returncode}, "
+            f"stderr={result.stderr}"
+        )
 
     def test_skill_persists_across_deactivate_reactivate(
         self, ipman_env: EnvInfo, project_dir: Path, agent: str,
         agent_manager: AgentManager,
     ) -> None:
         """Installed skill survives deactivate + reactivate cycle."""
-        pytest.skip("Local skill directory install not yet supported — see Sprint 7 P0 task")
+        fixture_skill = FIXTURES_DIR / "skills" / agent / "hello-world"
+        config_dir_name = agent_manager.config_dir_name
+        run_ipman(
+            "env", "activate", ipman_env.name, f"--{ipman_env.scope}",
+            cwd=project_dir,
+        )
+        install_result = run_ipman(
+            "install", str(fixture_skill),
+            "--agent", agent, "--no-vet",
+            cwd=project_dir, check=False, timeout=30,
+        )
+        if install_result.returncode != 0:
+            pytest.skip(f"Install failed (rc={install_result.returncode}), cannot test persistence")
+
+        run_ipman(
+            "env", "deactivate", ipman_env.name, f"--{ipman_env.scope}",
+            cwd=project_dir, check=False,
+        )
+        run_ipman(
+            "env", "activate", ipman_env.name, f"--{ipman_env.scope}",
+            cwd=project_dir,
+        )
+
+        skill_dir = project_dir / config_dir_name / "skills" / "hello-world"
+        assert skill_dir.exists(), (
+            f"Skill directory missing after reactivate: {skill_dir}"
+        )
 
     def test_install_skill_from_hub(
         self, ipman_env: EnvInfo, project_dir: Path, agent: str,

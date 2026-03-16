@@ -39,11 +39,28 @@ class OpenClawAdapter(AgentAdapter):
     def install_skill(
         self, name: str, **kwargs: str | None,
     ) -> subprocess.CompletedProcess[str]:
-        """Install a skill via ``clawhub install``."""
+        """Install a skill.
+
+        If *name* is an existing directory, copy it into the agent's
+        skills/ dir. Otherwise delegate to ``clawhub install``.
+        """
+        path = Path(name)
+        if path.exists() and path.is_dir():
+            config_dir = kwargs.get("config_dir")
+            if config_dir:
+                dest = Path(str(config_dir)) / "skills" / path.name
+            else:
+                dest = Path.cwd() / ".openclaw" / "skills" / path.name
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copytree(path, dest, dirs_exist_ok=True)
+            return subprocess.CompletedProcess(
+                args=[], returncode=0,
+                stdout=f"Copied to {dest}\n", stderr="",
+            )
         args = ["clawhub", "install", name]
         hub = kwargs.get("hub")
         if hub:
-            args.extend(["--hub", hub])
+            args.extend(["--hub", str(hub)])
         return self._run_cli(args)
 
     def uninstall_skill(

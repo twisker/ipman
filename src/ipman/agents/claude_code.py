@@ -39,11 +39,28 @@ class ClaudeCodeAdapter(AgentAdapter):
     def install_skill(
         self, name: str, **kwargs: str | None,
     ) -> subprocess.CompletedProcess[str]:
-        """Install a plugin via ``claude plugin install``."""
+        """Install a skill.
+
+        If *name* is an existing directory, copy it into the agent's
+        skills/ dir. Otherwise delegate to ``claude plugin install``.
+        """
+        path = Path(name)
+        if path.exists() and path.is_dir():
+            config_dir = kwargs.get("config_dir")
+            if config_dir:
+                dest = Path(str(config_dir)) / "skills" / path.name
+            else:
+                dest = Path.cwd() / ".claude" / "skills" / path.name
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copytree(path, dest, dirs_exist_ok=True)
+            return subprocess.CompletedProcess(
+                args=[], returncode=0,
+                stdout=f"Copied to {dest}\n", stderr="",
+            )
         args = ["claude", "plugin", "install", name]
         scope = kwargs.get("scope")
         if scope:
-            args.extend(["-s", scope])
+            args.extend(["-s", str(scope)])
         return self._run_cli(args)
 
     def uninstall_skill(
