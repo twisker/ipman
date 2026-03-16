@@ -102,10 +102,21 @@ See the **[Security Guide](https://twisker.github.io/ipman/guide/security/)** fo
 ## IpHub Rankings
 
 <!-- TOP_SKILLS_START -->
-*Rankings will appear here once IpHub has install data.*
+## Top 10 Skills
+
+*Updated: 2026-03-15T04:33:52Z*
+
+| # | Name | Type | Installs | Users |
+|---|------|------|----------|-------|
 <!-- TOP_SKILLS_END -->
 
 <!-- TOP_PACKAGES_START -->
+## Top 10 Packages
+
+*Updated: 2026-03-15T04:33:52Z*
+
+| # | Name | Type | Installs | Users |
+|---|------|------|----------|-------|
 <!-- TOP_PACKAGES_END -->
 
 ## Star History
