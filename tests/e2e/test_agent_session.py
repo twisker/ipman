@@ -62,6 +62,11 @@ class TestAgentSession:
             timeout=60,
         )
 
+        # Gracefully skip if API credit balance is too low
+        _output = (session.stdout or "") + (session.stderr or "")
+        if session.exit_code == 1 and "credit balance" in _output.lower():
+            pytest.skip("Skipped: API credit balance too low")
+
         # Symlink must still be alive after the session
         assert PlatformAssert.is_symlink(config_dir), (
             f"Symlink destroyed during session! "
@@ -118,7 +123,7 @@ class TestAgentSession:
         # Install a test skill
         fixture_skill = FIXTURES_DIR / "skills" / agent / "hello-world"
         run_ipman(
-            "skill", "install", str(fixture_skill),
+            "install", str(fixture_skill),
             "--agent", agent,
             cwd=project_dir, check=False, timeout=30,
         )
@@ -128,6 +133,11 @@ class TestAgentSession:
             prompt="Reply with exactly: OK",
             timeout=60,
         )
+
+        # Gracefully skip if API credit balance is too low
+        _output = (session.stdout or "") + (session.stderr or "")
+        if session.exit_code == 1 and "credit balance" in _output.lower():
+            pytest.skip("Skipped: API credit balance too low")
 
         # Session should complete (exit_code 0) or timeout gracefully (-1)
         assert session.exit_code in (0, -1, -2), (
