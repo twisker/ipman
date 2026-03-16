@@ -173,3 +173,56 @@
 | P1 | iphub 定时统计 + README Top 排名 Action | CI/CD | AI | 已完成 |
 | P1 | 多平台 PyInstaller 打包（Linux/macOS/Windows） | CI/CD | AI | 已完成 |
 | P2 | GitHub Actions 发布时自动构建 + GitHub Release 上传 | CI/CD | AI | 已完成 |
+
+---
+
+## Phase 4 -- 用户体验改进 + 持续质量保障
+
+### Sprint 7（activate/deactivate 脚本 + install 增强 + E2E 完善）
+
+**目标：** 简化虚拟环境操作体验，扩展 install 命令，完善 E2E 测试覆盖
+
+| 优先级 | 任务 | 所属模块 | 责任人 | 状态 |
+|-------|------|----------|--------|------|
+| P0 | 为各平台提供 activate/deactivate 脚本（参考 conda）：Linux/macOS 生成 source 脚本、Windows 生成 .ps1/.bat，用户无需手动 eval | core/environment + CLI | AI | 待开始 |
+| P0 | 扩展 `ipman install` 支持直接安装 skill 目录/文件（自动检测类型：.ip.yaml / skill目录 / IpHub名称，委托 agent adapter） | cli/skill + core | AI | 待开始 |
+| P1 | Shell 集成：支持在 bash/zsh/fish/powershell 中 `source activate` 或 `. activate` 直接生效 | core/environment | AI | 待开始 |
+| P1 | Windows 平台 activate 脚本兼容性验证（当前 eval 不生效的问题） | core/environment | AI | 待开始 |
+| P2 | E2E 测试框架持续改进：根据运行结果修复测试用例 | tests/e2e | AI | 进行中 |
+
+---
+
+## Phase 5 -- IpHub Awesome-List 转型
+
+> **总体目标：** 将 IpHub 从扁平注册表升级为 awesome-list 式的策展与传播平台
+> **设计文档：** `docs/superpowers/specs/2026-03-16-iphub-ip-format-enhancement-design.md`
+> **实施计划：** `docs/superpowers/plans/2026-03-16-iphub-ip-format-enhancement.md`
+
+### Sprint 10（Sub-1: IP 格式增强 + 版本迭代 + Tag + 页面生成）
+
+**目标：** 扩展 IP 数据模型，建立三层架构（yaml → md → html），支持 tag 搜索、趋势统计、i18n Landing Page
+
+| 优先级 | 任务 | 所属模块 | 责任人 | 状态 |
+|-------|------|----------|--------|------|
+| P0 | IPPackage 扩展：新增 tags/summary/homepage/repository/icon/links 字段 | core/package | AI | 待开始 |
+| P0 | Publisher 适配：registry 输出新字段 + 版本文件含 changelog | hub/publisher | AI | 待开始 |
+| P0 | Client 适配：search() 支持 --tag 过滤 | hub/client | AI | 待开始 |
+| P0 | CLI 适配：hub search --tag, hub info 展示新字段 | cli/hub | AI | 待开始 |
+| P1 | i18n 翻译文件（en + zh-cn）| iphub/templates | AI | 待开始 |
+| P1 | README.md 生成模板（含新手引导）| iphub/templates | AI | 待开始 |
+| P1 | HTML Landing Page 模板（i18n + 响应式）| iphub/templates | AI | 待开始 |
+| P1 | 页面生成脚本 generate_pages.py | iphub/scripts | AI | 待开始 |
+| P1 | 趋势计算脚本 generate_trending.py | iphub/scripts | AI | 待开始 |
+| P2 | rebuild-index.yml：tag 聚合 + 趋势 + Labels 同步 | iphub/CI | AI | 待开始 |
+| P2 | rebuild-pages.yml：自动生成页面工作流 | iphub/CI | AI | 待开始 |
+| P2 | validate-pr.yml：tag 格式校验 | iphub/CI | AI | 待开始 |
+| P2 | GitHub Pages 启用（人工） | iphub 仓库设置 | 人工 | 待开始 |
+
+### Sprint 11-13（Sub-2 ~ Sub-5：待设计）
+
+| Sprint | 子项目 | 状态 |
+|--------|--------|------|
+| Sprint 11 | Sub-2: Tag 搜索 + 排名 + 趋势推荐系统 | 待设计 |
+| Sprint 12 | Sub-3: 个人页面 + IP Landing Page 完善 | 待设计 |
+| Sprint 13 | Sub-4: 社交媒体趋势抓取 + 自动 IP 生成 | 待设计 |
+| Sprint 14 | Sub-5: 自动化编排层 | 待设计 |
