@@ -43,6 +43,10 @@ docs = [
     "mkdocs-material>=9.5",
     "mkdocs-click>=0.8",
 ]
+e2e = [
+    "pytest-timeout>=2.2",
+    "pytest-rerunfailures>=14",
+]
 
 [project.scripts]
 ipman = "ipman.cli.main:cli"
@@ -105,3 +109,12 @@ disallow_untyped_defs = false
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-v --tb=short"
+markers = [
+    "e2e: All E2E tests",
+    "platform: Layer 1 platform integration tests",
+    "agent_cli: Layer 2 agent CLI integration tests",
+    "agent_session: Layer 3 agent session tests",
+    "publish: Publish workflow tests",
+    "symlink: Symlink-specific tests",
+    "slow: Tests taking > 30s",
+]

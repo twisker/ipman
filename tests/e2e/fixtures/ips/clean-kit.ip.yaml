@@ -1,0 +1,6 @@
+name: e2e-clean-kit
+version: "1.0.0"
+description: "Clean test IP package for E2E"
+author: e2e-test
+skills:
+  - name: e2e-hello-world
