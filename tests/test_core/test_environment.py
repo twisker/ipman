@@ -107,6 +107,46 @@ class TestCreateEnv:
 
 
 class TestActivateDeactivate:
+    def test_activate_user_scope(self, tmp_path, adapter, monkeypatch):
+        """User scope activate should work without pre-existing project config."""
+        project = tmp_path / "myproject"
+        project.mkdir()
+
+        fake_home = tmp_path / "home"
+        monkeypatch.setenv("IPMAN_HOME", str(fake_home / ".ipman"))
+
+        env_path = create_env("test-user", adapter, Scope.USER, project)
+        # This should NOT raise "No ipman.yaml found"
+        result = activate_env("test-user", Scope.USER, project)
+
+        assert result == env_path
+        # Verify symlink created
+        agent_config = project / ".claude"
+        assert agent_config.is_symlink()
+        assert agent_config.resolve() == env_path.resolve()
+
+        # Verify project config was auto-created
+        config_file = project / ".ipman" / "ipman.yaml"
+        assert config_file.exists()
+        config = yaml.safe_load(config_file.read_text())
+        assert config["active_env"] == "test-user"
+
+    def test_deactivate_user_scope(self, tmp_path, adapter, monkeypatch):
+        """User scope deactivate should work without pre-existing project config."""
+        project = tmp_path / "myproject"
+        project.mkdir()
+
+        fake_home = tmp_path / "home"
+        monkeypatch.setenv("IPMAN_HOME", str(fake_home / ".ipman"))
+
+        create_env("test-user", adapter, Scope.USER, project)
+        activate_env("test-user", Scope.USER, project)
+        # This should NOT raise
+        deactivate_env(project)
+
+        agent_config = project / ".claude"
+        assert not agent_config.is_symlink()
+
     def test_activate_no_existing_config(self, project, adapter):
         """Activate when no .claude/ exists yet."""
         project.mkdir()
