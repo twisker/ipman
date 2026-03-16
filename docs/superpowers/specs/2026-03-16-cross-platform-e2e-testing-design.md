@@ -53,7 +53,7 @@ Before implementing E2E tests, the following production code changes are needed:
 +-----------------------------------------------------+
 |  Layer 2: Agent CLI Integration Tests               |
 |  Real agent CLI commands (install/uninstall/list).   |
-|  Frequency: every push        Duration: ~5 min      |
+|  Frequency: daily + release   Duration: ~5 min      |
 +-----------------------------------------------------+
 |  Layer 1: Platform Integration Tests                |
 |  ipman's own cross-platform behavior (symlink, env, |
@@ -394,8 +394,10 @@ class AgentManager:
     def is_installed(name: str) -> bool:
         return get_adapter(name).is_installed()
 
-    def install_skill(self, skill_path: str) -> bool:
-        return self._adapter.install_skill(skill_path)
+    def install_skill(self, name: str, **kwargs) -> bool:
+        """Delegate to production adapter, return True if exit code == 0."""
+        result = self._adapter.install_skill(name, **kwargs)
+        return result.returncode == 0
 
     def list_skills(self) -> list[dict]:
         return self._adapter.list_skills()
