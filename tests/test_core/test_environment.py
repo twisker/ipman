@@ -18,6 +18,8 @@ from ipman.core.environment import (
     generate_activate_script,
     generate_deactivate_script,
     get_env_status,
+    get_envs_root,
+    get_ipman_home,
     list_envs,
 )
 
@@ -293,3 +295,34 @@ class TestEnvStatus:
         assert result[0]["scope"] == "project"
         assert result[0]["name"] == "myenv"
         assert result[0]["agent"] == "claude-code"
+
+
+def test_get_ipman_home_default(tmp_path, monkeypatch):
+    """Default: returns ~/.ipman."""
+    monkeypatch.delenv("IPMAN_HOME", raising=False)
+    result = get_ipman_home()
+    assert result == Path.home() / ".ipman"
+
+
+def test_get_ipman_home_override(tmp_path, monkeypatch):
+    """IPMAN_HOME env var overrides default."""
+    custom = tmp_path / "custom-ipman"
+    monkeypatch.setenv("IPMAN_HOME", str(custom))
+    result = get_ipman_home()
+    assert result == custom
+
+
+def test_get_envs_root_machine_default(monkeypatch):
+    """Default machine scope uses system path."""
+    monkeypatch.delenv("IPMAN_MACHINE_ROOT", raising=False)
+    result = get_envs_root(Scope.MACHINE)
+    assert "ipman" in str(result)
+    assert str(result).endswith("envs")
+
+
+def test_get_envs_root_machine_override(tmp_path, monkeypatch):
+    """IPMAN_MACHINE_ROOT env var overrides machine scope path."""
+    custom = tmp_path / "machine-root"
+    monkeypatch.setenv("IPMAN_MACHINE_ROOT", str(custom))
+    result = get_envs_root(Scope.MACHINE)
+    assert result == custom / "envs"

@@ -1,19 +1,15 @@
-# E2E tests — nightly + manual + pre-release
+# LEGACY: Docker-based E2E tests — replaced by e2e-fast.yml + e2e-full.yml
 # Runs real ipman against Docker containers with Claude Code / OpenClaw
 
-name: E2E Tests
+name: E2E Tests (Legacy)
 
 on:
-  schedule:
-    - cron: "0 4 * * *"  # Daily at 04:00 UTC
   workflow_dispatch:
     inputs:
       agent:
         description: "Agent to test (claude-code, openclaw, all)"
         required: false
         default: "all"
-  push:
-    tags: ["v*"]  # Also run before releases
 
 jobs:
   e2e:
@@ -27,9 +23,9 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Build test container
-        working-directory: tests/e2e
+        working-directory: tests/e2e-legacy
         run: docker compose build ${{ matrix.agent }}
 
       - name: Run E2E tests
-        working-directory: tests/e2e
+        working-directory: tests/e2e-legacy
         run: docker compose run --rm ${{ matrix.agent }}
