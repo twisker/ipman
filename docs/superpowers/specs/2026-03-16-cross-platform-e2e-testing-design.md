@@ -32,6 +32,14 @@ These issues exist at the boundary between ipman, real agent runtimes, and real 
 - **Agent sessions**: Real but minimal — short prompts like "Reply with exactly: OK" to minimize API cost and latency.
 - **Test framework**: pytest (already used for 68+ unit tests in the project).
 
+## 3.1 Prerequisites (Production Code Changes Required)
+
+Before implementing E2E tests, the following production code changes are needed:
+
+1. **`IPMAN_HOME` environment variable override**: `get_ipman_home()` in `core/environment.py` must honor an `IPMAN_HOME` env var to allow test isolation. Currently hardcoded to `Path.home() / ".ipman"`.
+2. **`IPMAN_MACHINE_ROOT` environment variable override**: Machine scope path (`/opt/ipman/envs` or `C:\ProgramData\ipman\envs`) must be overridable via env var for test isolation.
+3. **Existing `e2e.yml` migration**: The current Docker-based `e2e.yml` workflow will be replaced by the new `e2e-fast.yml` and `e2e-full.yml`. The old `e2e/` directory (Dockerfiles, bash scripts) will be archived or removed after the new framework is validated.
+
 ## 4. Test Architecture
 
 ### 4.1 Layered Strategy
@@ -122,23 +130,38 @@ Full matrix: OS(3) x Agent(2) = 6 CI jobs. Scope(3) x Order(2) parametrized with
 
 ### 5.1 Agent & Scope Parametrization
 
+The scope fixture uses ipman's canonical scope names (`project`, `user`, `machine`) as the parametrization axis. A mapping table translates these to agent-native scope names when invoking agent-specific CLI commands.
+
 ```python
+# Canonical ipman scopes → agent-native scope names
+# Values are agent-native terms used in CLI commands; keys are ipman-canonical.
 AGENT_SCOPES = {
     "claude-code": {
-        "project":  "project",
-        "user":     "user",
-        "machine":  "machine",
+        "project":  "project",     # .claude in project dir
+        "user":     "user",        # ~/.claude
+        "machine":  "machine",     # /opt/ipman/envs or C:\ProgramData\ipman\envs
     },
     "openclaw": {
-        "workspace": "project",
-        "local":     "user",
-        "managed":   "machine",
+        "project":  "workspace",   # .openclaw/workspace in project dir
+        "user":     "local",       # ~/.openclaw/skills
+        "machine":  None,          # OpenClaw bundled scope is read-only; skip
     },
 }
+
+def _agent_supports_scope(agent: str, scope: str) -> bool:
+    """Check if an agent supports the given canonical scope."""
+    return AGENT_SCOPES.get(agent, {}).get(scope) is not None
+
+def _agent_native_scope(agent: str, scope: str) -> str:
+    """Translate ipman canonical scope to agent-native term."""
+    return AGENT_SCOPES[agent][scope]
 
 @pytest.fixture(params=["claude-code", "openclaw"])
 def agent(request):
     name = request.param
+    agent_filter = request.config.getoption("--agent", default=None)
+    if agent_filter and agent_filter != name:
+        pytest.skip(f"Filtered to --agent {agent_filter}")
     if not AgentManager.is_installed(name):
         pytest.skip(f"{name} not installed")
     return name
@@ -146,7 +169,7 @@ def agent(request):
 @pytest.fixture(params=["project", "user", "machine"])
 def scope(request, agent):
     s = request.param
-    if s not in AGENT_SCOPES.get(agent, {}):
+    if not _agent_supports_scope(agent, s):
         pytest.skip(f"{agent} does not support scope '{s}'")
     if s == "machine" and not _has_machine_scope_permission():
         pytest.skip("machine scope requires elevated permissions")
@@ -155,7 +178,17 @@ def scope(request, agent):
 
 ### 5.2 Project Environment
 
+All `ipman` CLI invocations in tests use `uv run ipman ...` to ensure the development version is used (consistent with existing CI). A `run_ipman()` helper wraps `subprocess.run` with appropriate error handling:
+
 ```python
+def run_ipman(*args, cwd=None, check=True, timeout=30) -> subprocess.CompletedProcess:
+    """Invoke ipman CLI via uv run. Returns CompletedProcess."""
+    cmd = ["uv", "run", "ipman", *args]
+    return subprocess.run(
+        cmd, capture_output=True, text=True,
+        cwd=cwd, check=check, timeout=timeout,
+    )
+
 @pytest.fixture
 def project_dir(tmp_path, agent):
     """Temporary project directory with agent config dir stub."""
@@ -169,20 +202,33 @@ def project_dir(tmp_path, agent):
 @pytest.fixture
 def ipman_env(project_dir, agent, scope):
     env_name = f"e2e-{uuid4().hex[:8]}"
-    run(f"ipman env create {env_name} --agent {agent} --{scope}")
+    run_ipman("env", "create", env_name, "--agent", agent, f"--{scope}",
+              cwd=project_dir)
     yield EnvInfo(name=env_name, agent=agent, scope=scope, project=project_dir)
-    run(f"ipman env delete {env_name} --{scope}")
+    run_ipman("env", "delete", env_name, f"--{scope}",
+              cwd=project_dir, check=False)  # best-effort cleanup
 ```
 
-### 5.3 User/Machine Scope Isolation
+### 5.3 Scope Isolation
+
+Requires the production code prerequisites from Section 3.1 (env var overrides).
 
 ```python
 @pytest.fixture(autouse=True)
-def isolate_user_scope(tmp_path, monkeypatch):
-    """Redirect ~/.ipman to tmp_path to avoid polluting real HOME."""
+def isolate_scopes(tmp_path, monkeypatch):
+    """Redirect ipman storage paths to tmp_path to avoid polluting
+    real HOME or system directories.
+
+    Prerequisite: production code must honor IPMAN_HOME and
+    IPMAN_MACHINE_ROOT environment variables (see Section 3.1).
+    """
     fake_home = tmp_path / "fake_home"
     fake_home.mkdir()
     monkeypatch.setenv("IPMAN_HOME", str(fake_home / ".ipman"))
+
+    fake_machine = tmp_path / "fake_machine"
+    fake_machine.mkdir()
+    monkeypatch.setenv("IPMAN_MACHINE_ROOT", str(fake_machine / "ipman"))
 ```
 
 ### 5.4 GitHub Identity Fixtures (Publish Tests)
@@ -330,31 +376,61 @@ Parametrized by: `agent x scope x init_order(ipman_first, agent_first)`
 
 ### 7.1 AgentManager
 
+`AgentManager` is a **test-only** helper that wraps the existing production `AgentAdapter` classes for E2E testing purposes. It delegates CLI command construction to the production adapters where possible, and adds session management capabilities that production code does not need.
+
 ```python
+from ipman.agents.registry import get_adapter
+
 class AgentManager:
+    """Test helper wrapping production AgentAdapter + session management."""
+
+    def __init__(self, agent_name: str, project_dir: Path):
+        self.agent_name = agent_name
+        self.project_dir = project_dir
+        self._adapter = get_adapter(agent_name)  # reuse production adapter
+
+    # --- Delegated to production adapter ---
+    @staticmethod
+    def is_installed(name: str) -> bool:
+        return get_adapter(name).is_installed()
+
+    def install_skill(self, skill_path: str) -> bool:
+        return self._adapter.install_skill(skill_path)
+
+    def list_skills(self) -> list[dict]:
+        return self._adapter.list_skills()
+
+    # --- Test-only: session management ---
     SESSION_COMMANDS = {
         "claude-code": {"cmd": ["claude", "--print"], "prompt_arg": "positional"},
         "openclaw":    {"cmd": ["openclaw", "run"],   "prompt_arg": "positional"},
     }
 
-    CLI_COMMANDS = {
-        "claude-code": {
-            "install":   ["claude", "plugin", "install"],
-            "uninstall": ["claude", "plugin", "uninstall"],
-            "list":      ["claude", "plugin", "list", "--json"],
-        },
-        "openclaw": {
-            "install":   ["clawhub", "install"],
-            "uninstall": ["clawhub", "uninstall"],
-            "list":      ["clawhub", "list", "--json"],
-        },
-    }
-
-    def is_installed(name) -> bool: ...
-    def run_cli(*args, timeout=30) -> CompletedProcess: ...
-    def install_skill(skill_path) -> bool: ...
-    def start_session(prompt, timeout=60) -> SessionResult: ...
-    def list_skills() -> list[dict]: ...
+    def start_session(self, prompt: str = "Reply with exactly: OK",
+                      timeout: int = 60) -> SessionResult:
+        """Start a minimal, controlled agent session.
+        Timeout kills the process to prevent CI hangs."""
+        spec = self.SESSION_COMMANDS[self.agent_name]
+        cmd = [*spec["cmd"], prompt]
+        env = {**os.environ}
+        if self.agent_name == "claude-code":
+            env["ANTHROPIC_API_KEY"] = os.environ["ANTHROPIC_API_KEY"]
+        start = time.monotonic()
+        try:
+            result = subprocess.run(
+                cmd, capture_output=True, text=True,
+                timeout=timeout, cwd=self.project_dir, env=env,
+            )
+            return SessionResult(
+                exit_code=result.returncode, stdout=result.stdout,
+                stderr=result.stderr,
+                duration_seconds=time.monotonic() - start,
+            )
+        except subprocess.TimeoutExpired as e:
+            return SessionResult(
+                exit_code=-1, stdout=e.stdout or "", stderr=f"TIMEOUT after {timeout}s",
+                duration_seconds=timeout,
+            )
 ```
 
 ### 7.2 PlatformAssert
@@ -373,7 +449,26 @@ class PlatformAssert:
 
 ### 7.3 GitHub Cleanup
 
+All publish test fixtures use `request.addfinalizer()` to guarantee cleanup runs regardless of test outcome (pass, fail, or error). This prevents stale PRs/branches from causing subsequent test failures.
+
 ```python
+@pytest.fixture
+def publish_context(request, unique_skill_name):
+    """Track GitHub artifacts created during a publish test for cleanup."""
+    ctx = PublishContext(skill_name=unique_skill_name)
+
+    def _cleanup():
+        """Runs even if the test fails or errors."""
+        for pr_number in ctx.created_prs:
+            cleanup_pr(ctx.repo, pr_number, ctx.token)
+        for branch in ctx.created_branches:
+            cleanup_fork_branch(ctx.repo, branch, ctx.token)
+        for path in ctx.created_registry_files:
+            cleanup_registry_file(ctx.repo, path, ctx.token)
+
+    request.addfinalizer(_cleanup)
+    return ctx
+
 def cleanup_pr(repo: str, pr_number: int, token: str): ...
 def cleanup_fork_branch(repo: str, branch: str, token: str): ...
 def cleanup_registry_file(repo: str, path: str, token: str): ...
@@ -384,10 +479,11 @@ def cleanup_registry_file(repo: str, path: str, token: str): ...
 ### 8.1 Dual Workflow Architecture
 
 **e2e-fast.yml** — Runs on every push/PR:
-- Layers 1 + 2 (platform + agent CLI)
-- No secrets required
-- Matrix: OS(3) x Agent(2) = 6 jobs
-- Duration: ~5 min
+- Layer 1 only (platform integration — ipman's own file/symlink/env operations)
+- No secrets required, no agent installation required
+- Matrix: OS(3) = 3 jobs (agent parametrized in pytest, auto-skips if not installed)
+- Duration: ~3 min
+- Note: Layer 2 (agent CLI) moved to e2e-full.yml because agent installation via npm may require authentication or may not be freely redistributable in all CI contexts
 
 **e2e-full.yml** — Runs daily (04:00 UTC) + release tags + manual:
 - All layers 1-3 + publish security + init order
@@ -423,10 +519,26 @@ twisker/iphub-test/
 
 Publish security tests run as a dedicated job on ubuntu-latest only. Rationale: publish logic is platform-independent (uses `gh` CLI), running on all 3 OS would generate 6x GitHub API load and cleanup burden with no additional coverage.
 
-### 8.5 Local Execution
+### 8.5 Agent Installation in CI
+
+Both agents are installed via npm in the `e2e-full.yml` workflow:
+
+```yaml
+- name: Install agent CLI
+  run: npm install -g ${{ matrix.agent == 'claude-code'
+         && '@anthropic-ai/claude-code'
+         || 'openclaw' }}
+```
+
+Notes:
+- Claude Code npm package installs without API key; the key is only needed at runtime (session tests).
+- OpenClaw npm package installs without authentication.
+- If an agent cannot be installed (e.g., package removed, auth required), the `agent` fixture's `is_installed()` check will `pytest.skip` all tests for that agent, preventing false failures.
+
+### 8.6 Local Execution
 
 ```bash
-# Platform tests only (no secrets needed)
+# Platform tests only (no secrets, no agent needed)
 uv run pytest tests/e2e/ -m "platform" -v
 
 # Platform + agent CLI (needs local agent installation)
@@ -437,6 +549,15 @@ export ANTHROPIC_API_KEY=sk-...
 export GH_TOKEN_OWNER=ghp_...
 uv run pytest tests/e2e/ -v
 ```
+
+### 8.7 Migration from Existing E2E
+
+The current `e2e.yml` (Docker-based) and `tests/e2e/` bash scripts will be replaced:
+
+1. New `e2e-fast.yml` and `e2e-full.yml` workflows are added.
+2. Old `e2e.yml` is renamed to `e2e-docker-legacy.yml` and disabled (`on: workflow_dispatch` only).
+3. After the new framework is validated over 2 weeks of nightly runs, the legacy workflow and Docker/bash files are removed.
+4. Old `tests/e2e/` content (Dockerfiles, bash scripts, docker-compose.yml) is archived to `tests/e2e-legacy/` during transition.
 
 ## 9. Extensibility
 
@@ -451,7 +572,7 @@ No test code modifications needed — parametrization automatically includes the
 ## 10. Dependencies
 
 ```toml
-# pyproject.toml [project.optional-dependencies]
+# pyproject.toml [dependency-groups]
 e2e = [
     "pytest-timeout>=2.2",       # Prevent agent session hangs
     "pytest-xdist>=3.5",         # Parallel execution (optional)
@@ -459,7 +580,49 @@ e2e = [
 ]
 ```
 
-## 11. Custom pytest CLI Options
+## 11. Timeout & Retry Strategy
+
+Default timeouts and retry counts per marker, configured in `pyproject.toml`:
+
+```toml
+# pyproject.toml [tool.pytest.ini_options]
+markers = [
+    "e2e: All E2E tests",
+    "platform: Layer 1 platform integration tests",
+    "agent_cli: Layer 2 agent CLI integration tests",
+    "agent_session: Layer 3 agent session tests",
+    "publish: Publish workflow tests",
+    "symlink: Symlink-specific tests",
+    "slow: Tests taking > 30s",
+]
+```
+
+| Marker | Timeout | Retries | Rationale |
+|--------|---------|---------|-----------|
+| `platform` | 30s | 0 | Pure local operations, no network |
+| `agent_cli` | 60s | 1 | Agent CLI may be slow on first run |
+| `agent_session` | 120s | 1 | LLM API call + agent startup |
+| `publish` | 90s | 2 | GitHub API may have transient failures |
+| `symlink` | 30s | 0 | Pure filesystem operations |
+
+Applied via pytest-timeout marker defaults in conftest.py:
+
+```python
+def pytest_collection_modifyitems(items):
+    timeout_map = {
+        "platform": 30, "agent_cli": 60, "agent_session": 120,
+        "publish": 90, "symlink": 30,
+    }
+    for item in items:
+        for marker_name, timeout in timeout_map.items():
+            if marker_name in [m.name for m in item.iter_markers()]:
+                item.add_marker(pytest.mark.timeout(timeout))
+                break
+
+# Retries configured via CLI: --reruns 2 --reruns-delay 5 --only-rerun "TimeoutError|HTTPError"
+```
+
+## 12. Custom pytest CLI Options
 
 ```python
 def pytest_addoption(parser):
@@ -467,4 +630,24 @@ def pytest_addoption(parser):
         help="Only run tests for this agent (claude-code, openclaw)")
     parser.addoption("--iphub-repo", default=None,
         help="Override iphub test repo (default: env IPHUB_TEST_REPO)")
+```
+
+The `--agent` option filters the `agent` fixture via the fixture itself (see Section 5.1): when `--agent` is provided, the fixture `pytest.skip`s non-matching agents.
+
+## 13. Concurrent Publish Testing
+
+`test_concurrent_publish_no_conflict` uses `threading` to simulate two users publishing simultaneously:
+
+```python
+def test_concurrent_publish_no_conflict(github_user_a, github_user_b):
+    results = {}
+    def publish_as(identity, skill_name):
+        results[identity] = run_ipman("hub", "publish", skill_name, ...)
+
+    t1 = threading.Thread(target=publish_as, args=(github_user_a, "skill-a"))
+    t2 = threading.Thread(target=publish_as, args=(github_user_b, "skill-b"))
+    t1.start(); t2.start()
+    t1.join(timeout=90); t2.join(timeout=90)
+    assert results[github_user_a].exit_code == 0
+    assert results[github_user_b].exit_code == 0
 ```
