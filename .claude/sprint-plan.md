@@ -221,11 +221,19 @@
 | P2 | validate-pr.yml：tag 格式校验 | iphub/CI | AI | 已完成 |
 | P2 | GitHub Pages 启用（人工） | iphub 仓库设置 | 人工 | 已完成 |
 
-### Sprint 11-13（Sub-2 ~ Sub-5：待设计）
+### Sprint 11（Sub-2: Tag 搜索 + 排名 + 趋势推荐） — 已完成
+
+| 任务 | 仓库 | 状态 |
+|------|------|------|
+| `ipman hub trending` CLI 命令 | ipman | 已完成 |
+| IpHub 首页模板 + trending 展示 | iphub | 已完成 |
+| Tag 浏览页模板 | iphub | 已完成 |
+| i18n 新增 11 key + generate_pages 首页/tag 生成 | iphub | 已完成 |
+
+### Sprint 12-14（Sub-3 ~ Sub-5：待设计）
 
 | Sprint | 子项目 | 状态 |
 |--------|--------|------|
-| Sprint 11 | Sub-2: Tag 搜索 + 排名 + 趋势推荐系统 | 待设计 |
 | Sprint 12 | Sub-3: 个人页面 + IP Landing Page 完善 | 待设计 |
 | Sprint 13 | Sub-4: 社交媒体趋势抓取 + 自动 IP 生成 | 待设计 |
 | Sprint 14 | Sub-5: 自动化编排层 | 待设计 |
