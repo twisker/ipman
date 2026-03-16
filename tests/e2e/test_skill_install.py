@@ -31,7 +31,7 @@ class TestSkillInstall:
         assert fixture_skill.exists(), f"Fixture not found: {fixture_skill}"
 
         result = run_ipman(
-            "skill", "install", str(fixture_skill),
+            "install", str(fixture_skill),
             "--agent", agent,
             cwd=project_dir, check=False, timeout=30,
         )
@@ -58,14 +58,14 @@ class TestSkillInstall:
 
         fixture_skill = FIXTURES_DIR / "skills" / agent / "hello-world"
         run_ipman(
-            "skill", "install", str(fixture_skill),
+            "install", str(fixture_skill),
             "--agent", agent,
             cwd=project_dir, check=False, timeout=30,
         )
 
         # Now uninstall
         result = run_ipman(
-            "skill", "uninstall", "e2e-hello-world",
+            "uninstall", "e2e-hello-world",
             "--agent", agent,
             cwd=project_dir, check=False, timeout=30,
         )
@@ -91,7 +91,7 @@ class TestSkillInstall:
 
         fixture_skill = FIXTURES_DIR / "skills" / agent / "hello-world"
         run_ipman(
-            "skill", "install", str(fixture_skill),
+            "install", str(fixture_skill),
             "--agent", agent,
             cwd=project_dir, check=False, timeout=30,
         )
@@ -122,8 +122,8 @@ class TestSkillInstall:
         )
 
         result = run_ipman(
-            "skill", "install", "nonexistent-hub-skill",
-            "--agent", agent, "--from", "hub",
+            "install", "nonexistent-hub-skill",
+            "--agent", agent,
             cwd=project_dir, check=False, timeout=30,
         )
 
@@ -145,7 +145,7 @@ class TestSkillInstall:
         fixture_skill = FIXTURES_DIR / "skills" / agent / "hello-world"
 
         result = run_ipman(
-            "skill", "install", str(fixture_skill),
+            "install", str(fixture_skill),
             "--agent", agent, "--security", "strict",
             cwd=project_dir, check=False, timeout=30,
         )
