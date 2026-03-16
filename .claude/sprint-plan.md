@@ -207,19 +207,19 @@
 
 | 优先级 | 任务 | 所属模块 | 责任人 | 状态 |
 |-------|------|----------|--------|------|
-| P0 | IPPackage 扩展：新增 tags/summary/homepage/repository/icon/links 字段 | core/package | AI | 待开始 |
-| P0 | Publisher 适配：registry 输出新字段 + 版本文件含 changelog | hub/publisher | AI | 待开始 |
-| P0 | Client 适配：search() 支持 --tag 过滤 | hub/client | AI | 待开始 |
-| P0 | CLI 适配：hub search --tag, hub info 展示新字段 | cli/hub | AI | 待开始 |
-| P1 | i18n 翻译文件（en + zh-cn）| iphub/templates | AI | 待开始 |
-| P1 | README.md 生成模板（含新手引导）| iphub/templates | AI | 待开始 |
-| P1 | HTML Landing Page 模板（i18n + 响应式）| iphub/templates | AI | 待开始 |
-| P1 | 页面生成脚本 generate_pages.py | iphub/scripts | AI | 待开始 |
-| P1 | 趋势计算脚本 generate_trending.py | iphub/scripts | AI | 待开始 |
-| P2 | rebuild-index.yml：tag 聚合 + 趋势 + Labels 同步 | iphub/CI | AI | 待开始 |
-| P2 | rebuild-pages.yml：自动生成页面工作流 | iphub/CI | AI | 待开始 |
-| P2 | validate-pr.yml：tag 格式校验 | iphub/CI | AI | 待开始 |
-| P2 | GitHub Pages 启用（人工） | iphub 仓库设置 | 人工 | 待开始 |
+| P0 | IPPackage 扩展：新增 tags/summary/homepage/repository/icon/links 字段 | core/package | AI | 已完成 |
+| P0 | Publisher 适配：registry 输出新字段 + 版本文件含 changelog | hub/publisher | AI | 已完成 |
+| P0 | Client 适配：search() 支持 --tag 过滤 | hub/client | AI | 已完成 |
+| P0 | CLI 适配：hub search --tag, hub info 展示新字段 | cli/hub | AI | 已完成 |
+| P1 | i18n 翻译文件（en + zh-cn）| iphub/templates | AI | 已完成 |
+| P1 | README.md 生成模板（含新手引导）| iphub/templates | AI | 已完成 |
+| P1 | HTML Landing Page 模板（i18n + 响应式）| iphub/templates | AI | 已完成 |
+| P1 | 页面生成脚本 generate_pages.py | iphub/scripts | AI | 已完成 |
+| P1 | 趋势计算脚本 generate_trending.py | iphub/scripts | AI | 已完成 |
+| P2 | rebuild-index.yml：tag 聚合 + 趋势 + Labels 同步 | iphub/CI | AI | 已完成 |
+| P2 | rebuild-pages.yml：自动生成页面工作流 | iphub/CI | AI | 已完成 |
+| P2 | validate-pr.yml：tag 格式校验 | iphub/CI | AI | 已完成 |
+| P2 | GitHub Pages 启用（人工） | iphub 仓库设置 | 人工 | 已完成 |
 
 ### Sprint 11-13（Sub-2 ~ Sub-5：待设计）
 
