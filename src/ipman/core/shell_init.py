@@ -133,3 +133,69 @@ def generate_injection(shell: str) -> str:
         return _powershell_injection()
     msg = f"Unsupported shell: {shell}"
     raise ValueError(msg)
+
+
+def _strip_block(content: str) -> str:
+    """Remove the ipman marker block from *content*.
+
+    Walks line-by-line, skipping everything between MARKER_START and
+    MARKER_END (inclusive). Returns the remaining content.
+    """
+    lines: list[str] = []
+    inside = False
+    for line in content.splitlines(keepends=True):
+        stripped = line.rstrip("\n\r")
+        if stripped == MARKER_START:
+            inside = True
+            continue
+        if stripped == MARKER_END:
+            inside = False
+            continue
+        if not inside:
+            lines.append(line)
+    return "".join(lines)
+
+
+def is_initialized(config_path: Path) -> bool:
+    """Return True if *config_path* contains both ipman markers."""
+    if not config_path.exists():
+        return False
+    content = config_path.read_text(encoding="utf-8")
+    return MARKER_START in content and MARKER_END in content
+
+
+def inject_into_file(config_path: Path, shell: str) -> None:
+    """Inject the ipman shell wrapper into *config_path*.
+
+    * Creates parent directories if missing.
+    * Creates a ``.ipman-backup`` copy when the file already exists.
+    * Idempotent — strips any existing marker block before appending.
+    """
+    config_path.parent.mkdir(parents=True, exist_ok=True)
+
+    if config_path.exists():
+        original = config_path.read_text(encoding="utf-8")
+        backup_path = config_path.with_name(config_path.name + ".ipman-backup")
+        backup_path.write_text(original, encoding="utf-8")
+    else:
+        original = ""
+
+    cleaned = _strip_block(original)
+    injection = generate_injection(shell)
+    new_content = cleaned + injection + "\n"
+    config_path.write_text(new_content, encoding="utf-8")
+
+
+def remove_from_file(config_path: Path) -> bool:
+    """Remove the ipman marker block from *config_path*.
+
+    Returns True if a block was found and removed, False otherwise.
+    """
+    if not config_path.exists():
+        return False
+    content = config_path.read_text(encoding="utf-8")
+    if MARKER_START not in content:
+        return False
+    cleaned = _strip_block(content)
+    config_path.write_text(cleaned, encoding="utf-8")
+    return True
