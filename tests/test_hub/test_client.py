@@ -179,3 +179,54 @@ class TestIpHubClientLookup:
         client = self._make_client(tmp_path)
         info = client.lookup("does-not-exist")
         assert info is None
+
+
+def test_search_by_tag(tmp_path):
+    """search() filters by tag when provided."""
+    client = IpHubClient(cache_dir=tmp_path)
+    # Inject mock index with tags
+    client._index = {
+        "skills": {
+            "css-helper": {
+                "description": "CSS help",
+                "tags": ["frontend", "css"],
+            },
+            "python-lint": {
+                "description": "Python linter",
+                "tags": ["backend", "python"],
+            },
+        },
+        "packages": {},
+    }
+    results = client.search("", tag="frontend")
+    assert len(results) == 1
+    assert results[0]["name"] == "css-helper"
+
+
+def test_search_by_tag_and_query(tmp_path):
+    """search() combines tag filter with keyword query."""
+    client = IpHubClient(cache_dir=tmp_path)
+    client._index = {
+        "skills": {
+            "css-helper": {"description": "CSS help", "tags": ["frontend"]},
+            "react-patterns": {"description": "React patterns", "tags": ["frontend"]},
+        },
+        "packages": {},
+    }
+    results = client.search("react", tag="frontend")
+    assert len(results) == 1
+    assert results[0]["name"] == "react-patterns"
+
+
+def test_search_no_tag_returns_all(tmp_path):
+    """search() without tag returns all matching entries."""
+    client = IpHubClient(cache_dir=tmp_path)
+    client._index = {
+        "skills": {
+            "a": {"description": "x", "tags": ["t1"]},
+            "b": {"description": "x", "tags": ["t2"]},
+        },
+        "packages": {},
+    }
+    results = client.search("")
+    assert len(results) == 2
