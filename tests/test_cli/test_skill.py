@@ -8,6 +8,7 @@ from unittest.mock import MagicMock, patch
 from click.testing import CliRunner
 
 from ipman.cli.main import cli
+from ipman.cli.skill import _classify_source
 
 # All tests patch _resolve_agent at the point of use in each module
 _PATCH_SKILL = "ipman.cli.skill._resolve_agent"
@@ -148,9 +149,6 @@ class TestSkillList:
         assert result.exit_code == 0
         assert "test-skill" in result.output
         mock_resolve.assert_called_once_with("openclaw")
-
-
-from ipman.cli.skill import _classify_source
 
 
 class TestClassifySource:
