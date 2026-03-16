@@ -230,10 +230,17 @@
 | Tag 浏览页模板 | iphub | 已完成 |
 | i18n 新增 11 key + generate_pages 首页/tag 生成 | iphub | 已完成 |
 
-### Sprint 12-14（Sub-3 ~ Sub-5：待设计）
+### Sprint 12（Sub-3: 个人页面 + IP Landing Page 完善） — 已完成
+
+| 任务 | 仓库 | 状态 |
+|------|------|------|
+| Author 个人页面模板 + generate_pages 生成 | iphub | 已完成 |
+| 首页 "Active Authors" 区域 | iphub | 已完成 |
+| i18n 新增 7 key | iphub | 已完成 |
+
+### Sprint 13-14（Sub-4 ~ Sub-5：待设计）
 
 | Sprint | 子项目 | 状态 |
 |--------|--------|------|
-| Sprint 12 | Sub-3: 个人页面 + IP Landing Page 完善 | 待设计 |
 | Sprint 13 | Sub-4: 社交媒体趋势抓取 + 自动 IP 生成 | 待设计 |
 | Sprint 14 | Sub-5: 自动化编排层 | 待设计 |
