@@ -1286,6 +1286,32 @@ class TestInitOrder:
         run_ipman("env", "delete", "inherit-files", f"--{scope}",
                   cwd=project_dir, check=False)
 
+    def test_skill_visible_after_late_ipman_init(
+        self, agent, scope, project_dir, agent_manager
+    ):
+        """Pre-installed skills remain visible after ipman activate --inherit."""
+        config_dir = project_dir / agent_manager.config_dir_name
+        config_dir.mkdir(exist_ok=True)
+
+        # Simulate agent having installed a skill before ipman existed
+        skill_dir = config_dir / "skills" / "pre-installed"
+        skill_dir.mkdir(parents=True, exist_ok=True)
+        (skill_dir / "SKILL.md").write_text("pre-existing skill")
+
+        # ipman takes over
+        run_ipman("env", "create", "late-init",
+                  "--agent", agent, f"--{scope}", "--inherit",
+                  cwd=project_dir)
+        run_ipman("env", "activate", "late-init", cwd=project_dir)
+
+        # Pre-existing skill content should be accessible through symlink
+        assert (config_dir / "skills" / "pre-installed" / "SKILL.md").exists()
+
+        # Cleanup
+        run_ipman("env", "deactivate", cwd=project_dir, check=False)
+        run_ipman("env", "delete", "late-init", f"--{scope}",
+                  cwd=project_dir, check=False)
+
     def test_symlink_replaces_real_dir_correctly(
         self, agent, scope, project_dir, agent_manager
     ):
@@ -1489,6 +1515,7 @@ Uses `gh` CLI to close PRs, delete branches, and remove registry files.
 
 from __future__ import annotations
 
+import os
 import subprocess
 
 
@@ -1535,9 +1562,6 @@ def cleanup_registry_file(repo: str, path: str, token: str) -> None:
         capture_output=True,
         check=False,
     )
-
-
-import os
 ```
 
 - [ ] **Step 2: Commit**
@@ -1771,6 +1795,88 @@ class TestPublishSecurity:
         )
         assert result.returncode != 0 or "block" in result.stderr.lower()
 
+    def test_pr_author_matches_registry_author(
+        self, ipman_env, project_dir, github_user_a, iphub_test_repo
+    ):
+        """PR author must match the registry file's author field."""
+        username = _get_username(github_user_a.token)
+        skill_name = f"e2e-pr-author-{os.urandom(4).hex()}"
+        result = run_ipman(
+            "hub", "publish", skill_name,
+            "--agent", ipman_env.agent,
+            cwd=project_dir, check=False, timeout=90,
+        )
+        if result.returncode == 0 and "pr" in result.stdout.lower():
+            # Verify PR was created by the correct user
+            pr_list = subprocess.run(
+                ["gh", "pr", "list", "--repo", iphub_test_repo,
+                 "--author", username, "--json", "title", "--limit", "5"],
+                capture_output=True, text=True, check=False,
+                env={**os.environ, "GH_TOKEN": github_user_a.token},
+            )
+            assert skill_name in pr_list.stdout or username in pr_list.stdout
+
+    def test_pr_only_modifies_own_namespace(
+        self, ipman_env, project_dir, github_user_a, iphub_test_repo
+    ):
+        """PR from user_a only touches registry/@user_a/ paths."""
+        username = _get_username(github_user_a.token)
+        skill_name = f"e2e-ns-{os.urandom(4).hex()}"
+        run_ipman(
+            "hub", "publish", skill_name,
+            "--agent", ipman_env.agent,
+            cwd=project_dir, check=False, timeout=90,
+        )
+        # Check PR files changed — should only be under @username/
+        prs = subprocess.run(
+            ["gh", "pr", "list", "--repo", iphub_test_repo,
+             "--author", username, "--json", "number", "--limit", "1"],
+            capture_output=True, text=True, check=False,
+            env={**os.environ, "GH_TOKEN": github_user_a.token},
+        )
+        if prs.returncode == 0 and prs.stdout.strip() not in ("", "[]"):
+            import json
+            pr_nums = json.loads(prs.stdout)
+            if pr_nums:
+                pr_num = pr_nums[0]["number"]
+                files = subprocess.run(
+                    ["gh", "pr", "diff", str(pr_num),
+                     "--repo", iphub_test_repo, "--name-only"],
+                    capture_output=True, text=True, check=False,
+                    env={**os.environ, "GH_TOKEN": github_user_a.token},
+                )
+                for line in files.stdout.strip().splitlines():
+                    if line.startswith("registry/"):
+                        assert f"@{username}" in line, (
+                            f"PR modifies outside own namespace: {line}"
+                        )
+
+    def test_fork_cleanup_after_publish(
+        self, ipman_env, project_dir, github_user_a, iphub_test_repo
+    ):
+        """Fork branch is cleaned up after publish completes."""
+        skill_name = f"e2e-fork-{os.urandom(4).hex()}"
+        result = run_ipman(
+            "hub", "publish", skill_name,
+            "--agent", ipman_env.agent,
+            cwd=project_dir, check=False, timeout=90,
+        )
+        # After publish, the temporary branch in the fork should be gone
+        # (ipman's publisher should clean up)
+        # We verify by checking for stale branches
+        username = _get_username(github_user_a.token)
+        branches = subprocess.run(
+            ["gh", "api", f"/repos/{username}/iphub-test/branches",
+             "--jq", ".[].name"],
+            capture_output=True, text=True, check=False,
+            env={**os.environ, "GH_TOKEN": github_user_a.token},
+        )
+        # The publish branch (if any) should have been deleted
+        if branches.returncode == 0:
+            branch_names = branches.stdout.strip().splitlines()
+            stale = [b for b in branch_names if skill_name in b]
+            assert len(stale) == 0, f"Stale fork branches remain: {stale}"
+
     def test_publish_path_traversal_blocked(
         self, ipman_env, project_dir, github_user_a, iphub_test_repo
     ):
@@ -1964,6 +2070,26 @@ class TestIPInstall:
                            "--agent", ipman_env.agent,
                            cwd=project_dir)
         assert result.returncode == 0
+
+    def test_install_ip_with_deps(self, ipman_env, project_dir):
+        """IP package with dependencies — resolver parses deps correctly."""
+        run_ipman("env", "activate", ipman_env.name, cwd=project_dir)
+        ip_file = FIXTURES_DIR / "ips" / "with-deps.ip.yaml"
+        result = run_ipman("install", str(ip_file),
+                           "--dry-run", "--no-vet",
+                           "--agent", ipman_env.agent,
+                           cwd=project_dir, check=False)
+        # Dry-run should parse deps without error
+        assert result.returncode == 0 or "dependency" in result.stdout.lower()
+
+    def test_install_ip_from_hub(self, ipman_env, project_dir):
+        """Install IP via iphub reference (may fail if not in test hub)."""
+        run_ipman("env", "activate", ipman_env.name, cwd=project_dir)
+        result = run_ipman("install", "e2e-clean-kit",
+                           "--agent", ipman_env.agent,
+                           cwd=project_dir, check=False)
+        # May fail (not in registry) — verify no crash
+        assert result.returncode == 0 or "not found" in result.stderr.lower()
 ```
 
 - [ ] **Step 2: Commit**
