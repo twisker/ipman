@@ -81,14 +81,17 @@ end
 # >>> ipman init >>>
 # !! Contents within this block are managed by 'ipman init' !!
 function ipman {
+    $ipmanExe = (Get-Command ipman -CommandType Application).Source
     if ($args[0] -eq 'env' -and $args[1] -eq 'activate') {
-        $script = & (Get-Command ipman -CommandType Application).Source env activate @($args | Select-Object -Skip 2)
+        $remaining = @($args | Select-Object -Skip 2)
+        $script = (& $ipmanExe env activate @remaining) -join "`n"
         Invoke-Expression $script
     } elseif ($args[0] -eq 'env' -and $args[1] -eq 'deactivate') {
-        $script = & (Get-Command ipman -CommandType Application).Source env deactivate @($args | Select-Object -Skip 2)
+        $remaining = @($args | Select-Object -Skip 2)
+        $script = (& $ipmanExe env deactivate @remaining) -join "`n"
         Invoke-Expression $script
     } else {
-        & (Get-Command ipman -CommandType Application).Source @args
+        & $ipmanExe @args
     }
 }
 # <<< ipman init <<<
@@ -110,14 +113,46 @@ function ipman {
 
 Idempotent: running `--reverse` when already removed is a no-op with a message.
 
-## 5. Idempotency
+## 5. Shell Detection
+
+`ipman init` needs its own shell detection logic, separate from the existing `_detect_shell()` in `cli/env.py` which returns "bash" for both bash and zsh. The new detection must distinguish them because the **config file paths differ** (`~/.bashrc` vs `~/.zshrc`):
+
+```python
+def detect_shell() -> str:
+    shell_path = os.environ.get("SHELL", "")
+    if "zsh" in shell_path:
+        return "zsh"
+    if "bash" in shell_path:
+        return "bash"
+    if "fish" in shell_path:
+        return "fish"
+    if os.environ.get("PSModulePath"):
+        return "powershell"
+    return "bash"  # fallback
+```
+
+## 6. File Handling Safety
+
+### 6.1 Backup before modification
+
+Before writing to any config file, create a backup: `~/.bashrc` → `~/.bashrc.ipman-backup`. If a backup already exists, overwrite it (latest backup only).
+
+### 6.2 Create file if not exists
+
+If the target config file does not exist (common for `~/.zshrc` on fresh installs, PowerShell `$PROFILE`, and `config.fish`), create the file and any necessary parent directories before injecting.
+
+### 6.3 File encoding
+
+All config files read/written as UTF-8.
+
+## 7. Idempotency
 
 Running `ipman init` multiple times does NOT duplicate the injection:
 1. Check if markers already exist in the config file
 2. If yes, remove old block first, then inject new one (supports upgrades)
 3. If no, append the block
 
-## 6. User Experience Flow
+## 8. User Experience Flow
 
 ### First-time user (no `ipman init`):
 ```
@@ -154,13 +189,23 @@ Restart your shell or run:
   source ~/.bashrc
 ```
 
-## 7. Backward Compatibility
+## 9. Backward Compatibility
 
 - Users who never run `ipman init` continue to see the `eval` hint — no behavior change.
 - The `eval "$(ipman env activate ...)"` pattern still works even after `ipman init` (the shell function calls it internally).
 - No changes to the activate/deactivate core logic — only the CLI output messaging changes.
 
-## 8. Production Code Changes
+## 10. Tip Messaging in activate/deactivate
+
+The existing `cli/env.py` activate command shows an `eval` hint when stdout is a TTY. After this change:
+
+- **If `ipman init` has NOT been run** (detected by checking if markers exist in the shell config): show the new tip: `"Tip: Run 'ipman init' to enable automatic shell integration."`
+- **If `ipman init` HAS been run**: show nothing extra — the shell function handles everything.
+- The old `eval` hint is removed from the TTY output.
+
+Detection: `shell_init.is_initialized(shell)` checks if the markers exist in the config file.
+
+## 11. Production Code Changes
 
 | File | Action | Description |
 |------|--------|-------------|
@@ -171,7 +216,7 @@ Restart your shell or run:
 | `tests/test_core/test_shell_init.py` | Create | Injection, removal, idempotency, dry-run tests |
 | `tests/test_cli/test_init.py` | Create | CLI command tests |
 
-## 9. Test Scenarios
+## 12. Test Scenarios
 
 ### test_shell_init.py (core logic)
 
@@ -188,7 +233,11 @@ Restart your shell or run:
 | `test_remove_not_present` | `--reverse` when not injected is no-op |
 | `test_dry_run` | Returns content without writing file |
 | `test_detect_shell` | Auto-detects bash/zsh/fish/powershell |
+| `test_detect_shell_zsh_not_bash` | zsh detected as zsh, not bash |
 | `test_config_file_path` | Correct path for each shell |
+| `test_backup_created` | Config file backup created before modification |
+| `test_config_file_created_if_missing` | Config file + parent dirs created if not exist |
+| `test_is_initialized` | Detects whether markers are present in config |
 
 ### test_init.py (CLI)
 
