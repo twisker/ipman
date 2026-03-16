@@ -59,6 +59,8 @@ def generate_skill_registry(
     license_: str | None = None,
     homepage: str | None = None,
     keywords: list[str] | None = None,
+    tags: list[str] | None = None,
+    summary: str | None = None,
     agents: dict[str, dict[str, str]] | None = None,
     risk_level: str | None = None,
 ) -> dict[str, Any]:
@@ -73,8 +75,12 @@ def generate_skill_registry(
         data["license"] = license_
     if homepage:
         data["homepage"] = homepage
-    if keywords:
-        data["keywords"] = keywords
+    # tags takes precedence over deprecated keywords
+    effective_tags = tags if tags else keywords
+    if effective_tags:
+        data["tags"] = effective_tags
+    if summary:
+        data["summary"] = summary
     if agents:
         data["agents"] = agents
     if risk_level:
@@ -89,6 +95,11 @@ def generate_package_registry(
     author: str,
     license_: str | None = None,
     homepage: str | None = None,
+    tags: list[str] | None = None,
+    summary: str | None = None,
+    repository: str | None = None,
+    icon: str | None = None,
+    links: list[dict[str, str]] | None = None,
     risk_level: str | None = None,
 ) -> dict[str, Any]:
     """Generate a package meta.yaml dict."""
@@ -102,12 +113,25 @@ def generate_package_registry(
         data["license"] = license_
     if homepage:
         data["homepage"] = homepage
+    if tags:
+        data["tags"] = tags
+    if summary:
+        data["summary"] = summary
+    if repository:
+        data["repository"] = repository
+    if icon:
+        data["icon"] = icon
+    if links:
+        data["links"] = links
     if risk_level:
         data["risk_level"] = risk_level
     return data
 
 
-def generate_version_data(pkg: IPPackage) -> dict[str, Any]:
+def generate_version_data(
+    pkg: IPPackage,
+    changelog: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     """Generate a package version file dict from an IPPackage."""
     data: dict[str, Any] = {
         "version": pkg.version,
@@ -124,6 +148,8 @@ def generate_version_data(pkg: IPPackage) -> dict[str, Any]:
                 entry["source"] = d.source
             deps.append(entry)
         data["dependencies"] = deps
+    if changelog:
+        data["changelog"] = changelog
     return data
 
 
