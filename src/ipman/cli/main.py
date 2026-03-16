@@ -5,6 +5,7 @@ import click
 from ipman import __version__
 from ipman.cli.env import env
 from ipman.cli.hub import hub
+from ipman.cli.init import init
 from ipman.cli.pack import pack
 from ipman.cli.skill import install, skill, uninstall
 from ipman.utils.i18n import detect_locale, set_locale
@@ -24,6 +25,7 @@ def cli() -> None:
 
 cli.add_command(env)
 cli.add_command(hub)
+cli.add_command(init)
 cli.add_command(pack)
 cli.add_command(skill)
 cli.add_command(install)
