@@ -1,0 +1,43 @@
+name: E2E Fast
+
+on:
+  push:
+    branches: [main, dev, "release/*"]
+  pull_request:
+    branches: [main, dev]
+
+jobs:
+  e2e-platform:
+    name: E2E Platform (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Install dependencies
+        run: uv sync --group dev --group e2e
+
+      - name: Run E2E platform tests (Layer 1)
+        run: >
+          uv run pytest tests/e2e/
+          -m "platform"
+          --junit-xml=e2e-fast-results.xml
+          --timeout=60
+          -v
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-fast-${{ matrix.os }}
+          path: e2e-fast-results.xml
