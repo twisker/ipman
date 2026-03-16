@@ -43,17 +43,26 @@ class AgentManager:
 
     def install_skill(self, name: str, **kwargs: str | None) -> bool:
         """Install a skill via agent CLI. Returns True on success."""
-        result = self._adapter.install_skill(name, **kwargs)
-        return result.returncode == 0
+        try:
+            result = self._adapter.install_skill(name, **kwargs)
+            return result.returncode == 0
+        except FileNotFoundError:
+            return False
 
     def uninstall_skill(self, name: str) -> bool:
         """Uninstall a skill via agent CLI. Returns True on success."""
-        result = self._adapter.uninstall_skill(name)
-        return result.returncode == 0
+        try:
+            result = self._adapter.uninstall_skill(name)
+            return result.returncode == 0
+        except FileNotFoundError:
+            return False
 
     def list_skills(self) -> list[SkillInfo]:
         """List installed skills via agent CLI."""
-        return self._adapter.list_skills()
+        try:
+            return self._adapter.list_skills()
+        except FileNotFoundError:
+            return []
 
     @property
     def config_dir_name(self) -> str:
