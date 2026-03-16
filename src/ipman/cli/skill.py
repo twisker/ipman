@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -20,6 +21,17 @@ if TYPE_CHECKING:
 def _is_ip_file(source: str) -> bool:
     """Check if the source argument looks like an .ip.yaml file path."""
     return source.endswith(".ip.yaml")
+
+
+def _classify_source(source: str) -> str:
+    """Classify install source: 'ip_file', 'local_skill', or 'hub_name'."""
+    if source.endswith(".ip.yaml"):
+        return "ip_file"
+    if os.sep in source or source.startswith("."):
+        path = Path(source)
+        if path.exists() and path.is_dir():
+            return "local_skill"
+    return "hub_name"
 
 
 def _run_vet(content: str, skill_name: str) -> VetReport:
@@ -209,7 +221,8 @@ def install(
 ) -> None:
     """Install a skill or an IP package.
 
-    SOURCE can be a skill name (e.g. web-scraper) or an .ip.yaml file path.
+    SOURCE can be a skill name (e.g. web-scraper), an .ip.yaml file path,
+    or a local skill directory (e.g. ./my-skill).
     """
     adapter = _resolve_agent(agent_name)
 
@@ -217,43 +230,50 @@ def install(
     cfg = load_config()
     mode = SecurityMode(security_mode) if security_mode else cfg.security_mode
 
-    is_local = _is_ip_file(source)
+    source_type = _classify_source(source)
+    is_local = source_type in ("ip_file", "local_skill")
 
     # Determine whether to run local vet
     should_vet = False
     if skip_vet:
         should_vet = False
-    elif force_vet:
+    elif force_vet or is_local or mode == SecurityMode.STRICT:
         should_vet = True
-    elif is_local:
-        # Local/URL sources: always vet by default
-        should_vet = True
-    elif mode == SecurityMode.STRICT:
-        # STRICT mode: vet everything
-        should_vet = True
-    # else: IpHub source in non-STRICT mode → trust existing label
 
     # Run vet if needed
     if should_vet and not dry_run:
-        if is_local:
+        if source_type == "ip_file":
             path = Path(source)
             if not path.exists():
-                raise click.ClickException(
-                    f"IP file not found: {path}",
-                )
+                raise click.ClickException(f"IP file not found: {path}")
             content = path.read_text(encoding="utf-8")
             report = _run_vet(content, skill_name=source)
+        elif source_type == "local_skill":
+            skill_path = Path(source)
+            md_contents = []
+            for md_file in skill_path.rglob("*.md"):
+                md_contents.append(md_file.read_text(encoding="utf-8"))
+            content = "\n".join(md_contents)
+            report = _run_vet(content, skill_name=source)
         else:
-            # For hub skills, vet the registry content
             report = _run_vet("", skill_name=source)
 
         if not _enforce_security(report, mode, source):
             raise SystemExit(1)
 
-    if is_local:
-        _install_from_ip_file(
-            Path(source), adapter, dry_run=dry_run,
-        )
+    if source_type == "local_skill":
+        if dry_run:
+            click.echo(f"Would install local skill: {source}")
+        else:
+            result = adapter.install_skill(source)
+            if result.returncode == 0:
+                click.secho(f"Installed local skill from '{source}'.", fg="green")
+            else:
+                msg = result.stderr.strip() or result.stdout.strip() or "Unknown error"
+                click.secho(f"Install failed: {msg}", fg="red", err=True)
+                raise SystemExit(1)
+    elif source_type == "ip_file":
+        _install_from_ip_file(Path(source), adapter, dry_run=dry_run)
     else:
         _install_from_hub(source, adapter, dry_run=dry_run)
 
