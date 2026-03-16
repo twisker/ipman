@@ -1,32 +1,30 @@
-# Sprint 7 存档
+# 当前 Sprint
 
-**Sprint 7 - 安装安全集成 + IpHub 举报 + 镜像**
+## Sprint 7（Phase 4 — 用户体验改进 + 持续质量保障）— 已完成
 
-**目标：** 将安全模块集成到 install/publish 命令，实现举报功能和镜像支持
+**目标：** 简化虚拟环境操作体验，扩展 install 命令支持本地 skill
 
-**状态：** 已完成
+**状态：** ✅ 全部完成
 
-**完成日期：** 2026-03-14
+### A 组：activate/deactivate 脚本改进 ✅
 
----
+| 任务 | 状态 |
+|------|------|
+| `ipman init` 命令（bash/zsh/fish/powershell） | ✅ |
+| Shell function wrapper 注入/移除/备份 | ✅ |
+| `--reverse` 撤销 + `--dry-run` 预览 | ✅ |
+| env.py activate/deactivate 消息更新 | ✅ |
 
-## 任务列表
+### B 组：install 本地 skill 支持 ✅
 
-| 优先级 | 任务 | 状态 |
-|-------|------|------|
-| P0 | install 命令集成安全策略（--security/--vet/--no-vet/--yes） | 已完成 |
-| P0 | publish 命令集成发布时风险评估（阻止 HIGH/EXTREME） | 已完成 |
-| P1 | `ipman hub report` 举报命令 | 已完成 |
-| P1 | IpHub 镜像支持（config hub.url 驱动） | 已完成 |
-| P2 | CNB 镜像同步工作流模板 | 已完成 |
+| 任务 | 状态 |
+|------|------|
+| `_classify_source()` 三分类（ip_file / local_skill / hub_name） | ✅ |
+| `ClaudeCodeAdapter` 本地目录 → copytree | ✅ |
+| `OpenClawAdapter` 本地目录 → copytree | ✅ |
+| E2E 3 个 skip 测试已解锁 | ✅ |
 
-**Sprint 7 新增测试：14 tests（项目总计 242 tests）**
+### 测试统计
 
----
-
-## 关键设计决策
-
-1. **install 安全路由**：本地/URL → 强制 vet；IpHub → 信任标注（除 STRICT 模式或 --vet）
-2. **publish 门禁**：HIGH/EXTREME 直接阻止，无绕过选项
-3. **举报通过 gh issue create** 提交到 iphub 仓库
-4. **镜像通过 base_url** 参数传播到 IpHubClient 的所有 URL 构建
+- 单元测试：321 passed
+- E2E 测试：320 collected（含解锁的 3 个 skill install 测试）
