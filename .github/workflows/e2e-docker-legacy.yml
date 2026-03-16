@@ -1,0 +1,31 @@
+# LEGACY: Docker-based E2E tests — replaced by e2e-fast.yml + e2e-full.yml
+# Runs real ipman against Docker containers with Claude Code / OpenClaw
+
+name: E2E Tests (Legacy)
+
+on:
+  workflow_dispatch:
+    inputs:
+      agent:
+        description: "Agent to test (claude-code, openclaw, all)"
+        required: false
+        default: "all"
+
+jobs:
+  e2e:
+    name: E2E (${{ matrix.agent }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        agent: [claude-code, openclaw]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build test container
+        working-directory: tests/e2e-legacy
+        run: docker compose build ${{ matrix.agent }}
+
+      - name: Run E2E tests
+        working-directory: tests/e2e-legacy
+        run: docker compose run --rm ${{ matrix.agent }}
