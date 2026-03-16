@@ -11,6 +11,7 @@ from ipman.core.shell_init import (
     SUPPORTED_SHELLS,
     config_file_path,
     detect_shell,
+    generate_injection,
 )
 
 
@@ -70,3 +71,36 @@ class TestConfigFilePath:
     def test_unknown_raises(self) -> None:
         with pytest.raises(ValueError, match="tcsh"):
             config_file_path("tcsh")
+
+
+class TestGenerateInjection:
+    def test_bash_has_markers(self) -> None:
+        result = generate_injection("bash")
+        assert result.startswith(MARKER_START)
+        assert result.endswith(MARKER_END)
+
+    def test_bash_has_function(self) -> None:
+        result = generate_injection("bash")
+        assert "ipman()" in result
+        assert "command ipman" in result
+        assert "env activate" in result
+        assert "env deactivate" in result
+
+    def test_zsh_same_as_bash(self) -> None:
+        assert generate_injection("zsh") == generate_injection("bash")
+
+    def test_fish_has_function(self) -> None:
+        result = generate_injection("fish")
+        assert "function ipman" in result
+        assert "command ipman" in result
+
+    def test_powershell_has_function(self) -> None:
+        result = generate_injection("powershell")
+        assert "function ipman" in result
+        assert "Get-Command" in result
+        assert "Invoke-Expression" in result
+        assert "-join" in result
+
+    def test_unknown_shell_raises(self) -> None:
+        with pytest.raises(ValueError, match="tcsh"):
+            generate_injection("tcsh")
