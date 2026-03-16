@@ -18,6 +18,7 @@ from ipman.core.environment import (
     generate_activate_script,
     generate_deactivate_script,
     get_env_status,
+    get_ipman_home,
     list_envs,
 )
 
@@ -293,3 +294,18 @@ class TestEnvStatus:
         assert result[0]["scope"] == "project"
         assert result[0]["name"] == "myenv"
         assert result[0]["agent"] == "claude-code"
+
+
+def test_get_ipman_home_default(tmp_path, monkeypatch):
+    """Default: returns ~/.ipman."""
+    monkeypatch.delenv("IPMAN_HOME", raising=False)
+    result = get_ipman_home()
+    assert result == Path.home() / ".ipman"
+
+
+def test_get_ipman_home_override(tmp_path, monkeypatch):
+    """IPMAN_HOME env var overrides default."""
+    custom = tmp_path / "custom-ipman"
+    monkeypatch.setenv("IPMAN_HOME", str(custom))
+    result = get_ipman_home()
+    assert result == custom

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import enum
+import os
 import shutil
 from datetime import datetime, timezone
 from pathlib import Path
@@ -27,7 +28,13 @@ class Scope(enum.Enum):
 # ---------------------------------------------------------------------------
 
 def get_ipman_home() -> Path:
-    """Return the global IpMan home directory (~/.ipman)."""
+    """Return the global IpMan home directory (~/.ipman).
+
+    Honors IPMAN_HOME environment variable for testing/custom setups.
+    """
+    override = os.environ.get("IPMAN_HOME")
+    if override:
+        return Path(override)
     return Path.home() / ".ipman"
 
 
