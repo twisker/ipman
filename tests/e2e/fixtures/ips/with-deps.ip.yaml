@@ -1,0 +1,9 @@
+name: e2e-dep-kit
+version: "1.0.0"
+description: "IP package with dependencies for E2E"
+author: e2e-test
+skills:
+  - name: e2e-hello-world
+dependencies:
+  - name: e2e-clean-kit
+    version: ">=1.0.0"
