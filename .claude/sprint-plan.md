@@ -184,11 +184,11 @@
 
 | 优先级 | 任务 | 所属模块 | 责任人 | 状态 |
 |-------|------|----------|--------|------|
-| P0 | 为各平台提供 activate/deactivate 脚本（参考 conda）：Linux/macOS 生成 source 脚本、Windows 生成 .ps1/.bat，用户无需手动 eval | core/environment + CLI | AI | 待开始 |
+| P0 | 为各平台提供 activate/deactivate 脚本（参考 conda）：`ipman init` 命令注入 shell function wrapper，支持 bash/zsh/fish/powershell | core/shell_init + CLI | AI | 已完成 |
 | P0 | 扩展 `ipman install` 支持直接安装本地 skill（自动检测类型：.ip.yaml / skill目录 / IpHub名称）。Claude Code 走 `claude plugin add ./path`（需 `.claude-plugin/plugin.json` 结构），OpenClaw 走文件复制到 skills 目录。需同步更新 `ClaudeCodeAdapter.install_skill()` 区分远程名称 vs 本地路径 | cli/skill + agents | AI | 待开始 |
 | P0 | 更新 E2E test fixture 为正确的 plugin 结构（Claude Code: 添加 `.claude-plugin/plugin.json`；OpenClaw: 标准 skill 目录），解锁 3 个 skip 的 Layer 2 测试 | tests/e2e/fixtures + test_skill_install | AI | 待开始 |
-| P1 | Shell 集成：支持在 bash/zsh/fish/powershell 中 `source activate` 或 `. activate` 直接生效 | core/environment | AI | 待开始 |
-| P1 | Windows 平台 activate 脚本兼容性验证（当前 eval 不生效的问题） | core/environment | AI | 待开始 |
+| P1 | Shell 集成：`ipman init` 注入后 activate/deactivate 直接生效，含 `--reverse` 撤销 + `--dry-run` 预览 | core/shell_init + CLI | AI | 已完成 |
+| P1 | Windows PowerShell 兼容：`Invoke-Expression` + 正确 splatting，替代不可用的 eval | core/shell_init | AI | 已完成 |
 | P1 | 更新 `ClaudeCodeAdapter`：`install_skill()` 区分远程名称（`claude plugin install`）和本地路径（`claude plugin add`） | agents/claude_code | AI | 待开始 |
 | P1 | 更新 `OpenClawAdapter`：`install_skill()` 对本地路径走文件复制到 `skills/` 目录 | agents/openclaw | AI | 待开始 |
 | P2 | E2E 测试框架持续改进：根据运行结果修复测试用例 | tests/e2e | AI | 已完成 |
