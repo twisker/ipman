@@ -18,13 +18,18 @@ def _classify_source(source: str) -> str:
     """Classify install source type."""
     if source.endswith(".ip.yaml"):
         return "ip_file"
-    path = Path(source)
-    if path.exists() and (path.is_dir() or path.is_file()):
-        return "local_skill"
+    # Local skill requires explicit path syntax (./path, ../path, /abs/path)
+    # to avoid ambiguity with hub names (e.g. a file named "web-scraper" in cwd)
+    if os.sep in source or source.startswith("."):
+        path = Path(source)
+        if path.exists() and path.is_dir():
+            return "local_skill"
     return "hub_name"
 ```
 
-Priority: `.ip.yaml` suffix check first (explicit), then filesystem existence, then fallback to hub name.
+Design decisions:
+- Only **directories** with explicit path syntax (`./my-skill`, `../skills/foo`, `/abs/path`) are treated as local skills. Bare names like `web-scraper` always go to hub lookup (backward compatible).
+- Files (non-directories) are NOT accepted as local skills — only `.ip.yaml` files and directories. This avoids `ipman install ./random-file.txt` confusion.
 
 ## 3. Agent Adapter Changes
 
@@ -37,19 +42,28 @@ New: detect local path vs remote name.
 ```python
 def install_skill(self, name: str, **kwargs):
     path = Path(name)
-    if path.exists():
-        # Local path — use claude mcp add or plugin add
-        args = ["claude", "mcp", "add", str(path.resolve())]
+    if path.exists() and path.is_dir():
+        # Local skill directory — copy into the agent's skills/ dir
+        # (same approach as OpenClaw — avoids claude mcp add argument complexity)
+        config_dir = kwargs.get("config_dir")
+        if config_dir:
+            dest = Path(config_dir) / "skills" / path.name
+        else:
+            dest = Path.cwd() / ".claude" / "skills" / path.name
+        shutil.copytree(path, dest, dirs_exist_ok=True)
+        return subprocess.CompletedProcess(
+            args=[], returncode=0, stdout=f"Copied to {dest}\n", stderr=""
+        )
     else:
         # IpHub name — use plugin install
         args = ["claude", "plugin", "install", name]
-    scope = kwargs.get("scope")
-    if scope:
-        args.extend(["-s", scope])
-    return self._run_cli(args)
+        scope = kwargs.get("scope")
+        if scope:
+            args.extend(["-s", scope])
+        return self._run_cli(args)
 ```
 
-Note: `claude mcp add` is the current recommended way to add local skills/plugins. If this fails on CI, the E2E tests will skip gracefully (existing FileNotFoundError handling in AgentManager).
+Note: Local skill install uses file copy (not `claude mcp add`) because `mcp add` requires server name + command arguments that can't be inferred from a bare skill directory. File copy to the agent's `skills/` directory is the universal approach that works for both agents. The agent discovers skills on next session start.
 
 ### 3.2 OpenClawAdapter.install_skill()
 
@@ -60,19 +74,23 @@ New: detect local path and copy to skills directory.
 ```python
 def install_skill(self, name: str, **kwargs):
     path = Path(name)
-    if path.exists():
-        # Local path — copy to skills/ directory
-        dest = Path.cwd() / "skills" / path.name
-        if path.is_dir():
-            shutil.copytree(path, dest, dirs_exist_ok=True)
+    if path.exists() and path.is_dir():
+        # Local skill directory — copy to skills/ dir
+        config_dir = kwargs.get("config_dir")
+        if config_dir:
+            dest = Path(config_dir) / "skills" / path.name
         else:
-            dest.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(path, dest)
-        return subprocess.CompletedProcess(args=[], returncode=0, stdout="", stderr="")
+            dest = Path.cwd() / ".openclaw" / "skills" / path.name
+        shutil.copytree(path, dest, dirs_exist_ok=True)
+        return subprocess.CompletedProcess(
+            args=[], returncode=0, stdout=f"Copied to {dest}\n", stderr=""
+        )
     else:
         # IpHub name — use clawhub install
         return self._run_cli(["clawhub", "install", name])
 ```
+
+Note: `config_dir` kwarg allows the caller (CLI install command) to pass the active environment's config directory. Fallback to cwd-based default if not provided.
 
 ### 3.3 Uninstall — no changes needed
 
@@ -102,7 +120,7 @@ else:
     _install_from_hub(source, adapter, dry_run=dry_run)
 ```
 
-Security vetting for local skills: the existing vet logic already handles local files. For directories, vet the contents of key files (SKILL.md, etc.) if `should_vet` is True.
+Security vetting for local skill directories: when `should_vet` is True, read and concatenate the text content of all `.md` files in the directory, then pass the combined content to `_run_vet()`. This catches risk patterns in SKILL.md and any other markdown documentation. The `_is_ip_file()` check is replaced by `_classify_source()` to determine the `is_local` flag for vetting decisions.
 
 ## 5. E2E Test Updates
 
