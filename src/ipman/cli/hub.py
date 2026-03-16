@@ -243,6 +243,54 @@ def publish(
         click.secho(f"PR created: {pr_url}", fg="green")
 
 
+@hub.command()
+def trending() -> None:
+    """Show trending skills and packages."""
+    client = _get_hub_client()
+    index = client.fetch_index()
+    trend = index.get("trending", {})
+
+    if not trend:
+        click.echo("No trending data available yet.")
+        return
+
+    if trend.get("bootstrap"):
+        click.echo("Trending data is being collected. Check back in a few days.")
+        return
+
+    updated = trend.get("updated", "")
+    click.secho(f"IpHub Trending (updated: {updated})", bold=True)
+
+    # Hot Tags
+    hot_tags = trend.get("hot_tags", [])
+    if hot_tags:
+        click.echo("\n  Hot Tags:")
+        for t in hot_tags:
+            click.echo(
+                f"    {click.style(t['tag'], fg='cyan')}"
+                f"  ({t.get('weekly_installs', 0)} weekly installs)"
+            )
+
+    # Rising
+    rising = trend.get("rising", [])
+    if rising:
+        click.echo("\n  Rising This Week:")
+        for i, r in enumerate(rising[:10], 1):
+            rtype = click.style(f"[{r.get('type', 'skill')}]", fg="cyan")
+            name = click.style(r["name"], bold=True)
+            weekly = r.get("weekly_installs", 0)
+            click.echo(f"    {i}. {rtype} {name}  ({weekly} weekly)")
+
+    # New Releases
+    new_releases = trend.get("new_releases", [])
+    if new_releases:
+        click.echo("\n  Just Published:")
+        for r in new_releases[:10]:
+            name = click.style(r["name"], bold=True)
+            ver = r.get("version", "")
+            click.echo(f"    {name} v{ver}  by {r.get('owner', '')}")
+
+
 @hub.command("report")
 @click.argument("name")
 @click.option("--reason", "-r", required=True,

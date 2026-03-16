@@ -359,3 +359,74 @@ class TestHubReport:
             "hub", "report", "nonexistent", "--reason", "test",
         ])
         assert result.exit_code != 0
+
+
+SAMPLE_TRENDING = {
+    **SAMPLE_INDEX,
+    "trending": {
+        "updated": "2026-03-16T04:00:00Z",
+        "hot_tags": [
+            {"tag": "frontend", "weekly_installs": 320},
+        ],
+        "rising": [
+            {
+                "name": "awesome-frontend",
+                "type": "ip",
+                "owner": "@twisker",
+                "weekly_installs": 89,
+            },
+        ],
+        "new_releases": [
+            {
+                "name": "vue-toolkit",
+                "type": "ip",
+                "version": "1.0.0",
+                "released": "2026-03-15",
+                "owner": "@someone",
+            },
+        ],
+    },
+}
+
+
+class TestHubTrending:
+    """Test `ipman hub trending`."""
+
+    def test_trending_shows_data(self) -> None:
+        """hub trending displays hot tags, rising, new releases."""
+        hub = _mock_hub()
+        hub.fetch_index.return_value = SAMPLE_TRENDING
+        runner = CliRunner()
+        with patch("ipman.cli.hub._get_hub_client", return_value=hub):
+            result = runner.invoke(cli, ["hub", "trending"])
+        assert result.exit_code == 0, result.output
+        assert "Hot Tags" in result.output
+        assert "frontend" in result.output
+        assert "320" in result.output
+        assert "Rising" in result.output
+        assert "awesome-frontend" in result.output
+        assert "Just Published" in result.output
+        assert "vue-toolkit" in result.output
+
+    def test_trending_bootstrap(self) -> None:
+        """hub trending shows bootstrap message when data not ready."""
+        hub = _mock_hub()
+        hub.fetch_index.return_value = {
+            **SAMPLE_INDEX,
+            "trending": {"bootstrap": True},
+        }
+        runner = CliRunner()
+        with patch("ipman.cli.hub._get_hub_client", return_value=hub):
+            result = runner.invoke(cli, ["hub", "trending"])
+        assert result.exit_code == 0
+        assert "being collected" in result.output
+
+    def test_trending_empty(self) -> None:
+        """hub trending handles missing trending data."""
+        hub = _mock_hub()
+        hub.fetch_index.return_value = SAMPLE_INDEX  # no trending key
+        runner = CliRunner()
+        with patch("ipman.cli.hub._get_hub_client", return_value=hub):
+            result = runner.invoke(cli, ["hub", "trending"])
+        assert result.exit_code == 0
+        assert "No trending" in result.output
