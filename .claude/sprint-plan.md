@@ -240,23 +240,13 @@
 
 ### Sprint 13（Sub-4: 社交媒体机器人 + 自动 IP 生成）— 进行中
 
-**设计文档：** `docs/superpowers/specs/2026-03-17-iphub-bot-design.md`
+> 代码和设计文档在私有仓库 `twisker/iphub-bot` 中。
 
 | Batch | 内容 | 状态 |
 |-------|------|------|
-| Batch 1 | Worker 骨架 + AI 分析 + GitHub PR + 去重 + 限速 | 已完成 |
-| Batch 2 | X (Twitter) webhook 对接 | 待开始（需 X API Basic $100/月） |
-| Batch 3 | 微博 webhook 对接 | 待开始（需开发者认证） |
-| Batch 4 | GitHub Trending 轮询 | 已完成（含 Batch 1） |
-| Batch 5 | HN + Reddit + ProductHunt + Dev.to 轮询 | 待开始 |
-
-**人工事项：**
-- [ ] 创建 GitHub `twisker/iphub-bot` 仓库并推送
-- [ ] 创建 GitHub bot 账号 + PAT
-- [ ] Cloudflare 部署 (login → KV → secrets → deploy)
+| Batch 1+4 | 核心管道 + GitHub Trending 轮询 | 已完成 |
+| Batch 2 | X webhook | 待开始 |
+| Batch 3 | 微博 webhook | 待开始 |
+| Batch 5 | HN/Reddit/ProductHunt/Dev.to 轮询 | 待开始 |
 
 ### Sprint 14（Sub-5: 自动化编排层）— 待设计
-
-| Sprint | 子项目 | 状态 |
-|--------|--------|------|
-| Sprint 14 | Sub-5: 自动化编排层 | 待设计 |
