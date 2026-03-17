@@ -208,7 +208,7 @@ class TestSkillInfo:
 class TestAdapterInterface:
     """Verify both adapters implement the full interface."""
 
-    @pytest.mark.parametrize("adapter_cls", [ClaudeCodeAdapter, OpenClawAdapter])
+    @pytest.mark.parametrize("adapter_cls", [ClaudeCodeAdapter, OpenClawAdapter])  # type: ignore[type-abstract]
     def test_has_skill_methods(self, adapter_cls: type) -> None:
         adapter = adapter_cls()
         assert hasattr(adapter, "install_skill")
@@ -217,3 +217,69 @@ class TestAdapterInterface:
         assert callable(adapter.install_skill)
         assert callable(adapter.uninstall_skill)
         assert callable(adapter.list_skills)
+
+
+# ---------------------------------------------------------------------------
+# ClaudeCodeAdapter local skill install tests
+# ---------------------------------------------------------------------------
+
+class TestClaudeCodeLocalInstall:
+    def setup_method(self) -> None:
+        self.adapter = ClaudeCodeAdapter()
+
+    def test_install_local_dir(self, tmp_path):
+        """Local directory -> copied to config_dir/skills/."""
+        skill_dir = tmp_path / "my-skill"
+        skill_dir.mkdir()
+        (skill_dir / "SKILL.md").write_text("test skill")
+        project = tmp_path / "project"
+        project.mkdir()
+        (project / ".claude" / "skills").mkdir(parents=True)
+        result = self.adapter.install_skill(
+            str(skill_dir), config_dir=str(project / ".claude"),
+        )
+        assert result.returncode == 0
+        assert (project / ".claude" / "skills" / "my-skill" / "SKILL.md").exists()
+
+    @patch("subprocess.run")
+    def test_install_remote_name(self, mock_run):
+        """Non-existent path -> claude plugin install."""
+        mock_run.return_value = subprocess.CompletedProcess(
+            args=[], returncode=0, stdout="", stderr="",
+        )
+        self.adapter.install_skill("web-scraper")
+        args = mock_run.call_args[0][0]
+        assert args == ["claude", "plugin", "install", "web-scraper"]
+
+
+# ---------------------------------------------------------------------------
+# OpenClawAdapter local skill install tests
+# ---------------------------------------------------------------------------
+
+class TestOpenClawLocalInstall:
+    def setup_method(self) -> None:
+        self.adapter = OpenClawAdapter()
+
+    def test_install_local_dir(self, tmp_path):
+        """Local directory -> copied to config_dir/skills/."""
+        skill_dir = tmp_path / "my-skill"
+        skill_dir.mkdir()
+        (skill_dir / "SKILL.md").write_text("test skill")
+        project = tmp_path / "project"
+        project.mkdir()
+        (project / ".openclaw" / "skills").mkdir(parents=True)
+        result = self.adapter.install_skill(
+            str(skill_dir), config_dir=str(project / ".openclaw"),
+        )
+        assert result.returncode == 0
+        assert (project / ".openclaw" / "skills" / "my-skill" / "SKILL.md").exists()
+
+    @patch("subprocess.run")
+    def test_install_remote_name(self, mock_run):
+        """Non-existent path -> clawhub install."""
+        mock_run.return_value = subprocess.CompletedProcess(
+            args=[], returncode=0, stdout="", stderr="",
+        )
+        self.adapter.install_skill("web-scraper")
+        args = mock_run.call_args[0][0]
+        assert args == ["clawhub", "install", "web-scraper"]

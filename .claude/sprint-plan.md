@@ -173,3 +173,94 @@
 | P1 | iphub 定时统计 + README Top 排名 Action | CI/CD | AI | 已完成 |
 | P1 | 多平台 PyInstaller 打包（Linux/macOS/Windows） | CI/CD | AI | 已完成 |
 | P2 | GitHub Actions 发布时自动构建 + GitHub Release 上传 | CI/CD | AI | 已完成 |
+
+---
+
+## Phase 4 -- 用户体验改进 + 持续质量保障
+
+### Sprint 7（activate/deactivate 脚本 + install 增强 + E2E 完善）
+
+**目标：** 简化虚拟环境操作体验，扩展 install 命令，完善 E2E 测试覆盖
+
+| 优先级 | 任务 | 所属模块 | 责任人 | 状态 |
+|-------|------|----------|--------|------|
+| P0 | 为各平台提供 activate/deactivate 脚本（参考 conda）：`ipman init` 命令注入 shell function wrapper，支持 bash/zsh/fish/powershell | core/shell_init + CLI | AI | 已完成 |
+| P0 | 扩展 `ipman install` 支持本地 skill 目录（`_classify_source()` 三分类，两个 adapter 用 `shutil.copytree`） | cli/skill + agents | AI | 已完成 |
+| P0 | 解锁 3 个 E2E Layer 2 测试（本地 skill install/uninstall/persistence） | tests/e2e/test_skill_install | AI | 已完成 |
+| P1 | Shell 集成：`ipman init` 注入后 activate/deactivate 直接生效，含 `--reverse` 撤销 + `--dry-run` 预览 | core/shell_init + CLI | AI | 已完成 |
+| P1 | Windows PowerShell 兼容：`Invoke-Expression` + 正确 splatting，替代不可用的 eval | core/shell_init | AI | 已完成 |
+| P1 | `ClaudeCodeAdapter`：本地路径 → `copytree` 到 `.claude/skills/`，远程名称 → `claude plugin install` | agents/claude_code | AI | 已完成 |
+| P1 | `OpenClawAdapter`：本地路径 → `copytree` 到 `.openclaw/skills/`，远程名称 → `clawhub install` | agents/openclaw | AI | 已完成 |
+| P2 | E2E 测试框架持续改进：根据运行结果修复测试用例 | tests/e2e | AI | 已完成 |
+
+---
+
+## Phase 5 -- IpHub Awesome-List 转型
+
+> **总体目标：** 将 IpHub 从扁平注册表升级为 awesome-list 式的策展与传播平台
+> **设计文档：** `docs/superpowers/specs/2026-03-16-iphub-ip-format-enhancement-design.md`
+> **实施计划：** `docs/superpowers/plans/2026-03-16-iphub-ip-format-enhancement.md`
+
+### Sprint 10（Sub-1: IP 格式增强 + 版本迭代 + Tag + 页面生成）
+
+**目标：** 扩展 IP 数据模型，建立三层架构（yaml → md → html），支持 tag 搜索、趋势统计、i18n Landing Page
+
+| 优先级 | 任务 | 所属模块 | 责任人 | 状态 |
+|-------|------|----------|--------|------|
+| P0 | IPPackage 扩展：新增 tags/summary/homepage/repository/icon/links 字段 | core/package | AI | 已完成 |
+| P0 | Publisher 适配：registry 输出新字段 + 版本文件含 changelog | hub/publisher | AI | 已完成 |
+| P0 | Client 适配：search() 支持 --tag 过滤 | hub/client | AI | 已完成 |
+| P0 | CLI 适配：hub search --tag, hub info 展示新字段 | cli/hub | AI | 已完成 |
+| P1 | i18n 翻译文件（en + zh-cn）| iphub/templates | AI | 已完成 |
+| P1 | README.md 生成模板（含新手引导）| iphub/templates | AI | 已完成 |
+| P1 | HTML Landing Page 模板（i18n + 响应式）| iphub/templates | AI | 已完成 |
+| P1 | 页面生成脚本 generate_pages.py | iphub/scripts | AI | 已完成 |
+| P1 | 趋势计算脚本 generate_trending.py | iphub/scripts | AI | 已完成 |
+| P2 | rebuild-index.yml：tag 聚合 + 趋势 + Labels 同步 | iphub/CI | AI | 已完成 |
+| P2 | rebuild-pages.yml：自动生成页面工作流 | iphub/CI | AI | 已完成 |
+| P2 | validate-pr.yml：tag 格式校验 | iphub/CI | AI | 已完成 |
+| P2 | GitHub Pages 启用（人工） | iphub 仓库设置 | 人工 | 已完成 |
+
+### Sprint 11（Sub-2: Tag 搜索 + 排名 + 趋势推荐） — 已完成
+
+| 任务 | 仓库 | 状态 |
+|------|------|------|
+| `ipman hub trending` CLI 命令 | ipman | 已完成 |
+| IpHub 首页模板 + trending 展示 | iphub | 已完成 |
+| Tag 浏览页模板 | iphub | 已完成 |
+| i18n 新增 11 key + generate_pages 首页/tag 生成 | iphub | 已完成 |
+
+### Sprint 12（Sub-3: 个人页面 + IP Landing Page 完善） — 已完成
+
+| 任务 | 仓库 | 状态 |
+|------|------|------|
+| Author 个人页面模板 + generate_pages 生成 | iphub | 已完成 |
+| 首页 "Active Authors" 区域 | iphub | 已完成 |
+| i18n 新增 7 key | iphub | 已完成 |
+
+### Sprint 13（Sub-4: 社交媒体机器人 + 自动 IP 生成）— 已完成
+
+> 代码和设计文档在私有仓库 `twisker/iphub-bot` 中。
+
+| Batch | 内容 | 状态 |
+|-------|------|------|
+| Batch 1+4 | 核心管道 + GitHub Trending 轮询 | 已完成 ✅ 已部署 |
+| Batch 5 | HN/Reddit/ProductHunt/Dev.to 轮询 | 已完成 |
+| Batch 2 | X webhook | 暂缓（需 X API $100/月） |
+| Batch 3 | 微博 webhook | 暂缓（需开发者认证） |
+
+### Sprint 14（Sub-5: 自动化编排层）— 暂缓
+
+> 自动化已基本就位（CI/CD workflows + Cloudflare Worker crons）。如需补充监控告警或健康检查，后续按需启动。
+
+---
+
+## Phase 5 完成总结
+
+| Sub | Sprint | 内容 | 状态 |
+|-----|--------|------|------|
+| Sub-1 | Sprint 10 | IP 格式增强 + tags + changelog + 页面生成 | ✅ |
+| Sub-2 | Sprint 11 | Tag 搜索 + 趋势推荐 + hub trending 命令 | ✅ |
+| Sub-3 | Sprint 12 | 个人页面 + IP Landing Page | ✅ |
+| Sub-4 | Sprint 13 | 社交媒体机器人 + 5 数据源自动 IP 生成 | ✅ |
+| Sub-5 | Sprint 14 | 自动化编排层 | 暂缓（已基本就位） |

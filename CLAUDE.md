@@ -30,6 +30,16 @@
 
 ## CLAUDE CODING 规范（必须遵守）
 
+### Git Hooks 初始化（每次新会话必检）
+
+**每次会话开始时，必须检查 `git config core.hooksPath` 是否为 `.githooks`。如果未设置，立即执行：**
+
+```bash
+git config core.hooksPath .githooks
+```
+
+这确保 `.githooks/pre-commit`（自动版本 bump）能正常工作。此配置是本地的，不跟随 git clone，因此每次换机器或 clone 新仓库后都需要重新设置。
+
 ### Git 提交纪律（最高优先级）
 
 **每次完成一组有意义的改动后，必须立即执行 `git add` + `git commit`，不得拖延、不得遗忘、不得等用户提醒。**

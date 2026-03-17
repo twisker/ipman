@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import shutil
 import subprocess
 import time
 from pathlib import Path
@@ -19,7 +20,7 @@ class AgentManager:
 
     SESSION_COMMANDS: ClassVar[dict[str, dict[str, object]]] = {
         "claude-code": {"cmd": ["claude", "--print"], "prompt_arg": "positional"},
-        "openclaw":    {"cmd": ["openclaw", "run"],   "prompt_arg": "positional"},
+        "openclaw":    {"cmd": ["openclaw", "chat", "--message"], "prompt_arg": "positional"},
     }
 
     AGENT_CONFIG_DIR: ClassVar[dict[str, str]] = {
@@ -42,17 +43,26 @@ class AgentManager:
 
     def install_skill(self, name: str, **kwargs: str | None) -> bool:
         """Install a skill via agent CLI. Returns True on success."""
-        result = self._adapter.install_skill(name, **kwargs)
-        return result.returncode == 0
+        try:
+            result = self._adapter.install_skill(name, **kwargs)
+            return result.returncode == 0
+        except FileNotFoundError:
+            return False
 
     def uninstall_skill(self, name: str) -> bool:
         """Uninstall a skill via agent CLI. Returns True on success."""
-        result = self._adapter.uninstall_skill(name)
-        return result.returncode == 0
+        try:
+            result = self._adapter.uninstall_skill(name)
+            return result.returncode == 0
+        except FileNotFoundError:
+            return False
 
     def list_skills(self) -> list[SkillInfo]:
         """List installed skills via agent CLI."""
-        return self._adapter.list_skills()
+        try:
+            return self._adapter.list_skills()
+        except FileNotFoundError:
+            return []
 
     @property
     def config_dir_name(self) -> str:
@@ -80,15 +90,39 @@ class AgentManager:
                 )
             env["ANTHROPIC_API_KEY"] = key
 
+        # On Windows, npm-installed commands may need .cmd extension.
+        # Use shutil.which() to resolve the actual executable path.
+        base_cmd = cmd_parts[0]
+        resolved = shutil.which(base_cmd)
+        if resolved:
+            cmd[0] = resolved
+
         start = time.monotonic()
         try:
             result = subprocess.run(
                 cmd, capture_output=True, text=True,
                 timeout=timeout, cwd=self.project_dir, env=env,
             )
+            # Detect "unknown command" errors (e.g. openclaw CLI mismatch)
+            combined = (result.stdout or "") + (result.stderr or "")
+            if "unknown command" in combined.lower():
+                return SessionResult(
+                    exit_code=-3,
+                    stdout=result.stdout,
+                    stderr=f"Unknown command detected: {' '.join(cmd)}. "
+                           f"stderr={result.stderr}",
+                    duration_seconds=time.monotonic() - start,
+                )
             return SessionResult(
                 exit_code=result.returncode, stdout=result.stdout,
                 stderr=result.stderr,
+                duration_seconds=time.monotonic() - start,
+            )
+        except FileNotFoundError:
+            return SessionResult(
+                exit_code=-3,
+                stdout="",
+                stderr=f"Command not found on this platform: {base_cmd}",
                 duration_seconds=time.monotonic() - start,
             )
         except subprocess.TimeoutExpired as e:

@@ -118,9 +118,7 @@ def activate(
 ) -> None:
     """Activate a virtual skill environment.
 
-    To update your shell prompt, use:
-
-        eval "$(ipman env activate myenv)"
+    Run 'ipman init' first for automatic shell integration.
     """
     project_path = Path.cwd()
     scope = _resolve_scope(scope_project, scope_user, scope_machine)
@@ -139,10 +137,23 @@ def activate(
         if os.isatty(1):
             click.secho(f"Activated '{name}'.", fg="green")
             click.echo(f"  Prompt tag: {prompt_tag}")
-            click.echo(
-                "\nTo update your shell prompt, run:\n"
-                f'  eval "$(ipman env activate {name})"'
+            from ipman.core.shell_init import (
+                config_file_path,
+                detect_shell,
+                is_initialized,
             )
+            detected = detect_shell()
+            try:
+                initialized = is_initialized(config_file_path(detected))
+            except ValueError:
+                initialized = False
+            if not initialized:
+                click.echo(
+                    "\nTip: Run 'ipman init' to enable automatic "
+                    "shell integration.\n"
+                    "     After that, 'ipman env activate' will "
+                    "update your prompt directly."
+                )
         else:
             click.echo(script, nl=False)
     except (FileNotFoundError, FileExistsError) as e:
@@ -154,9 +165,7 @@ def activate(
 def deactivate() -> None:
     """Deactivate the current virtual skill environment.
 
-    To update your shell prompt, use:
-
-        eval "$(ipman env deactivate)"
+    Run 'ipman init' first for automatic shell integration.
     """
     project_path = Path.cwd()
 
@@ -166,10 +175,21 @@ def deactivate() -> None:
         script = generate_deactivate_script(shell)
         if os.isatty(1):
             click.secho("Environment deactivated.", fg="green")
-            click.echo(
-                "\nTo restore your shell prompt, run:\n"
-                '  eval "$(ipman env deactivate)"'
+            from ipman.core.shell_init import (
+                config_file_path,
+                detect_shell,
+                is_initialized,
             )
+            detected = detect_shell()
+            try:
+                initialized = is_initialized(config_file_path(detected))
+            except ValueError:
+                initialized = False
+            if not initialized:
+                click.echo(
+                    "\nTip: Run 'ipman init' to enable automatic "
+                    "shell integration."
+                )
         else:
             click.echo(script, nl=False)
     except RuntimeError as e:
