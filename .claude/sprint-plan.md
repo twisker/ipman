@@ -238,15 +238,15 @@
 | 首页 "Active Authors" 区域 | iphub | 已完成 |
 | i18n 新增 7 key | iphub | 已完成 |
 
-### Sprint 13（Sub-4: 社交媒体机器人 + 自动 IP 生成）— 进行中
+### Sprint 13（Sub-4: 社交媒体机器人 + 自动 IP 生成）— 已完成
 
 > 代码和设计文档在私有仓库 `twisker/iphub-bot` 中。
 
 | Batch | 内容 | 状态 |
 |-------|------|------|
 | Batch 1+4 | 核心管道 + GitHub Trending 轮询 | 已完成 ✅ 已部署 |
-| Batch 2 | X webhook | 待开始 |
-| Batch 3 | 微博 webhook | 待开始 |
-| Batch 5 | HN/Reddit/ProductHunt/Dev.to 轮询 | 待开始 |
+| Batch 5 | HN/Reddit/ProductHunt/Dev.to 轮询 | 已完成 |
+| Batch 2 | X webhook | 暂缓（需 X API $100/月） |
+| Batch 3 | 微博 webhook | 暂缓（需开发者认证） |
 
 ### Sprint 14（Sub-5: 自动化编排层）— 待设计
