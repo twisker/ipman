@@ -244,7 +244,7 @@
 
 | Batch | 内容 | 状态 |
 |-------|------|------|
-| Batch 1+4 | 核心管道 + GitHub Trending 轮询 | 已完成 |
+| Batch 1+4 | 核心管道 + GitHub Trending 轮询 | 已完成 ✅ 已部署 |
 | Batch 2 | X webhook | 待开始 |
 | Batch 3 | 微博 webhook | 待开始 |
 | Batch 5 | HN/Reddit/ProductHunt/Dev.to 轮询 | 待开始 |
