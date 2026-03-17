@@ -249,4 +249,18 @@
 | Batch 2 | X webhook | 暂缓（需 X API $100/月） |
 | Batch 3 | 微博 webhook | 暂缓（需开发者认证） |
 
-### Sprint 14（Sub-5: 自动化编排层）— 待设计
+### Sprint 14（Sub-5: 自动化编排层）— 暂缓
+
+> 自动化已基本就位（CI/CD workflows + Cloudflare Worker crons）。如需补充监控告警或健康检查，后续按需启动。
+
+---
+
+## Phase 5 完成总结
+
+| Sub | Sprint | 内容 | 状态 |
+|-----|--------|------|------|
+| Sub-1 | Sprint 10 | IP 格式增强 + tags + changelog + 页面生成 | ✅ |
+| Sub-2 | Sprint 11 | Tag 搜索 + 趋势推荐 + hub trending 命令 | ✅ |
+| Sub-3 | Sprint 12 | 个人页面 + IP Landing Page | ✅ |
+| Sub-4 | Sprint 13 | 社交媒体机器人 + 5 数据源自动 IP 生成 | ✅ |
+| Sub-5 | Sprint 14 | 自动化编排层 | 暂缓（已基本就位） |
