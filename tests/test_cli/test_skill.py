@@ -94,7 +94,7 @@ class TestSkillUninstall:
             result = self.runner.invoke(cli, ["uninstall", "web-scraper"])
         assert result.exit_code == 0
         assert "web-scraper" in result.output
-        adapter.uninstall_skill.assert_called_once_with("web-scraper")
+        adapter.uninstall_skill.assert_called_once_with("web-scraper", auto_yes=False)
 
     def test_uninstall_failure(self) -> None:
         adapter = MagicMock()

@@ -37,7 +37,12 @@ def _resolve_adapter(agent: str | None, project_path: Path) -> object:
     detected = detect_agent(project_path)
     if detected:
         return detected
-    # Default to claude-code
+    # Fallback: prefer first installed agent instead of hardcoding
+    from ipman.agents.registry import detect_installed_agents
+    installed = detect_installed_agents()
+    if installed:
+        return installed[0]
+    # Last resort
     return get_adapter("claude-code")
 
 
