@@ -230,3 +230,32 @@ def test_search_no_tag_returns_all(tmp_path):
     }
     results = client.search("")
     assert len(results) == 2
+
+
+class TestIpHubClientIndexUrl:
+    """Test that base_url properly overrides index_url."""
+
+    def test_base_url_overrides_index_url(self) -> None:
+        """When base_url is set, index_url should derive from it."""
+        client = IpHubClient(base_url="https://custom.example.com/repo/main")
+        assert client._index_url == "https://custom.example.com/repo/main/index.yaml"
+
+    def test_default_index_url(self) -> None:
+        """Without override, index_url uses the default GitHub raw URL."""
+        client = IpHubClient()
+        assert "raw.githubusercontent.com" in client._index_url
+        assert client._index_url.endswith("/index.yaml")
+
+    def test_explicit_index_url_preserved(self) -> None:
+        """Explicit index_url should be respected even with base_url."""
+        client = IpHubClient(
+            base_url="https://custom.example.com",
+            index_url="https://other.example.com/index.yaml",
+        )
+        assert client._index_url == "https://other.example.com/index.yaml"
+
+    def test_no_args_uses_default_constant(self) -> None:
+        """No args should use the hardcoded _INDEX_URL constant."""
+        from ipman.hub.client import _INDEX_URL
+        client = IpHubClient()
+        assert client._index_url == _INDEX_URL

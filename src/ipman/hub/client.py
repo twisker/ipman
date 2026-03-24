@@ -28,14 +28,20 @@ class IpHubClient:
     def __init__(
         self,
         cache_dir: Path | None = None,
-        index_url: str = _INDEX_URL,
+        index_url: str | None = None,
         base_url: str | None = None,
     ) -> None:
         self._base_url = base_url or (
             "https://raw.githubusercontent.com"
             f"/{_DEFAULT_REPO}/{_DEFAULT_BRANCH}"
         )
-        self._index_url = index_url or f"{self._base_url}/index.yaml"
+        # index_url priority: explicit > derived from base_url > default
+        if index_url:
+            self._index_url = index_url
+        elif base_url:
+            self._index_url = f"{self._base_url}/index.yaml"
+        else:
+            self._index_url = _INDEX_URL
         self._cache_dir = cache_dir or Path.home() / ".ipman" / "cache"
         self._cache_file = self._cache_dir / "index.yaml"
         self._index: dict[str, Any] | None = None
