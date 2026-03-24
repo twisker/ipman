@@ -15,7 +15,6 @@ from uuid import uuid4
 import pytest
 import yaml
 
-from .conftest_mock import mock_clawhub_env, mock_openclaw_project  # noqa: F401
 from .helpers.run import run_ipman
 
 pytestmark = [pytest.mark.e2e, pytest.mark.platform]
@@ -554,6 +553,7 @@ class TestErrorHandling:
     def test_submit_report_label_fallback_signature(self) -> None:
         """_submit_report accepts with_label kwarg."""
         import inspect
+
         from ipman.cli.hub import _submit_report
         sig = inspect.signature(_submit_report)
         assert "with_label" in sig.parameters

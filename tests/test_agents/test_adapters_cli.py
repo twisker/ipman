@@ -12,6 +12,20 @@ from ipman.agents.base import SkillInfo
 from ipman.agents.claude_code import ClaudeCodeAdapter
 from ipman.agents.openclaw import OpenClawAdapter
 
+
+@pytest.fixture(autouse=True)
+def _patch_shutil_which(monkeypatch):
+    """Patch shutil.which in the base adapter to return the command unchanged.
+
+    This allows all adapter CLI tests to assert exact argument lists
+    without resolved paths interfering.
+    """
+    monkeypatch.setattr(
+        "ipman.agents.base.shutil.which",
+        lambda cmd: cmd,
+    )
+
+
 # ---------------------------------------------------------------------------
 # ClaudeCodeAdapter skill CLI tests
 # ---------------------------------------------------------------------------
@@ -353,16 +367,21 @@ class TestOpenClawInstallFlags:
 class TestRunCliErrorHandling:
     """Test that _run_cli catches FileNotFoundError."""
 
-    def test_missing_cli_returns_friendly_error(self) -> None:
+    def test_missing_cli_returns_friendly_error(self, monkeypatch) -> None:
         """When agent CLI is not installed, return error instead of traceback."""
+        # Restore real shutil.which for this test
+        import shutil as _real_shutil
+        monkeypatch.setattr("ipman.agents.base.shutil.which", _real_shutil.which)
         adapter = ClaudeCodeAdapter()
         result = adapter._run_cli(["nonexistent-binary-xyz-12345", "list"])
         assert result.returncode == -1
         assert "command not found" in result.stderr
         assert "Claude Code" in result.stderr
 
-    def test_missing_openclaw_cli_returns_friendly_error(self) -> None:
+    def test_missing_openclaw_cli_returns_friendly_error(self, monkeypatch) -> None:
         """OpenClaw adapter should also return friendly error."""
+        import shutil as _real_shutil
+        monkeypatch.setattr("ipman.agents.base.shutil.which", _real_shutil.which)
         adapter = OpenClawAdapter()
         result = adapter._run_cli(["nonexistent-binary-xyz-12345", "list"])
         assert result.returncode == -1

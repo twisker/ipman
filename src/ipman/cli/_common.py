@@ -23,7 +23,7 @@ def _agent_from_active_env(project_path: Path | None = None) -> str | None:
         agent_name = config.get("agent")
         if agent_name and agent_name != "auto":
             return agent_name
-    except Exception:  # noqa: BLE001
+    except Exception:
         pass
     return None
 

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import shutil
 import subprocess
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
@@ -82,11 +83,9 @@ class AgentAdapter(ABC):
         .cmd/.bat wrappers are found. Returns a CompletedProcess with
         returncode=-1 if the executable is not found.
         """
-        import shutil as _shutil
-
         resolved_args = list(args)
         if resolved_args:
-            resolved = _shutil.which(resolved_args[0])
+            resolved = shutil.which(resolved_args[0])
             if resolved:
                 resolved_args[0] = resolved
             else:

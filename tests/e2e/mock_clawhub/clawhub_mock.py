@@ -5,7 +5,6 @@ State dir: $MOCK_CLAWHUB_STATE (must be set by test fixture).
 """
 from __future__ import annotations
 
-import json
 import os
 import shutil
 import sys
@@ -38,12 +37,11 @@ def main() -> int:
 
 def _install(args: list[str], skills_dir: Path) -> int:
     name = ""
-    force = False
     workdir = ""
     i = 0
     while i < len(args):
         if args[i] == "--force":
-            force = True
+            pass  # accepted but not used by mock
         elif args[i] == "--hub":
             i += 1  # skip value
         elif args[i] == "--workdir":
