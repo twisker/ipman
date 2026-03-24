@@ -76,10 +76,24 @@ class AgentAdapter(ABC):
     def _run_cli(
         self, args: list[str],
     ) -> subprocess.CompletedProcess[str]:
-        """Run a CLI command and capture output."""
-        return subprocess.run(
-            args,
-            capture_output=True,
-            text=True,
-            check=False,
-        )
+        """Run a CLI command and capture output.
+
+        Returns a CompletedProcess with returncode=-1 if the executable
+        is not found, instead of raising FileNotFoundError.
+        """
+        try:
+            return subprocess.run(
+                args,
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+        except FileNotFoundError:
+            cmd = args[0] if args else "unknown"
+            return subprocess.CompletedProcess(
+                args=args,
+                returncode=-1,
+                stdout="",
+                stderr=f"{cmd}: command not found. "
+                       f"Please install {self.display_name} CLI first.",
+            )

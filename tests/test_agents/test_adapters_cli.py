@@ -274,6 +274,30 @@ class TestOpenClawSkillListFallback:
 
 
 # ---------------------------------------------------------------------------
+# _run_cli error handling tests
+# ---------------------------------------------------------------------------
+
+class TestRunCliErrorHandling:
+    """Test that _run_cli catches FileNotFoundError."""
+
+    def test_missing_cli_returns_friendly_error(self) -> None:
+        """When agent CLI is not installed, return error instead of traceback."""
+        adapter = ClaudeCodeAdapter()
+        result = adapter._run_cli(["nonexistent-binary-xyz-12345", "list"])
+        assert result.returncode == -1
+        assert "command not found" in result.stderr
+        assert "Claude Code" in result.stderr
+
+    def test_missing_openclaw_cli_returns_friendly_error(self) -> None:
+        """OpenClaw adapter should also return friendly error."""
+        adapter = OpenClawAdapter()
+        result = adapter._run_cli(["nonexistent-binary-xyz-12345", "list"])
+        assert result.returncode == -1
+        assert "command not found" in result.stderr
+        assert "OpenClaw" in result.stderr
+
+
+# ---------------------------------------------------------------------------
 # SkillInfo dataclass tests
 # ---------------------------------------------------------------------------
 
