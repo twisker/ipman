@@ -241,31 +241,37 @@ def install(
         should_vet = True
 
     # Run vet if needed
+    vet_report: VetReport | None = None
     if should_vet and not dry_run:
         if source_type == "ip_file":
             path = Path(source)
             if not path.exists():
                 raise click.ClickException(f"IP file not found: {path}")
             content = path.read_text(encoding="utf-8")
-            report = _run_vet(content, skill_name=source)
+            vet_report = _run_vet(content, skill_name=source)
         elif source_type == "local_skill":
             skill_path = Path(source)
             md_contents = []
             for md_file in skill_path.rglob("*.md"):
                 md_contents.append(md_file.read_text(encoding="utf-8"))
             content = "\n".join(md_contents)
-            report = _run_vet(content, skill_name=source)
+            vet_report = _run_vet(content, skill_name=source)
         else:
-            report = _run_vet("", skill_name=source)
+            vet_report = _run_vet("", skill_name=source)
 
-        if not _enforce_security(report, mode, source):
+        if not _enforce_security(vet_report, mode, source):
             raise SystemExit(1)
+
+    # Pass --force to adapter when security allowed a risky install
+    force_install = (
+        vet_report is not None and vet_report.risk_level.value >= 1
+    )
 
     if source_type == "local_skill":
         if dry_run:
             click.echo(f"Would install local skill: {source}")
         else:
-            result = adapter.install_skill(source)
+            result = adapter.install_skill(source, force=force_install)
             if result.returncode == 0:
                 click.secho(f"Installed local skill from '{source}'.", fg="green")
             else:

@@ -37,12 +37,18 @@ class OpenClawAdapter(AgentAdapter):
         skills_dir.mkdir(parents=True, exist_ok=True)
 
     def install_skill(
-        self, name: str, **kwargs: str | None,
+        self, name: str, **kwargs: str | bool | None,
     ) -> subprocess.CompletedProcess[str]:
         """Install a skill.
 
         If *name* is an existing directory, copy it into the agent's
         skills/ dir. Otherwise delegate to ``clawhub install``.
+
+        Keyword args:
+            config_dir: Target config directory for local skill copy.
+            hub: Custom hub URL for clawhub install.
+            force: Pass --force to clawhub (for risky installs).
+            workdir: Pass --workdir to clawhub (controls install target).
         """
         path = Path(name)
         if path.exists() and path.is_dir():
@@ -61,6 +67,11 @@ class OpenClawAdapter(AgentAdapter):
         hub = kwargs.get("hub")
         if hub:
             args.extend(["--hub", str(hub)])
+        if kwargs.get("force"):
+            args.append("--force")
+        workdir = kwargs.get("workdir")
+        if workdir:
+            args.extend(["--workdir", str(workdir)])
         return self._run_cli(args)
 
     def uninstall_skill(

@@ -293,6 +293,60 @@ class TestOpenClawSkillListFallback:
 
 
 # ---------------------------------------------------------------------------
+# OpenClawAdapter install flags tests
+# ---------------------------------------------------------------------------
+
+class TestOpenClawInstallFlags:
+    """Test --force and --workdir passthrough."""
+
+    def setup_method(self) -> None:
+        self.adapter = OpenClawAdapter()
+
+    @patch("subprocess.run")
+    def test_install_with_force(self, mock_run) -> None:
+        mock_run.return_value = subprocess.CompletedProcess(
+            args=[], returncode=0, stdout="", stderr="",
+        )
+        self.adapter.install_skill("risky-skill", force=True)
+        args = mock_run.call_args[0][0]
+        assert "--force" in args
+
+    @patch("subprocess.run")
+    def test_install_with_workdir(self, mock_run) -> None:
+        mock_run.return_value = subprocess.CompletedProcess(
+            args=[], returncode=0, stdout="", stderr="",
+        )
+        self.adapter.install_skill("web-scraper", workdir="/tmp/myproject")
+        args = mock_run.call_args[0][0]
+        assert "--workdir" in args
+        idx = args.index("--workdir")
+        assert args[idx + 1] == "/tmp/myproject"
+
+    @patch("subprocess.run")
+    def test_install_without_force(self, mock_run) -> None:
+        mock_run.return_value = subprocess.CompletedProcess(
+            args=[], returncode=0, stdout="", stderr="",
+        )
+        self.adapter.install_skill("safe-skill")
+        args = mock_run.call_args[0][0]
+        assert "--force" not in args
+
+    @patch("subprocess.run")
+    def test_install_with_all_flags(self, mock_run) -> None:
+        mock_run.return_value = subprocess.CompletedProcess(
+            args=[], returncode=0, stdout="", stderr="",
+        )
+        self.adapter.install_skill(
+            "skill", hub="https://hub.example.com",
+            force=True, workdir="/tmp/project",
+        )
+        args = mock_run.call_args[0][0]
+        assert "--hub" in args
+        assert "--force" in args
+        assert "--workdir" in args
+
+
+# ---------------------------------------------------------------------------
 # _run_cli error handling tests
 # ---------------------------------------------------------------------------
 
