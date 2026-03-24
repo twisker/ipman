@@ -241,31 +241,37 @@ def install(
         should_vet = True
 
     # Run vet if needed
+    vet_report: VetReport | None = None
     if should_vet and not dry_run:
         if source_type == "ip_file":
             path = Path(source)
             if not path.exists():
                 raise click.ClickException(f"IP file not found: {path}")
             content = path.read_text(encoding="utf-8")
-            report = _run_vet(content, skill_name=source)
+            vet_report = _run_vet(content, skill_name=source)
         elif source_type == "local_skill":
             skill_path = Path(source)
             md_contents = []
             for md_file in skill_path.rglob("*.md"):
                 md_contents.append(md_file.read_text(encoding="utf-8"))
             content = "\n".join(md_contents)
-            report = _run_vet(content, skill_name=source)
+            vet_report = _run_vet(content, skill_name=source)
         else:
-            report = _run_vet("", skill_name=source)
+            vet_report = _run_vet("", skill_name=source)
 
-        if not _enforce_security(report, mode, source):
+        if not _enforce_security(vet_report, mode, source):
             raise SystemExit(1)
+
+    # Pass --force to adapter when security allowed a risky install
+    force_install = (
+        vet_report is not None and vet_report.risk_level.value >= 1
+    )
 
     if source_type == "local_skill":
         if dry_run:
             click.echo(f"Would install local skill: {source}")
         else:
-            result = adapter.install_skill(source)
+            result = adapter.install_skill(source, force=force_install)
             if result.returncode == 0:
                 click.secho(f"Installed local skill from '{source}'.", fg="green")
             else:
@@ -282,10 +288,12 @@ def install(
 @click.argument("name")
 @click.option("--agent", "agent_name", default=None,
               help="Agent tool to use (e.g. claude-code, openclaw).")
-def uninstall(name: str, agent_name: str | None) -> None:
+@click.option("--yes", "auto_yes", is_flag=True, default=False,
+              help="Skip confirmation prompts (non-interactive mode).")
+def uninstall(name: str, agent_name: str | None, auto_yes: bool) -> None:
     """Uninstall a skill via the agent's native CLI."""
     adapter = _resolve_agent(agent_name)
-    result = adapter.uninstall_skill(name)
+    result = adapter.uninstall_skill(name, auto_yes=auto_yes)
     if result.returncode == 0:
         click.secho(
             f"Uninstalled '{name}' via {adapter.display_name}.",

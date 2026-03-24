@@ -14,20 +14,19 @@ from ipman.hub.publisher import IpHubPublisher, PublishError, get_github_usernam
 
 
 def _submit_report(
-    name: str, body: str,
+    name: str, body: str, *, with_label: bool = True,
 ) -> subprocess.CompletedProcess[str]:
     """Submit a report issue to IpHub via gh CLI."""
     import subprocess as _sp
-    return _sp.run(
-        [
-            "gh", "issue", "create",
-            "--repo", "twisker/iphub",
-            "--title", f"[report] {name}",
-            "--body", body,
-            "--label", "report",
-        ],
-        capture_output=True, text=True, check=False,
-    )
+    args = [
+        "gh", "issue", "create",
+        "--repo", "twisker/iphub",
+        "--title", f"[report] {name}",
+        "--body", body,
+    ]
+    if with_label:
+        args.extend(["--label", "report"])
+    return _sp.run(args, capture_output=True, text=True, check=False)
 
 
 def _get_hub_client() -> IpHubClient:
@@ -308,13 +307,17 @@ def report_cmd(name: str, reason: str) -> None:
         raise click.ClickException(f"'{name}' not found in IpHub.")
 
     body = f"Report by @{username}: {reason}"
-    result = _submit_report(name, body)
+    result = _submit_report(name, body, with_label=True)
+
+    # Fallback: if 'report' label doesn't exist, retry without it
+    if result.returncode != 0 and "label" in (result.stderr or "").lower():
+        result = _submit_report(name, body, with_label=False)
+
     if result.returncode != 0:
         msg = result.stderr.strip() or "Failed to submit report"
         raise click.ClickException(msg)
 
     click.secho(
-        f"Reported '{name}'. Thank you for helping keep "
-        f"IpHub safe.",
+        f"Reported '{name}'. Thank you for helping keep IpHub safe.",
         fg="green",
     )

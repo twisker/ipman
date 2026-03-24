@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import shutil
 import subprocess
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
@@ -65,7 +66,7 @@ class AgentAdapter(ABC):
 
     @abstractmethod
     def uninstall_skill(
-        self, name: str,
+        self, name: str, *, auto_yes: bool = True,
     ) -> subprocess.CompletedProcess[str]:
         """Uninstall a skill via agent's native CLI command."""
 
@@ -76,10 +77,39 @@ class AgentAdapter(ABC):
     def _run_cli(
         self, args: list[str],
     ) -> subprocess.CompletedProcess[str]:
-        """Run a CLI command and capture output."""
-        return subprocess.run(
-            args,
-            capture_output=True,
-            text=True,
-            check=False,
-        )
+        """Run a CLI command and capture output.
+
+        On Windows, resolves the command via shutil.which() first so that
+        .cmd/.bat wrappers are found. Returns a CompletedProcess with
+        returncode=-1 if the executable is not found.
+        """
+        resolved_args = list(args)
+        if resolved_args:
+            resolved = shutil.which(resolved_args[0])
+            if resolved:
+                resolved_args[0] = resolved
+            else:
+                cmd = resolved_args[0]
+                return subprocess.CompletedProcess(
+                    args=args,
+                    returncode=-1,
+                    stdout="",
+                    stderr=f"{cmd}: command not found. "
+                           f"Please install {self.display_name} CLI first.",
+                )
+        try:
+            return subprocess.run(
+                resolved_args,
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+        except FileNotFoundError:
+            cmd = args[0] if args else "unknown"
+            return subprocess.CompletedProcess(
+                args=args,
+                returncode=-1,
+                stdout="",
+                stderr=f"{cmd}: command not found. "
+                       f"Please install {self.display_name} CLI first.",
+            )

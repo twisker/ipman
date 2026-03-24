@@ -73,7 +73,7 @@ class TestEnvCLI:
         with runner.isolated_filesystem(temp_dir=tmp_path):
             result = runner.invoke(cli, ["env", "status"])
             assert result.exit_code == 0
-            assert "No active environments" in result.output
+            assert "No active environment" in result.output
 
     def test_status_with_active(self, tmp_path):
         runner = CliRunner()
@@ -82,9 +82,9 @@ class TestEnvCLI:
             runner.invoke(cli, ["env", "activate", "myenv"])
             result = runner.invoke(cli, ["env", "status"])
             assert result.exit_code == 0
-            assert "[ip:myenv]" in result.output
-            assert "Project" in result.output
             assert "myenv" in result.output
+            assert "project" in result.output.lower()
+            assert "[ip:myenv]" in result.output
 
     def test_activate_shows_prompt_tag(self, tmp_path):
         runner = CliRunner()

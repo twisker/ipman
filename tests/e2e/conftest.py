@@ -8,6 +8,7 @@ from uuid import uuid4
 
 import pytest
 
+from .conftest_mock import mock_clawhub_env, mock_openclaw_project  # noqa: F401
 from .helpers.agent_manager import AgentManager
 from .helpers.platform_utils import has_machine_scope_permission
 from .helpers.run import EnvInfo, GitHubAuth, PublishContext, run_ipman

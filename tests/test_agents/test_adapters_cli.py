@@ -12,6 +12,20 @@ from ipman.agents.base import SkillInfo
 from ipman.agents.claude_code import ClaudeCodeAdapter
 from ipman.agents.openclaw import OpenClawAdapter
 
+
+@pytest.fixture(autouse=True)
+def _patch_shutil_which(monkeypatch):
+    """Patch shutil.which in the base adapter to return the command unchanged.
+
+    This allows all adapter CLI tests to assert exact argument lists
+    without resolved paths interfering.
+    """
+    monkeypatch.setattr(
+        "ipman.agents.base.shutil.which",
+        lambda cmd: cmd,
+    )
+
+
 # ---------------------------------------------------------------------------
 # ClaudeCodeAdapter skill CLI tests
 # ---------------------------------------------------------------------------
@@ -154,14 +168,33 @@ class TestOpenClawSkillUninstall:
         self.adapter = OpenClawAdapter()
 
     @patch("subprocess.run")
-    def test_uninstall_skill(self, mock_run: object) -> None:
+    def test_uninstall_skill_default_includes_yes(self, mock_run: object) -> None:
+        """Default behavior should include --yes for non-interactive safety."""
         mock_run.return_value = subprocess.CompletedProcess(  # type: ignore[attr-defined]
             args=[], returncode=0, stdout="", stderr="",
         )
         result = self.adapter.uninstall_skill("web-scraper")
         args = mock_run.call_args[0][0]  # type: ignore[attr-defined]
-        assert args == ["clawhub", "uninstall", "web-scraper"]
+        assert args == ["clawhub", "uninstall", "web-scraper", "--yes"]
         assert result.returncode == 0
+
+    @patch("subprocess.run")
+    def test_uninstall_skill_explicit_yes(self, mock_run: object) -> None:
+        mock_run.return_value = subprocess.CompletedProcess(  # type: ignore[attr-defined]
+            args=[], returncode=0, stdout="", stderr="",
+        )
+        self.adapter.uninstall_skill("web-scraper", auto_yes=True)
+        args = mock_run.call_args[0][0]  # type: ignore[attr-defined]
+        assert "--yes" in args
+
+    @patch("subprocess.run")
+    def test_uninstall_skill_no_yes(self, mock_run: object) -> None:
+        mock_run.return_value = subprocess.CompletedProcess(  # type: ignore[attr-defined]
+            args=[], returncode=0, stdout="", stderr="",
+        )
+        self.adapter.uninstall_skill("web-scraper", auto_yes=False)
+        args = mock_run.call_args[0][0]  # type: ignore[attr-defined]
+        assert "--yes" not in args
 
 
 class TestOpenClawSkillList:
@@ -181,6 +214,179 @@ class TestOpenClawSkillList:
         skills = self.adapter.list_skills()
         assert len(skills) == 1
         assert skills[0].name == "web-scraper"
+
+
+class TestOpenClawSkillListFallback:
+    """Test list_skills 3-strategy fallback: --json -> plain text -> lockfile."""
+
+    def setup_method(self) -> None:
+        self.adapter = OpenClawAdapter()
+
+    @patch("subprocess.run")
+    def test_list_skills_json_success(self, mock_run) -> None:
+        """Strategy 1: --json works — use it."""
+        output = json.dumps([
+            {"name": "web-scraper", "version": "1.0.0"},
+            {"name": "git-helper", "version": "2.0.0"},
+        ])
+        mock_run.return_value = subprocess.CompletedProcess(
+            args=[], returncode=0, stdout=output, stderr="",
+        )
+        skills = self.adapter.list_skills()
+        assert len(skills) == 2
+        assert skills[0].name == "web-scraper"
+        assert skills[1].name == "git-helper"
+
+    @patch("subprocess.run")
+    def test_list_skills_json_fails_plain_text_works(self, mock_run) -> None:
+        """Strategy 2: --json fails, parse plain text."""
+        def side_effect(args, **kwargs):
+            if "--json" in args:
+                return subprocess.CompletedProcess(
+                    args=args, returncode=1,
+                    stdout="", stderr="unknown flag: --json",
+                )
+            return subprocess.CompletedProcess(
+                args=args, returncode=0,
+                stdout="web-scraper  1.0.0  enabled\ngit-helper  2.0.0  enabled\n",
+                stderr="",
+            )
+        mock_run.side_effect = side_effect
+        skills = self.adapter.list_skills()
+        assert len(skills) == 2
+        assert skills[0].name == "web-scraper"
+        assert skills[0].version == "1.0.0"
+
+    @patch("subprocess.run")
+    def test_list_skills_both_cli_fail_lockfile_works(self, mock_run, tmp_path) -> None:
+        """Strategy 3: both CLI calls fail, read .clawhub/lock.json."""
+        mock_run.return_value = subprocess.CompletedProcess(
+            args=[], returncode=1, stdout="", stderr="command not found",
+        )
+        lock_dir = tmp_path / ".clawhub"
+        lock_dir.mkdir()
+        lock_file = lock_dir / "lock.json"
+        lock_file.write_text(json.dumps({
+            "skills": {
+                "web-scraper": {"version": "1.0.0"},
+                "git-helper": {"version": "2.0.0"},
+            }
+        }))
+        skills = self.adapter.list_skills(workdir=tmp_path)
+        assert len(skills) == 2
+
+    @patch("subprocess.run")
+    def test_list_skills_all_strategies_fail(self, mock_run) -> None:
+        """All strategies fail — return empty list."""
+        mock_run.return_value = subprocess.CompletedProcess(
+            args=[], returncode=1, stdout="", stderr="error",
+        )
+        skills = self.adapter.list_skills()
+        assert skills == []
+
+    @patch("subprocess.run")
+    def test_list_skills_plain_text_various_formats(self, mock_run) -> None:
+        """Parse plain text with different separators."""
+        def side_effect(args, **kwargs):
+            if "--json" in args:
+                return subprocess.CompletedProcess(
+                    args=args, returncode=1, stdout="", stderr="",
+                )
+            return subprocess.CompletedProcess(
+                args=args, returncode=0,
+                stdout="  skill-a    1.2.3\n  skill-b\n",
+                stderr="",
+            )
+        mock_run.side_effect = side_effect
+        skills = self.adapter.list_skills()
+        assert len(skills) == 2
+        assert skills[0].name == "skill-a"
+        assert skills[0].version == "1.2.3"
+        assert skills[1].name == "skill-b"
+        assert skills[1].version == ""
+
+
+# ---------------------------------------------------------------------------
+# OpenClawAdapter install flags tests
+# ---------------------------------------------------------------------------
+
+class TestOpenClawInstallFlags:
+    """Test --force and --workdir passthrough."""
+
+    def setup_method(self) -> None:
+        self.adapter = OpenClawAdapter()
+
+    @patch("subprocess.run")
+    def test_install_with_force(self, mock_run) -> None:
+        mock_run.return_value = subprocess.CompletedProcess(
+            args=[], returncode=0, stdout="", stderr="",
+        )
+        self.adapter.install_skill("risky-skill", force=True)
+        args = mock_run.call_args[0][0]
+        assert "--force" in args
+
+    @patch("subprocess.run")
+    def test_install_with_workdir(self, mock_run) -> None:
+        mock_run.return_value = subprocess.CompletedProcess(
+            args=[], returncode=0, stdout="", stderr="",
+        )
+        self.adapter.install_skill("web-scraper", workdir="/tmp/myproject")
+        args = mock_run.call_args[0][0]
+        assert "--workdir" in args
+        idx = args.index("--workdir")
+        assert args[idx + 1] == "/tmp/myproject"
+
+    @patch("subprocess.run")
+    def test_install_without_force(self, mock_run) -> None:
+        mock_run.return_value = subprocess.CompletedProcess(
+            args=[], returncode=0, stdout="", stderr="",
+        )
+        self.adapter.install_skill("safe-skill")
+        args = mock_run.call_args[0][0]
+        assert "--force" not in args
+
+    @patch("subprocess.run")
+    def test_install_with_all_flags(self, mock_run) -> None:
+        mock_run.return_value = subprocess.CompletedProcess(
+            args=[], returncode=0, stdout="", stderr="",
+        )
+        self.adapter.install_skill(
+            "skill", hub="https://hub.example.com",
+            force=True, workdir="/tmp/project",
+        )
+        args = mock_run.call_args[0][0]
+        assert "--hub" in args
+        assert "--force" in args
+        assert "--workdir" in args
+
+
+# ---------------------------------------------------------------------------
+# _run_cli error handling tests
+# ---------------------------------------------------------------------------
+
+class TestRunCliErrorHandling:
+    """Test that _run_cli catches FileNotFoundError."""
+
+    def test_missing_cli_returns_friendly_error(self, monkeypatch) -> None:
+        """When agent CLI is not installed, return error instead of traceback."""
+        # Restore real shutil.which for this test
+        import shutil as _real_shutil
+        monkeypatch.setattr("ipman.agents.base.shutil.which", _real_shutil.which)
+        adapter = ClaudeCodeAdapter()
+        result = adapter._run_cli(["nonexistent-binary-xyz-12345", "list"])
+        assert result.returncode == -1
+        assert "command not found" in result.stderr
+        assert "Claude Code" in result.stderr
+
+    def test_missing_openclaw_cli_returns_friendly_error(self, monkeypatch) -> None:
+        """OpenClaw adapter should also return friendly error."""
+        import shutil as _real_shutil
+        monkeypatch.setattr("ipman.agents.base.shutil.which", _real_shutil.which)
+        adapter = OpenClawAdapter()
+        result = adapter._run_cli(["nonexistent-binary-xyz-12345", "list"])
+        assert result.returncode == -1
+        assert "command not found" in result.stderr
+        assert "OpenClaw" in result.stderr
 
 
 # ---------------------------------------------------------------------------

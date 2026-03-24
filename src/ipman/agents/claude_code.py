@@ -64,7 +64,7 @@ class ClaudeCodeAdapter(AgentAdapter):
         return self._run_cli(args)
 
     def uninstall_skill(
-        self, name: str,
+        self, name: str, *, auto_yes: bool = True,
     ) -> subprocess.CompletedProcess[str]:
         """Uninstall a plugin via ``claude plugin uninstall``."""
         return self._run_cli(

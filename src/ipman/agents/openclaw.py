@@ -37,12 +37,18 @@ class OpenClawAdapter(AgentAdapter):
         skills_dir.mkdir(parents=True, exist_ok=True)
 
     def install_skill(
-        self, name: str, **kwargs: str | None,
+        self, name: str, **kwargs: str | bool | None,
     ) -> subprocess.CompletedProcess[str]:
         """Install a skill.
 
         If *name* is an existing directory, copy it into the agent's
         skills/ dir. Otherwise delegate to ``clawhub install``.
+
+        Keyword args:
+            config_dir: Target config directory for local skill copy.
+            hub: Custom hub URL for clawhub install.
+            force: Pass --force to clawhub (for risky installs).
+            workdir: Pass --workdir to clawhub (controls install target).
         """
         path = Path(name)
         if path.exists() and path.is_dir():
@@ -61,31 +67,80 @@ class OpenClawAdapter(AgentAdapter):
         hub = kwargs.get("hub")
         if hub:
             args.extend(["--hub", str(hub)])
+        if kwargs.get("force"):
+            args.append("--force")
+        workdir = kwargs.get("workdir")
+        if workdir:
+            args.extend(["--workdir", str(workdir)])
         return self._run_cli(args)
 
     def uninstall_skill(
-        self, name: str,
+        self, name: str, *, auto_yes: bool = True,
     ) -> subprocess.CompletedProcess[str]:
         """Uninstall a skill via ``clawhub uninstall``."""
-        return self._run_cli(
-            ["clawhub", "uninstall", name],
-        )
+        args = ["clawhub", "uninstall", name]
+        if auto_yes:
+            args.append("--yes")
+        return self._run_cli(args)
 
-    def list_skills(self) -> list[SkillInfo]:
-        """List installed skills via ``clawhub list --json``."""
-        result = self._run_cli(
-            ["clawhub", "list", "--json"],
-        )
-        if result.returncode != 0:
+    def list_skills(self, workdir: Path | None = None) -> list[SkillInfo]:
+        """List installed skills with 3-strategy fallback.
+
+        1. Try ``clawhub list --json``
+        2. Fall back to parsing ``clawhub list`` plain text
+        3. Fall back to reading ``.clawhub/lock.json``
+        """
+        # Strategy 1: try --json
+        result = self._run_cli(["clawhub", "list", "--json"])
+        if result.returncode == 0:
+            try:
+                skills = json.loads(result.stdout)
+                return [
+                    SkillInfo(
+                        name=s.get("name", ""),
+                        version=s.get("version", ""),
+                    )
+                    for s in skills
+                ]
+            except (json.JSONDecodeError, TypeError):
+                pass
+
+        # Strategy 2: parse plain text
+        result_plain = self._run_cli(["clawhub", "list"])
+        if result_plain.returncode == 0 and result_plain.stdout.strip():
+            return self._parse_plain_list(result_plain.stdout)
+
+        # Strategy 3: read lockfile
+        return self._read_lockfile(workdir or Path.cwd())
+
+    @staticmethod
+    def _parse_plain_list(output: str) -> list[SkillInfo]:
+        """Parse plain text output from ``clawhub list``."""
+        skills: list[SkillInfo] = []
+        for line in output.strip().splitlines():
+            parts = line.split()
+            if not parts:
+                continue
+            name = parts[0]
+            version = parts[1] if len(parts) > 1 else ""
+            # Skip header/separator lines
+            if name.startswith("-") or name.startswith("="):
+                continue
+            skills.append(SkillInfo(name=name, version=version))
+        return skills
+
+    @staticmethod
+    def _read_lockfile(workdir: Path) -> list[SkillInfo]:
+        """Read skills from .clawhub/lock.json as last resort."""
+        lock_file = workdir / ".clawhub" / "lock.json"
+        if not lock_file.exists():
             return []
         try:
-            skills = json.loads(result.stdout)
-        except (json.JSONDecodeError, TypeError):
+            data = json.loads(lock_file.read_text(encoding="utf-8"))
+            skills_data = data.get("skills", {})
+            return [
+                SkillInfo(name=name, version=info.get("version", ""))
+                for name, info in skills_data.items()
+            ]
+        except (json.JSONDecodeError, TypeError, AttributeError):
             return []
-        return [
-            SkillInfo(
-                name=s.get("name", ""),
-                version=s.get("version", ""),
-            )
-            for s in skills
-        ]

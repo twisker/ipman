@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git config:*)",
+      "Bash(ls:*)",
+      "Bash(xargs wc:*)",
+      "Bash(find /d/repos/ipman/src/ipman -type f -name \"*.py\" -exec wc -l {} +)",
+      "Bash(find /d/repos/ipman -name *.clawhub -o -name .clawhub -o -name lock.json)",
+      "Bash(xargs grep:*)",
+      "Bash(find /d/repos/ipman/docs/reports -name *.md -type f)",
+      "Bash(rtk uv:*)",
+      "Bash(rtk git:*)",
+      "Bash(python -c \"import os; os.environ[''MOCK_CLAWHUB_STATE'']=''/tmp/test''; os.environ[''PATH'']=''C:/test;''+os.environ[''PATH'']; import subprocess; r=subprocess.run\\([''which'', ''clawhub''], capture_output=True, text=True\\); print\\(r.stdout, r.stderr\\)\")"
+    ]
+  }
+}

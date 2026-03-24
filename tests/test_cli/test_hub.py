@@ -360,6 +360,40 @@ class TestHubReport:
         ])
         assert result.exit_code != 0
 
+    @patch("ipman.cli.hub._submit_report")
+    @patch("ipman.cli.hub._get_hub_client")
+    @patch("ipman.cli.hub.get_github_username", return_value="reporter")
+    def test_report_retries_without_label(
+        self, mock_user: MagicMock, mock_hub_fn: MagicMock, mock_submit: MagicMock,
+    ) -> None:
+        """If report label doesn't exist, retry without it."""
+        hub = _mock_hub()
+        mock_hub_fn.return_value = hub
+        mock_submit.side_effect = [
+            subprocess.CompletedProcess(
+                args=[], returncode=1,
+                stdout="", stderr="could not add label: 'report' not found",
+            ),
+            subprocess.CompletedProcess(
+                args=[], returncode=0,
+                stdout="https://github.com/twisker/iphub/issues/1\n",
+                stderr="",
+            ),
+        ]
+
+        runner = CliRunner()
+        result = runner.invoke(cli, [
+            "hub", "report", "web-scraper",
+            "--reason", "suspicious behavior",
+        ])
+        assert result.exit_code == 0
+        assert mock_submit.call_count == 2
+        # First call with label, second without
+        first_call = mock_submit.call_args_list[0]
+        second_call = mock_submit.call_args_list[1]
+        assert first_call.kwargs.get("with_label") is True
+        assert second_call.kwargs.get("with_label") is False
+
 
 SAMPLE_TRENDING = {
     **SAMPLE_INDEX,
