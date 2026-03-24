@@ -268,29 +268,30 @@ def list_cmd(
 
 @env.command("status")
 def status_cmd() -> None:
-    """Show detailed active environment status across all scopes."""
+    """Show active environment status."""
     project_path = Path.cwd()
     prompt_tag = build_prompt_tag(project_path)
     status = get_env_status(project_path)
 
     if not status:
-        click.echo("No active environments.")
+        click.echo("No active environment.")
         return
 
-    click.echo(f"Prompt: {prompt_tag}\n")
-
-    scope_labels = {
-        "machine": ("*", "Machine"),
-        "user": ("-", "User"),
-        "project": ("", "Project"),
-    }
-
-    for entry in status:
-        scope = entry["scope"]
-        symbol, label = scope_labels.get(scope, ("", scope))
-        prefix = f"  {symbol} " if symbol else "  "
-        click.secho(f"{prefix}{label}", fg="cyan", nl=False)
-        click.echo(
-            f": {entry['name']}  "
-            f"(agent: {entry['agent']}, path: {entry['path']})"
-        )
+    if len(status) == 1:
+        entry = status[0]
+        click.echo(f"Active environment: {entry['name']}")
+        click.echo(f"  Scope:  {entry['scope']}")
+        click.echo(f"  Agent:  {entry['agent']}")
+        click.echo(f"  Path:   {entry['path']}")
+        if prompt_tag:
+            click.echo(f"  Prompt: {prompt_tag}")
+    else:
+        if prompt_tag:
+            click.echo(f"Prompt: {prompt_tag}\n")
+        for entry in status:
+            scope = entry["scope"]
+            click.secho(f"  {scope.capitalize()}", fg="cyan", nl=False)
+            click.echo(
+                f": {entry['name']}  "
+                f"(agent: {entry['agent']}, path: {entry['path']})"
+            )
