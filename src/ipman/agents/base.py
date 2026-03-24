@@ -65,7 +65,7 @@ class AgentAdapter(ABC):
 
     @abstractmethod
     def uninstall_skill(
-        self, name: str,
+        self, name: str, *, auto_yes: bool = True,
     ) -> subprocess.CompletedProcess[str]:
         """Uninstall a skill via agent's native CLI command."""
 

@@ -154,14 +154,33 @@ class TestOpenClawSkillUninstall:
         self.adapter = OpenClawAdapter()
 
     @patch("subprocess.run")
-    def test_uninstall_skill(self, mock_run: object) -> None:
+    def test_uninstall_skill_default_includes_yes(self, mock_run: object) -> None:
+        """Default behavior should include --yes for non-interactive safety."""
         mock_run.return_value = subprocess.CompletedProcess(  # type: ignore[attr-defined]
             args=[], returncode=0, stdout="", stderr="",
         )
         result = self.adapter.uninstall_skill("web-scraper")
         args = mock_run.call_args[0][0]  # type: ignore[attr-defined]
-        assert args == ["clawhub", "uninstall", "web-scraper"]
+        assert args == ["clawhub", "uninstall", "web-scraper", "--yes"]
         assert result.returncode == 0
+
+    @patch("subprocess.run")
+    def test_uninstall_skill_explicit_yes(self, mock_run: object) -> None:
+        mock_run.return_value = subprocess.CompletedProcess(  # type: ignore[attr-defined]
+            args=[], returncode=0, stdout="", stderr="",
+        )
+        self.adapter.uninstall_skill("web-scraper", auto_yes=True)
+        args = mock_run.call_args[0][0]  # type: ignore[attr-defined]
+        assert "--yes" in args
+
+    @patch("subprocess.run")
+    def test_uninstall_skill_no_yes(self, mock_run: object) -> None:
+        mock_run.return_value = subprocess.CompletedProcess(  # type: ignore[attr-defined]
+            args=[], returncode=0, stdout="", stderr="",
+        )
+        self.adapter.uninstall_skill("web-scraper", auto_yes=False)
+        args = mock_run.call_args[0][0]  # type: ignore[attr-defined]
+        assert "--yes" not in args
 
 
 class TestOpenClawSkillList:

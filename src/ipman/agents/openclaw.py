@@ -64,12 +64,13 @@ class OpenClawAdapter(AgentAdapter):
         return self._run_cli(args)
 
     def uninstall_skill(
-        self, name: str,
+        self, name: str, *, auto_yes: bool = True,
     ) -> subprocess.CompletedProcess[str]:
         """Uninstall a skill via ``clawhub uninstall``."""
-        return self._run_cli(
-            ["clawhub", "uninstall", name],
-        )
+        args = ["clawhub", "uninstall", name]
+        if auto_yes:
+            args.append("--yes")
+        return self._run_cli(args)
 
     def list_skills(self, workdir: Path | None = None) -> list[SkillInfo]:
         """List installed skills with 3-strategy fallback.

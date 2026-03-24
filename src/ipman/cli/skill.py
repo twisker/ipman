@@ -282,10 +282,12 @@ def install(
 @click.argument("name")
 @click.option("--agent", "agent_name", default=None,
               help="Agent tool to use (e.g. claude-code, openclaw).")
-def uninstall(name: str, agent_name: str | None) -> None:
+@click.option("--yes", "auto_yes", is_flag=True, default=False,
+              help="Skip confirmation prompts (non-interactive mode).")
+def uninstall(name: str, agent_name: str | None, auto_yes: bool) -> None:
     """Uninstall a skill via the agent's native CLI."""
     adapter = _resolve_agent(agent_name)
-    result = adapter.uninstall_skill(name)
+    result = adapter.uninstall_skill(name, auto_yes=auto_yes)
     if result.returncode == 0:
         click.secho(
             f"Uninstalled '{name}' via {adapter.display_name}.",
