@@ -10,15 +10,15 @@ from pathlib import Path
 import pytest
 
 MOCK_CLAWHUB_DIR = Path(__file__).parent / "mock_clawhub"
+MOCK_PY = MOCK_CLAWHUB_DIR / "clawhub_mock.py"
 
 
 @pytest.fixture
 def mock_clawhub_env(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     """Set up mock clawhub on PATH and return the state directory.
 
-    - Puts mock_clawhub/ at front of PATH so 'clawhub' resolves to our mock
-    - Sets MOCK_CLAWHUB_STATE to a temp dir for skill state persistence
-    - Returns the state dir path for assertions
+    Creates a platform-appropriate wrapper that delegates to the
+    Python mock script (clawhub_mock.py) for cross-platform portability.
     """
     state_dir = tmp_path / "clawhub_state"
     state_dir.mkdir()
@@ -27,20 +27,33 @@ def mock_clawhub_env(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     mock_dir = tmp_path / "mock_bin"
     mock_dir.mkdir()
 
+    # Copy the Python mock script
+    py_dest = mock_dir / "clawhub_mock.py"
+    shutil.copy2(MOCK_PY, py_dest)
+
+    # Find the Python interpreter
+    python_exe = sys.executable
+
     if sys.platform == "win32":
-        # On Windows, use the .bat script
-        shutil.copy2(MOCK_CLAWHUB_DIR / "clawhub.bat", mock_dir / "clawhub.bat")
-        shutil.copy2(MOCK_CLAWHUB_DIR / "clawhub.bat", mock_dir / "clawhub.cmd")
-        # Ensure PATHEXT includes .BAT
+        # Create a .exe-like wrapper via a .cmd file
+        wrapper = mock_dir / "clawhub.cmd"
+        wrapper.write_text(
+            f'@echo off\n"{python_exe}" "{py_dest}" %*\n',
+            encoding="utf-8",
+        )
+        # Ensure PATHEXT includes .CMD
         pathext = os.environ.get("PATHEXT", ".COM;.EXE;.BAT;.CMD")
-        if ".BAT" not in pathext.upper():
-            pathext = f".BAT;{pathext}"
+        if ".CMD" not in pathext.upper():
+            pathext = f".CMD;{pathext}"
         monkeypatch.setenv("PATHEXT", pathext)
     else:
-        # On Unix, use the bash script
-        dest = mock_dir / "clawhub"
-        shutil.copy2(MOCK_CLAWHUB_DIR / "clawhub", dest)
-        dest.chmod(dest.stat().st_mode | stat.S_IEXEC)
+        # Create a bash wrapper
+        wrapper = mock_dir / "clawhub"
+        wrapper.write_text(
+            f'#!/usr/bin/env bash\nexec "{python_exe}" "{py_dest}" "$@"\n',
+            encoding="utf-8",
+        )
+        wrapper.chmod(wrapper.stat().st_mode | stat.S_IEXEC)
 
     monkeypatch.setenv(
         "PATH",
@@ -61,10 +74,10 @@ def mock_openclaw_project(
 
     # Redirect ipman home for isolation
     fake_home = tmp_path / "fake_home"
-    fake_home.mkdir()
+    fake_home.mkdir(exist_ok=True)
     monkeypatch.setenv("IPMAN_HOME", str(fake_home / ".ipman"))
     fake_machine = tmp_path / "fake_machine"
-    fake_machine.mkdir()
+    fake_machine.mkdir(exist_ok=True)
     monkeypatch.setenv("IPMAN_MACHINE_ROOT", str(fake_machine / "ipman"))
 
     return project

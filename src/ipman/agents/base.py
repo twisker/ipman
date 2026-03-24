@@ -78,12 +78,29 @@ class AgentAdapter(ABC):
     ) -> subprocess.CompletedProcess[str]:
         """Run a CLI command and capture output.
 
-        Returns a CompletedProcess with returncode=-1 if the executable
-        is not found, instead of raising FileNotFoundError.
+        On Windows, resolves the command via shutil.which() first so that
+        .cmd/.bat wrappers are found. Returns a CompletedProcess with
+        returncode=-1 if the executable is not found.
         """
+        import shutil as _shutil
+
+        resolved_args = list(args)
+        if resolved_args:
+            resolved = _shutil.which(resolved_args[0])
+            if resolved:
+                resolved_args[0] = resolved
+            else:
+                cmd = resolved_args[0]
+                return subprocess.CompletedProcess(
+                    args=args,
+                    returncode=-1,
+                    stdout="",
+                    stderr=f"{cmd}: command not found. "
+                           f"Please install {self.display_name} CLI first.",
+                )
         try:
             return subprocess.run(
-                args,
+                resolved_args,
                 capture_output=True,
                 text=True,
                 check=False,
