@@ -183,6 +183,96 @@ class TestOpenClawSkillList:
         assert skills[0].name == "web-scraper"
 
 
+class TestOpenClawSkillListFallback:
+    """Test list_skills 3-strategy fallback: --json -> plain text -> lockfile."""
+
+    def setup_method(self) -> None:
+        self.adapter = OpenClawAdapter()
+
+    @patch("subprocess.run")
+    def test_list_skills_json_success(self, mock_run) -> None:
+        """Strategy 1: --json works — use it."""
+        output = json.dumps([
+            {"name": "web-scraper", "version": "1.0.0"},
+            {"name": "git-helper", "version": "2.0.0"},
+        ])
+        mock_run.return_value = subprocess.CompletedProcess(
+            args=[], returncode=0, stdout=output, stderr="",
+        )
+        skills = self.adapter.list_skills()
+        assert len(skills) == 2
+        assert skills[0].name == "web-scraper"
+        assert skills[1].name == "git-helper"
+
+    @patch("subprocess.run")
+    def test_list_skills_json_fails_plain_text_works(self, mock_run) -> None:
+        """Strategy 2: --json fails, parse plain text."""
+        def side_effect(args, **kwargs):
+            if "--json" in args:
+                return subprocess.CompletedProcess(
+                    args=args, returncode=1,
+                    stdout="", stderr="unknown flag: --json",
+                )
+            return subprocess.CompletedProcess(
+                args=args, returncode=0,
+                stdout="web-scraper  1.0.0  enabled\ngit-helper  2.0.0  enabled\n",
+                stderr="",
+            )
+        mock_run.side_effect = side_effect
+        skills = self.adapter.list_skills()
+        assert len(skills) == 2
+        assert skills[0].name == "web-scraper"
+        assert skills[0].version == "1.0.0"
+
+    @patch("subprocess.run")
+    def test_list_skills_both_cli_fail_lockfile_works(self, mock_run, tmp_path) -> None:
+        """Strategy 3: both CLI calls fail, read .clawhub/lock.json."""
+        mock_run.return_value = subprocess.CompletedProcess(
+            args=[], returncode=1, stdout="", stderr="command not found",
+        )
+        lock_dir = tmp_path / ".clawhub"
+        lock_dir.mkdir()
+        lock_file = lock_dir / "lock.json"
+        lock_file.write_text(json.dumps({
+            "skills": {
+                "web-scraper": {"version": "1.0.0"},
+                "git-helper": {"version": "2.0.0"},
+            }
+        }))
+        skills = self.adapter.list_skills(workdir=tmp_path)
+        assert len(skills) == 2
+
+    @patch("subprocess.run")
+    def test_list_skills_all_strategies_fail(self, mock_run) -> None:
+        """All strategies fail — return empty list."""
+        mock_run.return_value = subprocess.CompletedProcess(
+            args=[], returncode=1, stdout="", stderr="error",
+        )
+        skills = self.adapter.list_skills()
+        assert skills == []
+
+    @patch("subprocess.run")
+    def test_list_skills_plain_text_various_formats(self, mock_run) -> None:
+        """Parse plain text with different separators."""
+        def side_effect(args, **kwargs):
+            if "--json" in args:
+                return subprocess.CompletedProcess(
+                    args=args, returncode=1, stdout="", stderr="",
+                )
+            return subprocess.CompletedProcess(
+                args=args, returncode=0,
+                stdout="  skill-a    1.2.3\n  skill-b\n",
+                stderr="",
+            )
+        mock_run.side_effect = side_effect
+        skills = self.adapter.list_skills()
+        assert len(skills) == 2
+        assert skills[0].name == "skill-a"
+        assert skills[0].version == "1.2.3"
+        assert skills[1].name == "skill-b"
+        assert skills[1].version == ""
+
+
 # ---------------------------------------------------------------------------
 # SkillInfo dataclass tests
 # ---------------------------------------------------------------------------
