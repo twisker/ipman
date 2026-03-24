@@ -36,6 +36,7 @@ class IpManConfig:
     )
     hub_url: str = _DEFAULT_HUB_URL
     agent_default: str = "auto"
+    machine_env_root: str = ""
 
 
 def load_config(
@@ -81,6 +82,10 @@ def load_config(
     # --- Agent ---
     agent_default = agent.get("default", "auto")
 
+    # --- Machine ---
+    machine = data.get("machine", {}) or {}
+    machine_env_root = machine.get("env_root", "")
+
     # --- Environment variable overrides ---
     env_hub = os.environ.get("IPMAN_HUB_URL")
     if env_hub:
@@ -91,10 +96,15 @@ def load_config(
         with contextlib.suppress(ValueError):
             mode = SecurityMode(env_mode)
 
+    env_machine_root = os.environ.get("IPMAN_MACHINE_ROOT")
+    if env_machine_root:
+        machine_env_root = env_machine_root
+
     return IpManConfig(
         security_mode=mode,
         log_enabled=log_enabled,
         log_path=log_path,
         hub_url=hub_url,
         agent_default=agent_default,
+        machine_env_root=machine_env_root,
     )

@@ -56,8 +56,17 @@ def get_envs_root(scope: Scope, project_path: Path | None = None) -> Path:
     override = os.environ.get("IPMAN_MACHINE_ROOT")
     if override:
         return Path(override) / "envs"
+    # Try config file
+    from ipman.core.config import load_config
+    cfg = load_config()
+    if cfg.machine_env_root:
+        return Path(cfg.machine_env_root) / "envs"
     if _is_windows():
         return Path("C:/ProgramData/ipman/envs")
+    # Unix: XDG_DATA_HOME fallback before /opt
+    xdg_data = os.environ.get("XDG_DATA_HOME", "")
+    if xdg_data:
+        return Path(xdg_data) / "ipman" / "envs"
     return Path("/opt/ipman/envs")
 
 
