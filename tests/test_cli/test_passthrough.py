@@ -115,3 +115,39 @@ class TestHelpOutput:
         result = runner.invoke(cli, ["skills", "--help"])
         assert result.exit_code == 0
         assert "list" in result.output
+
+
+class TestMainCLIIntegration:
+    """Verify skills/plugins commands are registered on the real CLI."""
+
+    def test_skills_command_exists(self) -> None:
+        from ipman.cli.main import cli
+        runner = CliRunner()
+        result = runner.invoke(cli, ["skills", "--help"])
+        assert result.exit_code == 0
+        assert "list" in result.output
+
+    def test_skill_alias_exists(self) -> None:
+        from ipman.cli.main import cli
+        runner = CliRunner()
+        result = runner.invoke(cli, ["skill", "--help"])
+        assert result.exit_code == 0
+        assert "list" in result.output
+
+    def test_plugins_command_exists(self) -> None:
+        from ipman.cli.main import cli
+        runner = CliRunner()
+        result = runner.invoke(cli, ["plugins", "--help"])
+        assert result.exit_code == 0
+
+    def test_plugin_alias_exists(self) -> None:
+        from ipman.cli.main import cli
+        runner = CliRunner()
+        result = runner.invoke(cli, ["plugin", "--help"])
+        assert result.exit_code == 0
+
+    def test_old_install_still_works(self) -> None:
+        from ipman.cli.main import cli
+        runner = CliRunner()
+        result = runner.invoke(cli, ["install", "--help"])
+        assert result.exit_code == 0

@@ -305,18 +305,19 @@ def uninstall(name: str, agent_name: str | None, auto_yes: bool) -> None:
         raise SystemExit(1)
 
 
-@click.group()
-def skill() -> None:
-    """Manage skills in the current environment."""
-
-
-@skill.command("list")
+@click.command("list")
 @click.option("--agent", "agent_name", default=None,
               help="Agent tool to use (e.g. claude-code, openclaw).")
-def list_cmd(agent_name: str | None) -> None:
+@click.pass_context
+def list_cmd(ctx: click.Context, agent_name: str | None) -> None:
     """List installed skills via the agent's native CLI."""
+    from ipman.core.environment import symlink_guard
+    # Fall back to agent_name from passthrough group if not provided directly
+    if agent_name is None and ctx.obj:
+        agent_name = ctx.obj.get("agent_name")
     adapter = _resolve_agent(agent_name)
-    skills = adapter.list_skills()
+    with symlink_guard():
+        skills = adapter.list_skills()
     if not skills:
         click.echo(f"No skills installed ({adapter.display_name}).")
         return
