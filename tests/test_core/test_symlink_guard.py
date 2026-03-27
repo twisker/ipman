@@ -79,7 +79,6 @@ class TestSymlinkGuardRepair:
         (env_path / "skills" / "old-skill").mkdir(parents=True)
 
         with symlink_guard(tmp_path):
-            target = resolve_symlink(link_path)
             _remove_link_or_dir(link_path)
             link_path.mkdir()
             (link_path / "plugins" / "new-ext").mkdir(parents=True)

@@ -5,6 +5,7 @@ from __future__ import annotations
 import enum
 import os
 import shutil
+from contextlib import contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -278,9 +279,6 @@ def deactivate_env(
 # ---------------------------------------------------------------------------
 # Symlink guard
 # ---------------------------------------------------------------------------
-
-from contextlib import contextmanager
-
 
 @contextmanager
 def symlink_guard(project_path: Path | None = None):
