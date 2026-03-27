@@ -13,7 +13,12 @@ from typing import Any
 import yaml
 
 from ipman.agents.base import AgentAdapter
-from ipman.utils.symlink import create_symlink, is_symlink, remove_symlink, resolve_symlink
+from ipman.utils.symlink import (
+    create_symlink,
+    is_symlink,
+    remove_symlink,
+    resolve_symlink,
+)
 
 
 class Scope(enum.Enum):

@@ -17,6 +17,7 @@
 | cli/main | CLI 主入口，Click group 定义 | -- | `src/ipman/cli/main.py` | 已完成 |
 | cli/env | 虚拟环境命令（create/activate/deactivate/delete/list/status） | -- | `src/ipman/cli/env.py` | 已完成 |
 | cli/skill | 技能命令（install/uninstall/list，通过 agent CLI 执行） | -- | `src/ipman/cli/skill.py` | 已完成 |
+| cli/passthrough | AgentPassthroughGroup — skills/plugins 命令透传给 agent CLI | `docs/superpowers/specs/2026-03-27-cli-passthrough-and-symlink-guard-design.md` | `src/ipman/cli/passthrough.py` | 已完成 |
 | cli/pack | IP 包打包命令（pack，合并原 export） | -- | `src/ipman/cli/pack.py` | 已完成 |
 | cli/hub | IpHub 命令（search/info/top/publish） | `.claude/research/iphub-design.md` | `src/ipman/cli/hub.py` | 已完成 |
 

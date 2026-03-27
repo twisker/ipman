@@ -9,6 +9,7 @@ from ipman.cli.init import init
 from ipman.cli.pack import pack
 from ipman.cli.passthrough import create_passthrough_group
 from ipman.cli.skill import install, list_cmd, uninstall
+from ipman.utils.i18n import detect_locale, set_locale
 
 SKILLS_CMD_MAP = {
     "claude-code": ["claude", "plugin"],
@@ -19,7 +20,6 @@ PLUGINS_CMD_MAP = {
     "claude-code": ["claude", "plugin"],
     "openclaw": ["openclaw", "plugins"],
 }
-from ipman.utils.i18n import detect_locale, set_locale
 
 
 @click.group()
