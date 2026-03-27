@@ -1,4 +1,4 @@
-# IpMan 常见问题 (FAQ)
+# 常见问题 (FAQ)
 
 ## 安装相关
 
@@ -34,7 +34,7 @@ macOS 用户推荐通过 Homebrew 安装：
 brew install python@3.12
 ```
 
-安装后需将其设为默认版本，参见[安装指南](installation-guide.zh-cn.md#2-将-python-312-设为默认版本)。
+安装后需将其设为默认版本，参见[安装指南](getting-started/installation.md#2-将-python-312-设为默认版本)。
 
 ---
 
