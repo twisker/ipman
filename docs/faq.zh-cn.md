@@ -72,6 +72,12 @@ pipx install ipman-cli
 
 pipx 会自动为 ipman-cli 创建独立的虚拟环境，不影响系统 Python 环境。
 
+> **VPN 用户注意**：如果 pipx 安装时也报 SSL 错误，需要加信任参数：
+> ```bash
+> pipx install ipman-cli --pip-args="--trusted-host pypi.org --trusted-host files.pythonhosted.org"
+> ```
+> 详见下方 [SSL 报错](#q-pip-install-报错-ssl-certificate_verify_failed怎么办) 条目。
+
 **备选方案**：手动创建虚拟环境：
 
 ```bash

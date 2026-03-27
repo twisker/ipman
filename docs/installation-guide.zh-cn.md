@@ -73,6 +73,12 @@ pipx install ipman-cli
 > **为什么用 pipx 而不是 pip？**
 > Python 3.12 引入了 PEP 668 保护机制，Homebrew 管理的 Python 环境会阻止 `pip install` 全局安装包。pipx 专为 CLI 工具设计，自动为每个包创建隔离的虚拟环境，既安全又方便。
 
+> **VPN / 企业网络用户**：如果遇到 SSL 证书验证失败，使用以下命令：
+> ```bash
+> pipx install ipman-cli --pip-args="--trusted-host pypi.org --trusted-host files.pythonhosted.org"
+> ```
+> 详见 [FAQ - SSL 报错](faq.zh-cn.md#q-pip-install-报错-ssl-certificate_verify_failed怎么办)。
+
 ## 从源码安装（开发者）
 
 ```bash
