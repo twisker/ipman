@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import subprocess
+from pathlib import Path
 from unittest.mock import patch
 
 import pytest
@@ -489,3 +490,59 @@ class TestOpenClawLocalInstall:
         self.adapter.install_skill("web-scraper")
         args = mock_run.call_args[0][0]
         assert args == ["clawhub", "install", "web-scraper"]
+
+
+# ---------------------------------------------------------------------------
+# OpenClawAdapter workspace skills scanning tests
+# ---------------------------------------------------------------------------
+
+class TestOpenClawWorkspaceSkillsScan:
+    """Test Strategy 4: workspace skills/ directory scanning."""
+
+    def setup_method(self) -> None:
+        self.adapter = OpenClawAdapter()
+
+    def test_scan_workspace_skills_found(self, tmp_path: Path) -> None:
+        skills_dir = tmp_path / "skills"
+        skill_a = skills_dir / "skill-a"
+        skill_a.mkdir(parents=True)
+        (skill_a / "SKILL.md").write_text("---\nname: skill-a\n---\n")
+        skill_b = skills_dir / "skill-b"
+        skill_b.mkdir()
+        (skill_b / "SKILL.md").write_text("---\nname: skill-b\n---\n")
+
+        result = self.adapter._scan_workspace_skills(tmp_path)
+        names = {s.name for s in result}
+        assert names == {"skill-a", "skill-b"}
+
+    def test_scan_workspace_skills_empty(self, tmp_path: Path) -> None:
+        result = self.adapter._scan_workspace_skills(tmp_path)
+        assert result == []
+
+    def test_scan_workspace_skills_no_skill_md(self, tmp_path: Path) -> None:
+        skills_dir = tmp_path / "skills"
+        (skills_dir / "not-a-skill").mkdir(parents=True)
+        (skills_dir / "not-a-skill" / "README.md").write_text("hello")
+        result = self.adapter._scan_workspace_skills(tmp_path)
+        assert result == []
+
+    @patch("ipman.agents.openclaw.OpenClawAdapter._run_cli")
+    def test_list_skills_merges_workspace(self, mock_run, tmp_path: Path) -> None:
+        mock_run.return_value = subprocess.CompletedProcess(
+            args=[], returncode=0,
+            stdout='[{"name": "skill-a", "version": "1.0"}]',
+            stderr="",
+        )
+        skills_dir = tmp_path / "skills"
+        for name in ("skill-a", "skill-b"):
+            d = skills_dir / name
+            d.mkdir(parents=True)
+            (d / "SKILL.md").write_text(f"---\nname: {name}\n---\n")
+
+        result = self.adapter.list_skills(workdir=tmp_path)
+        names = [s.name for s in result]
+        assert "skill-a" in names
+        assert "skill-b" in names
+        assert names.count("skill-a") == 1
+        skill_a = next(s for s in result if s.name == "skill-a")
+        assert skill_a.version == "1.0"
