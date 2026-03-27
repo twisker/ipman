@@ -705,3 +705,107 @@ class TestCrossPlatform:
                   cwd=mock_openclaw_project, check=False)
         run_ipman("env", "delete", name, "-y",
                   cwd=mock_openclaw_project, check=False)
+
+
+# ===========================================================================
+# Section 12: CLI passthrough, plugins, and alias tests
+# ===========================================================================
+
+
+class TestCLIPassthrough:
+    """Verify skills/plugins passthrough to mock agent CLI."""
+
+    def test_skills_passthrough_unknown_cmd(
+        self, mock_openclaw_project: Path,
+    ) -> None:
+        """ipman skills <unknown> should passthrough to openclaw skills."""
+        name = _unique_name()
+        run_ipman("env", "create", name, "--agent", "openclaw",
+                  cwd=mock_openclaw_project)
+        run_ipman("env", "activate", name, cwd=mock_openclaw_project)
+
+        result = run_ipman(
+            "skills", "install", "test-skill",
+            "--agent", "openclaw",
+            cwd=mock_openclaw_project, check=False, timeout=30,
+        )
+        assert result.returncode == 0
+        assert "test-skill" in result.stdout
+
+        run_ipman("env", "deactivate",
+                  cwd=mock_openclaw_project, check=False)
+        run_ipman("env", "delete", name, "-y",
+                  cwd=mock_openclaw_project, check=False)
+
+    def test_plugins_passthrough(
+        self, mock_openclaw_project: Path,
+    ) -> None:
+        """ipman plugins install should passthrough to openclaw plugins."""
+        name = _unique_name()
+        run_ipman("env", "create", name, "--agent", "openclaw",
+                  cwd=mock_openclaw_project)
+        run_ipman("env", "activate", name, cwd=mock_openclaw_project)
+
+        result = run_ipman(
+            "plugins", "install", "test-ext",
+            "--agent", "openclaw",
+            cwd=mock_openclaw_project, check=False, timeout=30,
+        )
+        assert result.returncode == 0
+        assert "test-ext" in result.stdout
+
+        run_ipman("env", "deactivate",
+                  cwd=mock_openclaw_project, check=False)
+        run_ipman("env", "delete", name, "-y",
+                  cwd=mock_openclaw_project, check=False)
+
+    def test_skill_alias_equals_skills(
+        self, mock_openclaw_project: Path, mock_clawhub_env: Path,
+    ) -> None:
+        """ipman skill list should work as alias for ipman skills list."""
+        name = _unique_name()
+        run_ipman("env", "create", name, "--agent", "openclaw",
+                  cwd=mock_openclaw_project)
+        run_ipman("env", "activate", name, cwd=mock_openclaw_project)
+
+        for sname in ("sk-x", "sk-y"):
+            d = mock_clawhub_env / "skills" / sname
+            d.mkdir(parents=True)
+
+        r1 = run_ipman("skills", "list", "--agent", "openclaw",
+                       cwd=mock_openclaw_project, check=False, timeout=30)
+        r2 = run_ipman("skill", "list", "--agent", "openclaw",
+                       cwd=mock_openclaw_project, check=False, timeout=30)
+        assert r1.returncode == r2.returncode == 0
+        assert "sk-x" in r1.stdout
+        assert "sk-x" in r2.stdout
+
+        run_ipman("env", "deactivate",
+                  cwd=mock_openclaw_project, check=False)
+        run_ipman("env", "delete", name, "-y",
+                  cwd=mock_openclaw_project, check=False)
+
+    def test_skills_list_includes_workspace_skills(
+        self, mock_openclaw_project: Path,
+    ) -> None:
+        """ipman skills list should include skills from workspace skills/ dir."""
+        name = _unique_name()
+        run_ipman("env", "create", name, "--agent", "openclaw",
+                  cwd=mock_openclaw_project)
+        run_ipman("env", "activate", name, cwd=mock_openclaw_project)
+
+        ws_skill = mock_openclaw_project / "skills" / "ws-skill"
+        ws_skill.mkdir(parents=True)
+        (ws_skill / "SKILL.md").write_text("---\nname: ws-skill\n---\nWorkspace skill")
+
+        result = run_ipman(
+            "skills", "list", "--agent", "openclaw",
+            cwd=mock_openclaw_project, check=False, timeout=30,
+        )
+        assert result.returncode == 0
+        assert "ws-skill" in result.stdout
+
+        run_ipman("env", "deactivate",
+                  cwd=mock_openclaw_project, check=False)
+        run_ipman("env", "delete", name, "-y",
+                  cwd=mock_openclaw_project, check=False)

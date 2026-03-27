@@ -55,6 +55,25 @@ def mock_clawhub_env(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
         )
         wrapper.chmod(wrapper.stat().st_mode | stat.S_IEXEC)
 
+    # Also create mock openclaw script
+    oc_mock_py = MOCK_CLAWHUB_DIR / "openclaw_mock.py"
+    oc_py_dest = mock_dir / "openclaw_mock.py"
+    shutil.copy2(oc_mock_py, oc_py_dest)
+
+    if sys.platform == "win32":
+        oc_wrapper = mock_dir / "openclaw.cmd"
+        oc_wrapper.write_text(
+            f'@echo off\n"{python_exe}" "{oc_py_dest}" %*\n',
+            encoding="utf-8",
+        )
+    else:
+        oc_wrapper = mock_dir / "openclaw"
+        oc_wrapper.write_text(
+            f'#!/usr/bin/env bash\nexec "{python_exe}" "{oc_py_dest}" "$@"\n',
+            encoding="utf-8",
+        )
+        oc_wrapper.chmod(oc_wrapper.stat().st_mode | stat.S_IEXEC)
+
     monkeypatch.setenv(
         "PATH",
         f"{mock_dir}{os.pathsep}{os.environ.get('PATH', '')}",
