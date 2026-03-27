@@ -560,7 +560,126 @@ class TestErrorHandling:
 
 
 # ===========================================================================
-# Section 10: Cross-platform (all platforms)
+# Section 10: Symlink resilience — agent CLI operations must not break env
+# ===========================================================================
+
+
+class TestSymlinkResilience:
+    """Verify that agent CLI operations don't break the ipman virtual env.
+
+    Bug: running 'openclaw plugins install' while an ipman env is active
+    causes the .openclaw symlink to be destroyed, silently deactivating
+    the virtual environment. The plugin ends up in the correct directory
+    (~/.ipman/envs/[XXX]) but the symlink is gone, so ipman thinks the
+    env is no longer active.
+    """
+
+    def test_env_survives_agent_file_write(
+        self, mock_openclaw_project: Path,
+    ) -> None:
+        """Simulate an agent CLI writing files into the env dir.
+
+        After writing, the symlink and active_env state must be intact.
+        """
+        name = _unique_name()
+        run_ipman("env", "create", name, "--agent", "openclaw",
+                  cwd=mock_openclaw_project)
+        run_ipman("env", "activate", name, cwd=mock_openclaw_project)
+
+        config_dir = mock_openclaw_project / ".openclaw"
+
+        # Sanity: .openclaw should be a symlink now
+        assert config_dir.exists(), ".openclaw should exist after activate"
+
+        # Simulate agent writing files into the symlinked dir
+        # (this is what 'openclaw plugins install' would do)
+        plugins_dir = config_dir / "plugins" / "test-extension"
+        plugins_dir.mkdir(parents=True, exist_ok=True)
+        (plugins_dir / "manifest.json").write_text('{"name": "test"}')
+
+        # The symlink should still be intact
+        from ipman.utils.symlink import is_symlink
+        assert is_symlink(config_dir), (
+            ".openclaw symlink was destroyed by file writes inside the env"
+        )
+
+        # ipman should still see this env as active
+        status = run_ipman("env", "status", cwd=mock_openclaw_project)
+        assert name in status.stdout, (
+            f"Env '{name}' not shown as active after agent file writes"
+        )
+
+        # The plugin file should exist in the actual env dir
+        from ipman.core.environment import get_env_path, Scope
+        env_path = get_env_path(name, Scope.PROJECT, mock_openclaw_project)
+        assert (env_path / "plugins" / "test-extension" / "manifest.json").exists()
+
+        run_ipman("env", "deactivate",
+                  cwd=mock_openclaw_project, check=False)
+        run_ipman("env", "delete", name, "-y",
+                  cwd=mock_openclaw_project, check=False)
+
+    def test_env_survives_symlink_replacement(
+        self, mock_openclaw_project: Path,
+    ) -> None:
+        """Simulate the worst case: agent CLI replaces symlink with real dir.
+
+        This is the actual bug scenario: 'openclaw plugins install' may
+        remove the .openclaw symlink and recreate it as a real directory.
+        After this, ipman env status should detect the breakage and report
+        it clearly rather than silently losing the environment.
+        """
+        import shutil
+
+        name = _unique_name()
+        run_ipman("env", "create", name, "--agent", "openclaw",
+                  cwd=mock_openclaw_project)
+        run_ipman("env", "activate", name, cwd=mock_openclaw_project)
+
+        config_dir = mock_openclaw_project / ".openclaw"
+
+        from ipman.utils.symlink import is_symlink, resolve_symlink
+        assert is_symlink(config_dir), "Precondition: .openclaw should be symlink"
+        target = resolve_symlink(config_dir)
+
+        # Simulate agent CLI destroying the symlink and creating a real dir
+        # (copy contents from the symlink target, then replace)
+        if sys.platform == "win32":
+            import os
+            os.rmdir(str(config_dir))  # junction removal
+        else:
+            config_dir.unlink()
+
+        # Recreate as real dir with same contents
+        shutil.copytree(target, config_dir)
+
+        # Now .openclaw is a real directory, not a symlink
+        assert not is_symlink(config_dir), "Should be a real dir now"
+
+        # ipman env status should detect this situation
+        # Current behavior (the bug): it silently shows "no active env"
+        # This test documents the bug — when fixed, it should either:
+        #   a) still show the env as active (by checking ipman.yaml), or
+        #   b) show a clear warning that the env link was broken
+        status = run_ipman("env", "status",
+                           cwd=mock_openclaw_project, check=False)
+        # For now, document the broken behavior so we can track the fix
+        # The env name should ideally still appear in status
+        # TODO: Once the fix is in, change this to: assert name in status.stdout
+        if name not in status.stdout:
+            pytest.xfail(
+                "Known bug: agent CLI replacing symlink with real dir "
+                "silently deactivates ipman env"
+            )
+
+        run_ipman("env", "deactivate",
+                  cwd=mock_openclaw_project, check=False)
+        run_ipman("env", "delete", name, "-y",
+                  cwd=mock_openclaw_project, check=False)
+
+
+# ===========================================================================
+# Section 11: Cross-platform (all platforms)
 # ===========================================================================
 
 

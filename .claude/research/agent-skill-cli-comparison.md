@@ -140,6 +140,18 @@ Markdown content...
 - `skills.load.extraDirs` 配置额外加载目录
 - Plugin skills 通过 `openclaw.plugin.json` 加载
 
+### Plugins / Extensions CLI 命令
+
+OpenClaw 有 Gateway Plugins / Extensions 的概念，通过 `openclaw plugins` 子命令管理：
+
+| 命令 | 说明 |
+|------|------|
+| `openclaw plugins install <name>` | 安装一个 Gateway Plugin/Extension |
+| `openclaw plugins list` | 列出已安装的 plugins |
+| `openclaw plugins uninstall <name>` | 卸载 plugin |
+
+> 注：OpenClaw 的 skills 和 plugins 是两个独立的概念。Skills 是技能（一等公民），Plugins 是 Gateway 扩展。
+
 ### 配置方式
 
 `~/.openclaw/openclaw.json`:
@@ -177,6 +189,7 @@ Markdown content...
 | **作用域** | user / project / local | workspace / user / bundled |
 | **市场** | GitHub 仓库（marketplace） | ClawHub（独立注册表） |
 | **市场规模** | ~25 个官方插件 | 13,729 个社区技能 |
+| **Plugin 命令** | `claude plugin install/list/...` | `openclaw plugins install/list/...` |
 | **CLI 工具** | `claude` 子命令 | `openclaw` + `clawhub` 两个 CLI |
 | **元数据格式** | plugin.json（插件级） | SKILL.md frontmatter（技能级） |
 | **加载机制** | 插件缓存目录 + 符号链接 | 三层目录优先级覆盖 |
@@ -201,10 +214,22 @@ Markdown content...
 - 启用/禁用: `claude plugin enable/disable <name>`
 
 **OpenClaw adapter:**
-- 安装: `clawhub install <slug>`
+- 安装: `clawhub install <slug>` 或 `openclaw skills install <name>`
 - 卸载: (需进一步调研)
-- 列表: (需进一步调研，可能通过读取 workspace/skills/ 目录)
+- 列表: `openclaw skills list` 或读取 workspace/skills/ 目录
 - 更新: `clawhub update --all`
+- Plugins 安装: `openclaw plugins install <name>`
+- Plugins 列表: `openclaw plugins list`
+- Plugins 卸载: `openclaw plugins uninstall <name>`
+
+**IpMan CLI 命令映射表：**
+
+| IpMan 命令 | Claude Code 映射 | OpenClaw 映射 |
+|---|---|---|
+| `ipman skills <args>` | `claude plugin <args>` | `openclaw skills <args>` |
+| `ipman plugins <args>` | `claude plugin <args>` | `openclaw plugins <args>` |
+
+> 注：Claude Code 的 plugin 概念包含了 skills + plugins 两层，因此 ipman 的 skills 和 plugins 在 Claude Code 下都映射到 `claude plugin`。
 
 ### IP 包的角色
 
