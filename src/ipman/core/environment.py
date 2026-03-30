@@ -5,6 +5,7 @@ from __future__ import annotations
 import enum
 import os
 import shutil
+from contextlib import contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -12,7 +13,12 @@ from typing import Any
 import yaml
 
 from ipman.agents.base import AgentAdapter
-from ipman.utils.symlink import create_symlink, is_symlink, remove_symlink
+from ipman.utils.symlink import (
+    create_symlink,
+    is_symlink,
+    remove_symlink,
+    resolve_symlink,
+)
 
 
 class Scope(enum.Enum):
@@ -273,6 +279,61 @@ def deactivate_env(
 
     # Clear active env in config
     _update_project_config(project_path, active_env=None)
+
+
+# ---------------------------------------------------------------------------
+# Symlink guard
+# ---------------------------------------------------------------------------
+
+@contextmanager
+def symlink_guard(project_path: Path | None = None):
+    """Protect symlink integrity across agent CLI operations.
+
+    Wraps agent CLI calls to detect and auto-repair broken symlinks.
+    If an agent CLI operation replaces the symlink with a real directory,
+    the guard will sync contents back and restore the symlink.
+    """
+    project_path = project_path or Path.cwd()
+
+    config = _read_project_config(project_path)
+    if not config or not config.get("active_env"):
+        yield
+        return
+
+    agent_config_dir = config.get("agent_config_dir", ".claude")
+    link_path = project_path / agent_config_dir
+    was_symlink = is_symlink(link_path)
+    original_target = resolve_symlink(link_path) if was_symlink else None
+
+    yield
+
+    if not original_target or is_symlink(link_path):
+        return
+
+    try:
+        if link_path.exists():
+            _sync_and_restore_symlink(link_path, original_target)
+        else:
+            create_symlink(target=original_target, link=link_path)
+        import click
+        click.secho(
+            "\u26a0 Environment link was broken by agent CLI operation. Auto-repaired.",
+            fg="yellow", err=True,
+        )
+    except Exception as exc:
+        import click
+        click.secho(
+            f"\u26a0 Environment link was broken and auto-repair failed: {exc}\n"
+            "  Run 'ipman env activate <name>' to manually restore.",
+            fg="yellow", err=True,
+        )
+
+
+def _sync_and_restore_symlink(link_path: Path, original_target: Path) -> None:
+    """Sync contents from a real dir back to env, then restore the symlink."""
+    shutil.copytree(link_path, original_target, dirs_exist_ok=True)
+    shutil.rmtree(link_path)
+    create_symlink(target=original_target, link=link_path)
 
 
 # ---------------------------------------------------------------------------

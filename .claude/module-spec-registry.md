@@ -17,6 +17,7 @@
 | cli/main | CLI 主入口，Click group 定义 | -- | `src/ipman/cli/main.py` | 已完成 |
 | cli/env | 虚拟环境命令（create/activate/deactivate/delete/list/status） | -- | `src/ipman/cli/env.py` | 已完成 |
 | cli/skill | 技能命令（install/uninstall/list，通过 agent CLI 执行） | -- | `src/ipman/cli/skill.py` | 已完成 |
+| cli/passthrough | AgentPassthroughGroup — skills/plugins 命令透传给 agent CLI | `docs/superpowers/specs/2026-03-27-cli-passthrough-and-symlink-guard-design.md` | `src/ipman/cli/passthrough.py` | 已完成 |
 | cli/pack | IP 包打包命令（pack，合并原 export） | -- | `src/ipman/cli/pack.py` | 已完成 |
 | cli/hub | IpHub 命令（search/info/top/publish） | `.claude/research/iphub-design.md` | `src/ipman/cli/hub.py` | 已完成 |
 
@@ -62,6 +63,15 @@
 | utils/symlink | 跨平台软链接创建/管理 | -- | `src/ipman/utils/symlink.py` | 已完成 |
 | utils/i18n | 国际化（中英文自动切换） | -- | `src/ipman/utils/i18n.py` | 待开始 |
 | utils/detect | Agent 工具自动探测 | -- | `src/ipman/utils/detect.py` | 待开始 |
+
+---
+
+## 文档目录索引
+
+| 目录 | 用途 | 说明 |
+|------|------|------|
+| `docs/` | 设计文档 | PRD、IP 包规格、架构报告、IpHub 工作流等内部设计资料 |
+| `docs-src/` | 帮助文档与教程 | 面向用户的安装指南、快速上手、CLI 参考、FAQ 等，支持中英双语（`zh/` 子目录） |
 
 ---
 

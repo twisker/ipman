@@ -84,34 +84,63 @@ class OpenClawAdapter(AgentAdapter):
         return self._run_cli(args)
 
     def list_skills(self, workdir: Path | None = None) -> list[SkillInfo]:
-        """List installed skills with 3-strategy fallback.
+        """List installed skills with 4-strategy fallback.
 
         1. Try ``clawhub list --json``
         2. Fall back to parsing ``clawhub list`` plain text
         3. Fall back to reading ``.clawhub/lock.json``
+        4. Merge workspace ``skills/`` directory entries
         """
+        effective_workdir = workdir or Path.cwd()
+
         # Strategy 1: try --json
         result = self._run_cli(["clawhub", "list", "--json"])
         if result.returncode == 0:
             try:
-                skills = json.loads(result.stdout)
-                return [
+                raw = json.loads(result.stdout)
+                skills = [
                     SkillInfo(
                         name=s.get("name", ""),
                         version=s.get("version", ""),
                     )
-                    for s in skills
+                    for s in raw
                 ]
+                return self._merge_workspace_skills(skills, effective_workdir)
             except (json.JSONDecodeError, TypeError):
                 pass
 
         # Strategy 2: parse plain text
         result_plain = self._run_cli(["clawhub", "list"])
         if result_plain.returncode == 0 and result_plain.stdout.strip():
-            return self._parse_plain_list(result_plain.stdout)
+            skills = self._parse_plain_list(result_plain.stdout)
+            return self._merge_workspace_skills(skills, effective_workdir)
 
         # Strategy 3: read lockfile
-        return self._read_lockfile(workdir or Path.cwd())
+        skills = self._read_lockfile(effective_workdir)
+        return self._merge_workspace_skills(skills, effective_workdir)
+
+    def _merge_workspace_skills(
+        self, skills: list[SkillInfo], workdir: Path,
+    ) -> list[SkillInfo]:
+        """Merge workspace skills/ entries into the skill list."""
+        workspace_skills = self._scan_workspace_skills(workdir)
+        known_names = {s.name for s in skills}
+        for ws in workspace_skills:
+            if ws.name not in known_names:
+                skills.append(ws)
+        return skills
+
+    @staticmethod
+    def _scan_workspace_skills(workdir: Path) -> list[SkillInfo]:
+        """Scan workspace skills/ directory for locally installed skills."""
+        skills_dir = workdir / "skills"
+        if not skills_dir.exists():
+            return []
+        return [
+            SkillInfo(name=entry.name, source="workspace")
+            for entry in sorted(skills_dir.iterdir())
+            if entry.is_dir() and (entry / "SKILL.md").exists()
+        ]
 
     @staticmethod
     def _parse_plain_list(output: str) -> list[SkillInfo]:
