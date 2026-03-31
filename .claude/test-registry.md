@@ -66,11 +66,32 @@
 
 ---
 
+## CLI 初始化测试覆盖
+
+| 模块 | 测试文件 | 覆盖率要求 | 当前覆盖率 | 状态 |
+|------|---------|-----------|-----------|------|
+| cli/init | `tests/test_cli/test_init.py` | >= 70% | 5 tests passed | 已完成 |
+
+---
+
+## 性能基准测试
+
+| 指标 | 测试文件 | 阈值 | 实测结果（开发机） | 状态 |
+|------|---------|------|----------------|------|
+| CLI 冷启动 | `tests/test_performance/test_benchmarks.py` | < 500ms | ~72ms (python -m) | ✅ PASS |
+| 依赖解析（50 个线性链） | `tests/test_performance/test_benchmarks.py` | < 3000ms | ~0.04ms | ✅ PASS |
+| 依赖解析（50 个宽树） | `tests/test_performance/test_benchmarks.py` | < 3000ms | ~0.04ms | ✅ PASS |
+| install --dry-run 调度 | `tests/test_performance/test_benchmarks.py` | < 1000ms | ~72ms | ✅ PASS |
+| 真实 skill install（本地） | E2E agent_cli 测试（CI） | < 5s | TBD（需 agent） | 待 CI |
+| 真实 skill install（网络） | E2E + hub 集成 | < 15s | TBD | 待 CI |
+
+---
+
 ## 基础设施与部署测试覆盖
 
 | 模块 | 测试文件 | 覆盖要求 | 状态 |
 |------|---------|---------|------|
-| CI/CD 流水线 | -- | 三平台全流程冒烟测试 | 待开始 |
+| CI/CD 流水线 | e2e-fast.yml, e2e-full.yml | 三平台全流程 | 已就位（待 CI 运行） |
 | PyPI 发布 | -- | TestPyPI 发布验证 | 待开始 |
 
 ---
