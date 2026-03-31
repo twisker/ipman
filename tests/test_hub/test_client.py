@@ -259,6 +259,7 @@ class TestIpHubClientErrorHandling:
     ) -> None:
         """URLError from urlopen -> HubError with descriptive message."""
         import urllib.error
+
         from ipman.hub.client import HubError
         mock_urlopen.side_effect = urllib.error.URLError("connection refused")
 

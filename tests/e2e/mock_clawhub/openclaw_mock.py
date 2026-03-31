@@ -2,6 +2,7 @@
 """Mock openclaw CLI for e2e tests."""
 import sys
 
+
 def main():
     args = sys.argv[1:]
     if not args:

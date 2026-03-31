@@ -612,7 +612,7 @@ class TestSymlinkResilience:
         )
 
         # The plugin file should exist in the actual env dir
-        from ipman.core.environment import get_env_path, Scope
+        from ipman.core.environment import Scope, get_env_path
         env_path = get_env_path(name, Scope.PROJECT, mock_openclaw_project)
         assert (env_path / "plugins" / "test-extension" / "manifest.json").exists()
 

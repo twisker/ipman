@@ -140,6 +140,7 @@ class TestCrossAgentPortability:
     ) -> None:
         """A local skill directory can be installed via both adapters."""
         import shutil as _shutil
+
         from ipman.agents.claude_code import ClaudeCodeAdapter
         from ipman.agents.openclaw import OpenClawAdapter
 

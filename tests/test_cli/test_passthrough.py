@@ -1,14 +1,13 @@
 """Tests for AgentPassthroughGroup."""
 from __future__ import annotations
 
-from unittest.mock import patch, MagicMock
 import subprocess
+from unittest.mock import MagicMock, patch
 
 import click
 from click.testing import CliRunner
 
 from ipman.cli.passthrough import create_passthrough_group
-
 
 MOCK_CMD_MAP = {
     "openclaw": ["openclaw", "skills"],

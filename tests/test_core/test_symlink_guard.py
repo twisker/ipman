@@ -8,7 +8,12 @@ import pytest
 import yaml
 
 from ipman.core.environment import symlink_guard
-from ipman.utils.symlink import create_symlink, is_symlink, remove_symlink, resolve_symlink
+from ipman.utils.symlink import (
+    create_symlink,
+    is_symlink,
+    remove_symlink,
+    resolve_symlink,
+)
 
 
 def _remove_link_or_dir(path: Path) -> None:
