@@ -5,6 +5,7 @@ from __future__ import annotations
 import enum
 import os
 import shutil
+from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
@@ -286,7 +287,7 @@ def deactivate_env(
 # ---------------------------------------------------------------------------
 
 @contextmanager
-def symlink_guard(project_path: Path | None = None):
+def symlink_guard(project_path: Path | None = None) -> Generator[None, None, None]:
     """Protect symlink integrity across agent CLI operations.
 
     Wraps agent CLI calls to detect and auto-repair broken symlinks.

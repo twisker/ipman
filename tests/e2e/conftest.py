@@ -130,9 +130,9 @@ def iphub_test_repo(request: pytest.FixtureRequest) -> str:
     cli = request.config.getoption("--iphub-repo", default=None)
     if cli:
         return cli
-    repo = os.environ.get("IPHUB_TEST_REPO", "")
+    repo = os.environ.get("IPHUB_REPO", "")
     if not repo:
-        pytest.skip("IPHUB_TEST_REPO not set")
+        pytest.skip("IPHUB_REPO not set")
     return repo
 
 

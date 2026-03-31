@@ -37,7 +37,7 @@ class ClaudeCodeAdapter(AgentAdapter):
         skills_dir.mkdir(parents=True, exist_ok=True)
 
     def install_skill(
-        self, name: str, **kwargs: str | None,
+        self, name: str, **kwargs: str | bool | None,
     ) -> subprocess.CompletedProcess[str]:
         """Install a skill.
 

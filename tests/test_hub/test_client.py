@@ -5,6 +5,8 @@ from __future__ import annotations
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 from ipman.hub.client import IpHubClient
 
 SAMPLE_INDEX = {
@@ -230,6 +232,39 @@ def test_search_no_tag_returns_all(tmp_path):
     }
     results = client.search("")
     assert len(results) == 2
+
+
+class TestIpHubClientErrorHandling:
+    """Test network and data error handling."""
+
+    @patch("ipman.hub.client.urllib.request.urlopen")
+    def test_fetch_index_empty_yaml_raises(
+        self, mock_urlopen: MagicMock, tmp_path: Path,
+    ) -> None:
+        """yaml.safe_load returns None for empty content -> HubError, not AttributeError."""
+        from ipman.hub.client import HubError
+        mock_response = MagicMock()
+        mock_response.read.return_value = b""
+        mock_response.__enter__ = lambda s: s
+        mock_response.__exit__ = MagicMock(return_value=False)
+        mock_urlopen.return_value = mock_response
+
+        client = IpHubClient(cache_dir=tmp_path)
+        with pytest.raises(HubError, match="empty or malformed"):
+            client.fetch_index(refresh=True)
+
+    @patch("ipman.hub.client.urllib.request.urlopen")
+    def test_fetch_index_network_error_raises(
+        self, mock_urlopen: MagicMock, tmp_path: Path,
+    ) -> None:
+        """URLError from urlopen -> HubError with descriptive message."""
+        import urllib.error
+        from ipman.hub.client import HubError
+        mock_urlopen.side_effect = urllib.error.URLError("connection refused")
+
+        client = IpHubClient(cache_dir=tmp_path)
+        with pytest.raises(HubError, match="Failed to fetch"):
+            client.fetch_index(refresh=True)
 
 
 class TestIpHubClientIndexUrl:

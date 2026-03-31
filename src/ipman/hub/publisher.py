@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import base64
+import os
 import subprocess
 from datetime import date
 from typing import Any
@@ -11,7 +12,7 @@ import yaml
 
 from ipman.core.package import IPPackage
 
-_IPHUB_REPO = "twisker/iphub"
+_IPHUB_REPO = os.environ.get("IPHUB_REPO", "twisker/iphub")
 
 
 def _dump_yaml(data: dict[str, Any]) -> str:

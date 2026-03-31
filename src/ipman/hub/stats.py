@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
+import os
 import subprocess
 from datetime import datetime, timezone
 
-_IPHUB_REPO = "twisker/iphub"
+_IPHUB_REPO = os.environ.get("IPHUB_REPO", "twisker/iphub")
 
 
 class StatsError(Exception):

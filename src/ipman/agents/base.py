@@ -60,7 +60,7 @@ class AgentAdapter(ABC):
 
     @abstractmethod
     def install_skill(
-        self, name: str, **kwargs: str | None,
+        self, name: str, **kwargs: str | bool | None,
     ) -> subprocess.CompletedProcess[str]:
         """Install a skill via agent's native CLI command."""
 

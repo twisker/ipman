@@ -29,7 +29,7 @@ class OpenClawAdapter(AgentAdapter):
         return ".openclaw"
 
     def is_installed(self) -> bool:
-        return shutil.which("openclaw") is not None
+        return shutil.which("clawhub") is not None
 
     def init_env_dir(self, env_path: Path) -> None:
         """Create OpenClaw environment structure."""

@@ -117,4 +117,5 @@ markers = [
     "publish: Publish workflow tests",
     "symlink: Symlink-specific tests",
     "slow: Tests taking > 30s",
+    "requires_clawhub: Tests requiring real clawhub CLI on PATH",
 ]

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 import click
 
@@ -19,14 +20,16 @@ class AgentPassthroughGroup(click.Group):
 
     def __init__(
         self,
-        *args,
+        *args: Any,
         agent_cmd_map: dict[str, list[str]],
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         super().__init__(*args, **kwargs)
         self.agent_cmd_map = agent_cmd_map
 
-    def resolve_command(self, ctx, args):
+    def resolve_command(
+        self, ctx: click.Context, args: list[str],
+    ) -> tuple[str | None, click.Command | None, list[str]]:
         """Try normal resolution first; fall back to passthrough."""
         try:
             cmd_name, cmd, remaining = super().resolve_command(ctx, args)
@@ -37,7 +40,7 @@ class AgentPassthroughGroup(click.Group):
         # Unknown command -> passthrough
         return "_passthrough", self.commands["_passthrough"], args
 
-    def parse_args(self, ctx, args):
+    def parse_args(self, ctx: click.Context, args: list[str]) -> list[str]:
         """Extract --agent before normal parsing."""
         agent_name = None
         filtered = []
@@ -57,7 +60,7 @@ class AgentPassthroughGroup(click.Group):
         ctx.obj["agent_name"] = agent_name
         return super().parse_args(ctx, filtered)
 
-    def format_help(self, ctx, formatter):
+    def format_help(self, ctx: click.Context, formatter: click.HelpFormatter) -> None:
         """Show ipman commands, then hint about agent passthrough."""
         super().format_help(ctx, formatter)
         formatter.write("\n")
@@ -73,7 +76,7 @@ def _make_passthrough_cmd(agent_cmd_map: dict[str, list[str]]) -> click.Command:
     @click.command("_passthrough", hidden=True)
     @click.argument("args", nargs=-1, type=click.UNPROCESSED)
     @click.pass_context
-    def _passthrough(ctx, args):
+    def _passthrough(ctx: click.Context, args: tuple[str, ...]) -> None:
         agent_name = ctx.obj.get("agent_name") if ctx.obj else None
         adapter = resolve_agent(agent_name)
 

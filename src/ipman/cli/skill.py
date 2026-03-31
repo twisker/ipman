@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import click
 
@@ -120,12 +120,19 @@ def _install_from_hub(
             click.secho(f"Install failed: {msg}", fg="red", err=True)
             raise SystemExit(1)
     else:
-        # IP package — fetch version file and install all skills
-        registry = hub.fetch_registry(name)
-        if registry is None:
-            raise click.ClickException(f"Failed to fetch registry for '{name}'.")
+        # IP package — resolve full dependency tree, then install all skills
+        from ipman.core.resolver import resolve_dependencies
 
-        skills = registry.get("skills", [])
+        def _fetcher(pkg_name: str, pkg_version: str | None) -> dict[str, Any]:
+            result = hub.fetch_registry(pkg_name, version=pkg_version)
+            if result is None:
+                raise click.ClickException(
+                    f"Failed to fetch registry for '{pkg_name}'."
+                )
+            return result
+
+        skills: list[dict[str, Any]] = resolve_dependencies(name, None, _fetcher)
+
         if not skills:
             click.secho(f"No skills in package '{name}'.", fg="yellow")
             return
