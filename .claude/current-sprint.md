@@ -12,8 +12,8 @@
 |------|------|------|------|
 | Phase 0 | 环境建立 + 基线修复 | ✅ 已完成（commit 00e9c3a） | mypy 0 errors, ruff clean |
 | Phase 1 | 规格审计 + 需求矩阵提取 | ✅ 已完成 | 36 需求行，10 个覆盖缺口已识别 |
-| Phase 2 | IpHub 验证（测试 fork） | ⏳ 待人工前置 | 需创建 iphub-test fork |
-| Phase 3 | OpenClaw 真实集成 | ⏳ 待人工前置 | 需安装 clawhub |
+| Phase 2 | IpHub 验证（测试 fork） | ✅ 已完成 | 17/17 E2E 通过；fork 已 seed；CI job 已添加 |
+| Phase 3 | OpenClaw 真实集成 | 🔄 进行中 | CI 通过 npm 自动安装；本地跳过；test_openclaw_real.py 已就位 |
 | Phase 4 | 核心模块验证 + 性能基准 | ⏳ 待开始 | |
 | Phase 5 | 合规报告 | ⏳ 待开始 | |
 
