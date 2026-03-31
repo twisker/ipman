@@ -42,7 +42,18 @@
 | agents/base | Agent 适配器基类接口 | -- | `src/ipman/agents/base.py` | 已完成 |
 | agents/claude_code | Claude Code 适配（环境探测 + plugin CLI 封装） | `.claude/research/agent-skill-cli-comparison.md` | `src/ipman/agents/claude_code.py` | 已完成（待扩展 skill CLI） |
 | agents/registry | Agent 适配器注册与自动探测 | -- | `src/ipman/agents/registry.py` | 已完成 |
-| agents/openclaw | OpenClaw 适配（clawhub CLI 封装） | `.claude/research/agent-skill-cli-comparison.md` | `src/ipman/agents/openclaw.py` | 待开始 |
+| agents/openclaw | OpenClaw 适配（clawhub CLI 封装） | `.claude/research/agent-skill-cli-comparison.md` | `src/ipman/agents/openclaw.py` | 已完成 |
+
+---
+
+## 安全模块索引（未在原规格中，已实现）
+
+| 模块 | 说明 | 设计文档 | 源代码目录 | 状态 |
+|------|------|---------|----------|------|
+| core/config | 配置文件加载与合并（~/.ipman/config.yaml） | -- | `src/ipman/core/config.py` | 已完成 |
+| core/security | 安全决策矩阵与日志记录 | -- | `src/ipman/core/security.py` | 已完成 |
+| core/vetter | Skill 内容风险评估引擎 | -- | `src/ipman/core/vetter.py` | 已完成 |
+| core/shell_init | Shell 检测与初始化脚本生成 | -- | `src/ipman/core/shell_init.py` | 已完成 |
 
 ---
 
@@ -61,8 +72,8 @@
 | 模块 | 说明 | 设计文档 | 源代码目录 | 状态 |
 |------|------|---------|----------|------|
 | utils/symlink | 跨平台软链接创建/管理 | -- | `src/ipman/utils/symlink.py` | 已完成 |
-| utils/i18n | 国际化（中英文自动切换） | -- | `src/ipman/utils/i18n.py` | 待开始 |
-| utils/detect | Agent 工具自动探测 | -- | `src/ipman/utils/detect.py` | 待开始 |
+| utils/i18n | 国际化（中英文自动切换） | -- | `src/ipman/utils/i18n.py` | 已完成 |
+| utils/detect | Agent 工具自动探测 | -- | `src/ipman/utils/detect.py` | 待开始（文件缺失） |
 
 ---
 
