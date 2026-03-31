@@ -117,4 +117,7 @@ markers = [
     "publish: Publish workflow tests",
     "symlink: Symlink-specific tests",
     "slow: Tests taking > 30s",
+    "requires_clawhub: Tests requiring real clawhub CLI on PATH",
+    "network: Tests requiring real network access (hit GitHub raw URLs)",
+    "performance: Performance benchmark tests (timing assertions against spec thresholds)",
 ]

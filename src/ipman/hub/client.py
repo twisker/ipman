@@ -3,11 +3,16 @@
 from __future__ import annotations
 
 import time
+import urllib.error
 import urllib.request
 from pathlib import Path
 from typing import Any
 
 import yaml
+
+
+class HubError(Exception):
+    """Raised when an IpHub network or data operation fails."""
 
 _DEFAULT_REPO = "twisker/iphub"
 _DEFAULT_BRANCH = "main"
@@ -62,12 +67,19 @@ class IpHubClient:
                 return self._index
 
         # Fetch from remote
-        with urllib.request.urlopen(self._index_url) as resp:
-            raw = resp.read().decode()
+        try:
+            with urllib.request.urlopen(self._index_url, timeout=30) as resp:
+                raw = resp.read().decode()
+        except urllib.error.URLError as exc:
+            raise HubError(f"Failed to fetch IpHub index: {exc}") from exc
+        except yaml.YAMLError as exc:
+            raise HubError(f"Malformed IpHub index YAML: {exc}") from exc
 
         self._cache_dir.mkdir(parents=True, exist_ok=True)
         self._cache_file.write_text(raw)
         self._index = yaml.safe_load(raw)
+        if self._index is None:
+            raise HubError("IpHub index is empty or malformed")
         return self._index
 
     def search(
@@ -131,8 +143,11 @@ class IpHubClient:
             ver = version or info.get("latest", "1.0.0")
             url = self._registry_url(f"@{owner}/{name}/{ver}.yaml")
 
-        with urllib.request.urlopen(url) as resp:
-            raw = resp.read().decode()
+        try:
+            with urllib.request.urlopen(url, timeout=30) as resp:
+                raw = resp.read().decode()
+        except urllib.error.URLError as exc:
+            raise HubError(f"Failed to fetch registry file: {exc}") from exc
         result: dict[str, Any] = yaml.safe_load(raw)
         return result
 

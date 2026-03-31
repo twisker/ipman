@@ -5,6 +5,8 @@ Covers all scenarios from the consolidated test reports:
 - docs/reports/ipman-final-summary-zh.md
 
 Uses a mock clawhub script for cross-platform portability (mac/win/linux).
+This is the fast regression suite — it does NOT require clawhub on PATH.
+For real E2E tests against a live clawhub installation, see test_openclaw_real.py.
 """
 from __future__ import annotations
 
@@ -610,7 +612,7 @@ class TestSymlinkResilience:
         )
 
         # The plugin file should exist in the actual env dir
-        from ipman.core.environment import get_env_path, Scope
+        from ipman.core.environment import Scope, get_env_path
         env_path = get_env_path(name, Scope.PROJECT, mock_openclaw_project)
         assert (env_path / "plugins" / "test-extension" / "manifest.json").exists()
 

@@ -22,7 +22,7 @@ def _agent_from_active_env(project_path: Path | None = None) -> str | None:
         config = yaml.safe_load(ipman_config.read_text(encoding="utf-8")) or {}
         agent_name = config.get("agent")
         if agent_name and agent_name != "auto":
-            return agent_name
+            return str(agent_name)
     except Exception:
         pass
     return None
