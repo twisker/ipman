@@ -36,7 +36,7 @@ jobs:
         run: uv python install 3.12
 
       - name: Install dependencies
-        run: uv sync --group dev --group e2e
+        run: uv sync --group dev --group e2e --retries 5
 
       - name: Install agent CLI
         run: >
@@ -84,7 +84,7 @@ jobs:
         run: uv python install 3.12
 
       - name: Install dependencies
-        run: uv sync --group dev --group e2e
+        run: uv sync --group dev --group e2e --retries 5 --retries 5
 
       - name: Run IpHub integration tests (Phase 2)
         env:
@@ -116,7 +116,7 @@ jobs:
         run: uv python install 3.12
 
       - name: Install dependencies
-        run: uv sync --group dev --group e2e
+        run: uv sync --group dev --group e2e --retries 5
 
       - name: Run publish security tests
         env:
