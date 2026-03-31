@@ -46,12 +46,18 @@ jobs:
             || 'openclaw'
           }}
 
+      - name: Install clawhub (openclaw only)
+        if: matrix.agent == 'openclaw'
+        run: npm install -g clawhub
+
       - name: Run E2E tests
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: >
           uv run pytest tests/e2e/
-          -m "platform or agent_cli or agent_session"
+          -m "platform or agent_cli or agent_session${{
+            matrix.agent == 'openclaw' && ' or requires_clawhub' || ''
+          }}"
           --agent ${{ matrix.agent }}
           --junit-xml=e2e-full-results.xml
           --timeout=300
