@@ -119,6 +119,13 @@ git config core.hooksPath .githooks
 7. 分解出 CI/CD 相关任务
 8. 按优先级安排：先撰写测试 -> 核心逻辑 -> CLI 命令 -> Agent 适配 -> CI/CD
 
+## gstack
+
+Use the `/browse` skill from gstack for all web browsing. Never use `mcp__claude-in-chrome__*` tools.
+
+Available gstack skills:
+`/office-hours`, `/plan-ceo-review`, `/plan-eng-review`, `/plan-design-review`, `/design-consultation`, `/design-shotgun`, `/design-html`, `/review`, `/ship`, `/land-and-deploy`, `/canary`, `/benchmark`, `/browse`, `/connect-chrome`, `/qa`, `/qa-only`, `/design-review`, `/setup-browser-cookies`, `/setup-deploy`, `/retro`, `/investigate`, `/document-release`, `/codex`, `/cso`, `/autoplan`, `/careful`, `/freeze`, `/guard`, `/unfreeze`, `/gstack-upgrade`, `/learn`
+
 ## Skill routing
 
 When the user's request matches an available skill, ALWAYS invoke it using the Skill
