@@ -3,15 +3,19 @@
 
 ### 🔲 [人工] 部署 iphub-bot 修复版到 Cloudflare Workers
 - **优先级：** P0（阻塞所有后续功能验证）
-- **前置条件：** 无
+- **前置条件：** 确认 Cloudflare Workers 付费计划
 - **预计耗时：** 10 分钟
 - **操作步骤：**
   1. `cd ../iphub-bot`
-  2. `git push origin main`（将 4 个新 commit 推送到远程）
-  3. `npx wrangler deploy`（部署到 Cloudflare Workers）
-  4. `npx wrangler tail`（观察实时日志，等待下一次 cron 触发）
-  5. 验证：在日志中看到 `poll_start` + `poll_complete` 事件（不再是 silent failure）
-  6. 验证：访问 `https://iphub-bot.<your-domain>.workers.dev/health` 返回 JSON 状态
+  2. `git push origin dev`（推送 dev 分支到远程）
+  3. `git push origin feature/unified-platform`（推送 feature 分支到远程）
+  4. `git checkout dev && git merge feature/unified-platform`（合并 feature 到 dev）
+  5. `git push origin dev`
+  6. `git checkout dev && npx wrangler deploy`（从 dev 部署到 Cloudflare Workers）
+  7. `npx wrangler tail`（观察实时日志，等待下一次 cron 触发）
+  8. 验证：在日志中看到 `poll_start` + `poll_complete` 事件（不再是 silent failure）
+  9. 验证：访问 `https://iphub-bot.<your-domain>.workers.dev/health` 返回 JSON 状态
+  10. 验证通过后，合并到 main：`git checkout main && git merge dev && git push origin main`
 - **成功标准：** 24 小时内至少 1 个 IP 包 PR 出现在 `twisker/iphub` 仓库
 
 ### 🔲 [人工] 确认 Cloudflare Workers 付费计划（Paid Plan）
