@@ -1,67 +1,6 @@
 
 ## 待办事项
 
-### 🔲 [人工] 部署 iphub-bot 修复版到 Cloudflare Workers
-- **优先级：** P0（阻塞所有后续功能验证）
-- **前置条件：** 确认 Cloudflare Workers 付费计划
-- **预计耗时：** 10 分钟
-- **操作步骤：**
-  1. `cd ../iphub-bot`
-  2. `git push origin dev`（推送 dev 分支到远程）
-  3. `git push origin feature/unified-platform`（推送 feature 分支到远程）
-  4. `git checkout dev && git merge feature/unified-platform`（合并 feature 到 dev）
-  5. `git push origin dev`
-  6. `git checkout dev && npx wrangler deploy`（从 dev 部署到 Cloudflare Workers）
-  7. `npx wrangler tail`（观察实时日志，等待下一次 cron 触发）
-  8. 验证：在日志中看到 `poll_start` + `poll_complete` 事件（不再是 silent failure）
-  9. 验证：访问 `https://iphub-bot.<your-domain>.workers.dev/health` 返回 JSON 状态
-  10. 验证通过后，合并到 main：`git checkout main && git merge dev && git push origin main`
-- **成功标准：** 24 小时内至少 1 个 IP 包 PR 出现在 `twisker/iphub` 仓库
-
-### 🔲 [人工] 确认 Cloudflare Workers 付费计划（Paid Plan）
-- **优先级：** P0（影响架构决策）
-- **前置条件：** 无
-- **预计耗时：** 5 分钟
-- **操作步骤：**
-  1. 登录 Cloudflare Dashboard → Workers & Pages → 查看当前计划
-  2. 如果是 Free Plan：升级到 Workers Paid ($5/月)
-     - Free Plan 的 cron 有 10ms CPU 限制，会导致超时
-     - Paid Plan 的 cron 无时长限制，是当前架构的前提
-  3. 确认后在此处标记完成
-- **成功标准：** Dashboard 显示 "Workers Paid" 或 "Workers Bundled"
-
-### 🔲 [人工] 注册 X (Twitter) 开发者账号 + 创建 Bot 应用
-- **优先级：** P1（阻塞 X 机器人功能）
-- **前置条件：** 部署修复版完成
-- **预计耗时：** 30-60 分钟
-- **操作步骤：**
-  1. 前往 https://developer.twitter.com/en/portal/dashboard
-  2. 注册开发者账号（如尚未注册）
-  3. 创建新 Project + App，命名为 "IpHub Bot"
-  4. 在 App 设置中：
-     - User authentication settings → 开启 Read and Write 权限
-     - 生成以下凭据：
-       - API Key (Consumer Key)
-       - API Key Secret (Consumer Secret)
-       - Access Token
-       - Access Token Secret
-       - Bearer Token
-  5. 选择 API 定价：
-     - 推荐：Pay-as-you-go（按量计费，设置 $30/月上限）
-     - 或：Basic Plan ($200/月，如果有预算)
-  6. 将凭据写入 Cloudflare Workers Secrets：
-     ```bash
-     cd ../iphub-bot
-     npx wrangler secret put X_BEARER_TOKEN
-     npx wrangler secret put X_API_KEY
-     npx wrangler secret put X_API_SECRET
-     npx wrangler secret put X_ACCESS_TOKEN
-     npx wrangler secret put X_ACCESS_SECRET
-     ```
-  7. 重新部署：`npx wrangler deploy`
-  8. 验证：用另一个 X 账号 @mention bot 账号，观察 wrangler tail 日志
-- **成功标准：** `wrangler tail` 显示 `poll_start { platform: "x" }` + 成功处理 mention
-
 ### 🔲 [人工] 注册微博开发者账号（Weibo Developer Certification）
 - **优先级：** P2（阻塞微博机器人，但不阻塞其他功能）
 - **前置条件：** 无
@@ -85,23 +24,25 @@
      ```
 - **成功标准：** 微博开放平台显示应用状态为"已审核"
 
-### 🔲 [人工] 创建 X Bot 账号 (@iphub_bot 或类似)
-- **优先级：** P1（与 X 开发者注册同步进行）
-- **前置条件：** 无
-- **预计耗时：** 10 分钟
-- **操作步骤：**
-  1. 注册新 X 账号，用户名尽量为 `iphub_bot` 或 `iphub_ai`
-  2. 完善账号 Profile：
-     - 头像：IpHub logo
-     - 简介："IpHub Bot — @mention me with an AI skill link, I'll package it for ipman install. Powered by IpMan."
-     - 网站：https://twisker.github.io/iphub/
-  3. 确认 X 开发者应用绑定到此账号
-  4. 更新 `src/handlers/x.ts` 中的 `@iphub_bot` 查询为实际注册的用户名（如果不同）
-- **成功标准：** 账号存在且可被 @mention
-
 ---
 
 ## 已完成事项
+
+### ✅ [人工] 确认 Cloudflare Workers 付费计划（Paid Plan）
+- **完成日期：** 2026-04-03
+- **结果：** 已升级到 Workers Paid 计划，cron 无时长限制
+
+### ✅ [人工] 部署 iphub-bot 修复版到 Cloudflare Workers
+- **完成日期：** 2026-04-03
+- **结果：** feature/unified-platform → dev → main 合并完成，已部署到 Cloudflare Workers
+
+### ✅ [人工] 创建 X Bot 账号 + 注册 X 开发者应用
+- **完成日期：** 2026-04-03
+- **结果：** 
+  - 使用 `@iphub_bot` 账号在 developer.x.com 开通开发者权限并创建 App
+  - 头像已设置（pixel art 风格 IpHub Bot icon）
+  - X API 凭据（Bearer Token / OAuth 1.0 Consumer Key & Secret / Access Token & Secret）已配置到 Cloudflare Workers Secrets
+  - 凭据映射：Bearer Token → `X_BEARER_TOKEN`，Consumer Key → `X_API_KEY`，Consumer Secret → `X_API_SECRET`，Access Token → `X_ACCESS_TOKEN`，Access Token Secret → `X_ACCESS_SECRET`
 
 ### ✅ [人工] 创建 IpHub 测试 Fork
 - **完成日期：** 2026-03-31
