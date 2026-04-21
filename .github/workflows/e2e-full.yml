@@ -15,6 +15,10 @@ on:
 jobs:
   e2e-agents:
     name: E2E (${{ matrix.os }}, ${{ matrix.agent }})
+    # Skip on nightly schedule: this matrix burns Anthropic API credits via
+    # real Claude Code / OpenClaw CLI calls. Only run on version tag push
+    # (release) and manual dispatch.
+    if: github.event_name != 'schedule'
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
