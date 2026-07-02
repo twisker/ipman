@@ -104,7 +104,7 @@ See the **[Security Guide](https://twisker.github.io/ipman/guide/security/)** fo
 <!-- TOP_SKILLS_START -->
 ## Top 10 Skills
 
-*Updated: 2026-07-01T06:34:52Z*
+*Updated: 2026-07-02T06:00:49Z*
 
 | # | Name | Type | Installs | Users |
 |---|------|------|----------|-------|
@@ -113,7 +113,7 @@ See the **[Security Guide](https://twisker.github.io/ipman/guide/security/)** fo
 <!-- TOP_PACKAGES_START -->
 ## Top 10 Packages
 
-*Updated: 2026-07-01T06:34:52Z*
+*Updated: 2026-07-02T06:00:49Z*
 
 | # | Name | Type | Installs | Users |
 |---|------|------|----------|-------|
